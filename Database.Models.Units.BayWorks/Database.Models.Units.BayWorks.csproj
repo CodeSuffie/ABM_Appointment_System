@@ -4,10 +4,11 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>Database.Models.Units.Works</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Database.Abstractions\Database.Abstractions.csproj" />
+      <ProjectReference Include="..\Database.Abstractions.Units\Database.Abstractions.Units.csproj" />
     </ItemGroup>
 
 </Project>
