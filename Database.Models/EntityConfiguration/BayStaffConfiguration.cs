@@ -9,7 +9,13 @@ public class BayStaffConfiguration : IEntityTypeConfiguration<BayStaff>
     {
         builder.HasMany(x => x.Shifts)
             .WithOne(x => x.BayStaff)
-            .HasForeignKey(x => x.BayStaffId)    // .HasForeignKey(x => x.Id) // BayShiftId
-            .IsRequired();
+            .HasForeignKey(x => x.BayStaffId);
+        
+        builder.HasOne(x => x.Hub)
+            .WithMany(x => x.BayStaffs);
+        
+        builder.HasOne(x => x.Work)
+            .WithOne(x => x.BayStaff)
+            .HasForeignKey<BayStaff>(x => x.WorkId);
     }
 }

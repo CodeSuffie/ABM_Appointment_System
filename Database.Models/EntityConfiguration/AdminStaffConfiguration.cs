@@ -9,7 +9,13 @@ public class AdminStaffConfiguration : IEntityTypeConfiguration<AdminStaff>
     {
         builder.HasMany(x => x.Shifts)
             .WithOne(x => x.AdminStaff)
-            .HasForeignKey(x => x.AdminStaffId)    // .HasForeignKey(x => x.Id) // AdminShiftId
-            .IsRequired();
+            .HasForeignKey(x => x.AdminStaffId);
+
+        builder.HasOne(x => x.Hub)
+            .WithMany();
+
+        builder.HasOne(x => x.Work)
+            .WithOne(x => x.AdminStaff)
+            .HasForeignKey<AdminStaff>(x => x.WorkId);
     }
 }

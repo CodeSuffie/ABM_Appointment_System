@@ -6,5 +6,6 @@ public class TruckDriver : Staff
     public new List<TruckShift> Shifts { get; set; } = [];
     
     // TruckDriver
-    public Trip? Trip { get; set; }
+    public required TruckCompany TruckCompany { get; set; }
+    public long TruckCompanyId { get; set; }
 }

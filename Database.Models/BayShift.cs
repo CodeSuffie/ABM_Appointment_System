@@ -3,9 +3,9 @@ namespace Database.Models;
 public class BayShift : Shift
 {
     // BayShift
-    public required Bay Bay { get; set; }
+    public Bay Bay { get; set; } = new();
     public long BayId { get; set; }
     
-    public required BayStaff BayStaff { get; set; }
+    public BayStaff BayStaff { get; set; } = new();
     public long BayStaffId { get; set; }
 }

@@ -9,12 +9,10 @@ public class BayShiftConfiguration : IEntityTypeConfiguration<BayShift>
     {
         builder.HasOne(x => x.Bay)
             .WithMany(x => x.Shifts)
-            .HasForeignKey(x => x.BayId)
-            .IsRequired();
-        
+            .HasForeignKey(x => x.BayId);
+
         builder.HasOne(x => x.BayStaff)
             .WithMany(x => x.Shifts)
-            .HasForeignKey(x => x.BayStaffId)
-            .IsRequired();
+            .HasForeignKey(x => x.BayStaffId);
     }
 }

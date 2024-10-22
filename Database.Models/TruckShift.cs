@@ -3,6 +3,8 @@ namespace Database.Models;
 public class TruckShift : Shift
 {
     // TruckShift
-    public required Truck Truck { get; set; }
-    public long TruckId { get; set; }
+    public required TruckDriver TruckDriver { get; set; }
+    public long TruckDriverId { get; set; }
+
+    public List<Trip> Trips { get; set; } = [];
 }

@@ -4,12 +4,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Database.Models.EntityConfiguration;
 
 public class AdminShiftConfiguration : IEntityTypeConfiguration<AdminShift>
-{
+{ 
     public void Configure(EntityTypeBuilder<AdminShift> builder)
     {
         builder.HasOne(x => x.AdminStaff)
             .WithMany(x => x.Shifts)
-            .HasForeignKey(x => x.AdminStaffId)    // .HasForeignKey(x => x.Id) // AdminShiftId
-            .IsRequired();
+            .HasForeignKey(x => x.AdminStaffId);
     }
 }

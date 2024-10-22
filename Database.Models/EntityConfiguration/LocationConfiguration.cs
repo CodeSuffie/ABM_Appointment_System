@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Database.Models.EntityConfiguration;
 
-public class ProductConfiguration : IEntityTypeConfiguration<Product>
+public class LocationConfiguration : IEntityTypeConfiguration<Location>
 {
-    public void Configure(EntityTypeBuilder<Product> builder)
+    public void Configure(EntityTypeBuilder<Location> builder)
     {
         
     }
