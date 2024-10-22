@@ -5,6 +5,7 @@ namespace Database.Models;
 public class Staff : IStaff
 {
     // IStaff
-    public int Id { get; set; }
+    public long Id { get; set; }
     public List<IShift> Shifts { get; set; } = [];
+    public List<long> ShiftIds { get; set; } = [];
 }

@@ -2,7 +2,7 @@ namespace Database.Models;
 
 public class Hub
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     // public string Name { get; set; } = "";
     public required HubYard HubYard { get; set; }
     public List<Shift> OperatingHours { get; set; } = [];

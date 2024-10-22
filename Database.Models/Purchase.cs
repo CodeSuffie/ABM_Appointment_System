@@ -2,6 +2,6 @@ namespace Database.Models;
 
 public class Purchase
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public List<Stock> Products { get; set; } = [];
 }

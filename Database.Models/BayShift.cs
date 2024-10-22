@@ -4,5 +4,8 @@ public class BayShift : Shift
 {
     // BayShift
     public required Bay Bay { get; set; }
-    public int BayId { get; set; }
+    public long BayId { get; set; }
+    
+    public required BayStaff BayStaff { get; set; }
+    public long BayStaffId { get; set; }
 }

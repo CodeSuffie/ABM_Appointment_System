@@ -5,7 +5,7 @@ namespace Database.Models;
 public class Work : IWork
 {
     // IWork
-    public int Id { get; set; }
+    public long Id { get; set; }
     public int StartTime { get; set; }
     public int Duration { get; set; }
 

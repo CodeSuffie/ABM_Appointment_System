@@ -1,8 +1,5 @@
-using Database.Models.Agents;
-using Database.Models.Agents.Staffs;
-using Database.Models.Units;
-using Database.Models.Units.Destinations;
-using Database.Models.Units.Shifts;
+using Database.Models;
+using Database.Models.EntityConfiguration;
 using Microsoft.EntityFrameworkCore;
 
 namespace TempWeb;
@@ -29,9 +26,8 @@ public class ModelDbContext : DbContext
     public DbSet<ParkingSpot> ParkingSpots { get; set; }
     public DbSet<Bay> Bays { get; set; }
     
-    public DbSet<Staff> Staffs { get; set; }
     public DbSet<TruckDriver> TruckDrivers { get; set; }
-    public DbSet<HubStaff> HubStaffs { get; set; }
+    public DbSet<AdminStaff> AdminStaffs { get; set; }
     public DbSet<BayStaff> BayStaffs { get; set; }
     
     public DbSet<Shift> Shifts { get; set; }
