@@ -4,11 +4,16 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>Database.Models.Units.Works</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Database.Abstractions.Units\Database.Abstractions.Units.csproj" />
+      <ProjectReference Include="..\Database.Models.Units.Destinations\Database.Models.Units.Destinations.csproj" />
+      <ProjectReference Include="..\Database.Models.Units\Database.Models.Units.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
     </ItemGroup>
 
 </Project>

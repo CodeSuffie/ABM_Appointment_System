@@ -1,6 +1,6 @@
 namespace Database.Abstractions.Units;
 
-public class Destination
+public interface IDestination
 {
     public int Id { get; set; }
     public int XLocation { get; set; }

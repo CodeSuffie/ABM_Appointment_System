@@ -1,6 +1,6 @@
 namespace Database.Models.Units.Destinations;
 
-public class HubYard : Destination
+public class Bay : Destination
 {
     
 }

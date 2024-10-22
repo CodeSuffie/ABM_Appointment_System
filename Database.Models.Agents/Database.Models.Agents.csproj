@@ -8,9 +8,13 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Database.Abstractions.Agents\Database.Abstractions.Agents.csproj" />
-      <ProjectReference Include="..\Database.Models.Units.BayWorks\Database.Models.Units.BayWorks.csproj" />
+      <ProjectReference Include="..\Database.Models.Agents.Staffs\Database.Models.Agents.Staffs.csproj" />
       <ProjectReference Include="..\Database.Models.Units.Destinations\Database.Models.Units.Destinations.csproj" />
       <ProjectReference Include="..\Database.Models.Units\Database.Models.Units.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
     </ItemGroup>
 
 </Project>

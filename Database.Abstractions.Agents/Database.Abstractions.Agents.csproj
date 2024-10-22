@@ -6,4 +6,13 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Database.Abstractions.Units\Database.Abstractions.Units.csproj" />
+      <ProjectReference Include="..\Database.Models.Units.Shifts\Database.Models.Units.Shifts.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+    </ItemGroup>
+
 </Project>
