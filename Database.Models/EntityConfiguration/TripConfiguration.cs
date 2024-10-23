@@ -8,24 +8,19 @@ public class TripConfiguration : IEntityTypeConfiguration<Trip>
     public void Configure(EntityTypeBuilder<Trip> builder)
     {
         builder.HasOne(x => x.TruckShift)
-            .WithMany(x => x.Trips)
-            .HasForeignKey(x => x.TruckShiftId);
-        
+            .WithMany();
+
         builder.HasOne(x => x.Truck)
-            .WithMany()
-            .HasForeignKey(x => x.TruckId);
+            .WithMany();
 
         builder.HasOne(x => x.CurrentDestination)
-            .WithOne()
-            .HasForeignKey<Trip>(x => x.LocationId);
-        
+            .WithOne();
+
         builder.HasOne(x => x.Load)
-            .WithOne()
-            .HasForeignKey<Trip>(x => x.LoadId);
-        
+            .WithOne();
+
         builder.HasOne(x => x.Work)
             .WithOne(x => x.Trip)
-            .HasForeignKey<Trip>(x => x.WorkId)
             .HasForeignKey<Work>(x => x.TripId);
     }
 }

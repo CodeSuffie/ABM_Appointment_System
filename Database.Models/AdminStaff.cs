@@ -6,7 +6,7 @@ public class AdminStaff : Staff
     public new List<AdminShift> Shifts { get; set; } = [];
     
     // AdminStaff
-    public required Hub Hub { get; set; }
+    public Hub Hub { get; set; } = new();
     public long HubId { get; set; }
     
     public Work? Work { get; set; }

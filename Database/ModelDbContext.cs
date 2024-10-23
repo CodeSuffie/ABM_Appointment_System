@@ -1,10 +1,11 @@
 using Database.Models;
 using Database.Models.EntityConfiguration;
 using Microsoft.EntityFrameworkCore;
+using Settings;
 
-namespace TempWeb;
+namespace Database;
 
-public class ModelDbContext : DbContext
+public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : DbContext(options)
 {
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Purchase> Purchases { get; set; }
@@ -36,6 +37,11 @@ public class ModelDbContext : DbContext
     public DbSet<BayShift> BayShifts { get; set; }
     
     public DbSet<Work> Works { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.UseSqlite(WebConfig.DbConnectionString);
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

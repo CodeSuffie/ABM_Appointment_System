@@ -3,6 +3,6 @@ namespace Database.Models;
 public class AdminShift : Shift
 {
     // AdminShift
-    public required AdminStaff AdminStaff { get; set; }
+    public AdminStaff AdminStaff { get; set; } = new();
     public long AdminStaffId { get; set; }
 }

@@ -2,6 +2,13 @@
 
 public static class ModelConfig
 {
+    // ModelConfig
+    public static readonly Random Random = new Random(2);
+
+    public const int MinutesPerHour = 60;
+    
+    public static TimeSpan ModelTime = TimeSpan.FromDays(7);
+    
     // AdminWork
     public const int AdminWorkTime = 9;
     

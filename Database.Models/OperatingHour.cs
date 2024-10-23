@@ -3,6 +3,6 @@ namespace Database.Models;
 public class OperatingHour : Shift
 {
     // OperatingHour
-    public required Hub Hub { get; set; }
+    public Hub Hub { get; set; } = new();
     public long HubId { get; set; }
 }
