@@ -9,9 +9,7 @@ namespace Services;
 
 public sealed class AdminStaffService(ModelDbContext context) : IAgentService<AdminStaff>
 {
-    private readonly ModelDbContext _context = context;
-
-    public async Task InitializeAgentShiftAsync(AdminStaff adminStaff, OperatingHour operatingHour, CancellationToken cancellationToken)
+    private static async Task InitializeAgentShiftAsync(AdminStaff adminStaff, OperatingHour operatingHour, CancellationToken cancellationToken)
     {
         if (operatingHour.Duration == null) return;
             
@@ -38,7 +36,7 @@ public sealed class AdminStaffService(ModelDbContext context) : IAgentService<Ad
         adminStaff.Shifts.Add(shift);
     }
 
-    public async Task InitializeAgentShiftsAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    private async Task InitializeAgentShiftsAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var operatingHours = context.OperatingHours.Where(
             x => x.HubId == adminStaff.Hub.Id
@@ -82,7 +80,7 @@ public sealed class AdminStaffService(ModelDbContext context) : IAgentService<Ad
 
     public async Task ExecuteStepAsync(CancellationToken cancellationToken)
     {
-        var adminStaffs = await _context.AdminStaffs.ToListAsync(cancellationToken);
+        var adminStaffs = await context.AdminStaffs.ToListAsync(cancellationToken);
         foreach (var adminStaff in adminStaffs)
         {
             await ExecuteStepAsync(adminStaff, cancellationToken);

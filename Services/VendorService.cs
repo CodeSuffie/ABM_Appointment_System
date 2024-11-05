@@ -8,9 +8,7 @@ namespace Services;
 
 public sealed class VendorService(ModelDbContext context) : IAgentService<Vendor>
 {
-    private readonly ModelDbContext _context = context;
-    
-    public void InitializeAgent()
+    public async Task InitializeAgentAsync(CancellationToken cancellationToken)
     {
         var truckCompanies = context.TruckCompanies.ToArray();
 
@@ -34,7 +32,7 @@ public sealed class VendorService(ModelDbContext context) : IAgentService<Vendor
     {
         for (var i = 0; i < AgentConfig.VendorCount; i++)
         {
-            InitializeAgent();
+            await InitializeAgentAsync(cancellationToken);
         }
         
         await context.SaveChangesAsync(cancellationToken);
@@ -47,7 +45,7 @@ public sealed class VendorService(ModelDbContext context) : IAgentService<Vendor
 
     public async Task ExecuteStepAsync(CancellationToken cancellationToken)
     {
-        var vendors = await _context.Vendors.ToListAsync(cancellationToken);
+        var vendors = await context.Vendors.ToListAsync(cancellationToken);
         foreach (var vendor in vendors)
         {
             await ExecuteStepAsync(vendor, cancellationToken);

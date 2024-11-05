@@ -8,8 +8,6 @@ namespace Services;
 
 public sealed class BayService(ModelDbContext context) : IAgentService<Bay>
 {
-    private readonly ModelDbContext _context = context;
-
     public async Task InitializeAgentAsync(CancellationToken cancellationToken)
     {
         var hubs = context.Hubs.ToList();
@@ -43,7 +41,7 @@ public sealed class BayService(ModelDbContext context) : IAgentService<Bay>
 
     public async Task ExecuteStepAsync(CancellationToken cancellationToken)
     {
-        var bays = await _context.Bays.ToListAsync(cancellationToken);
+        var bays = await context.Bays.ToListAsync(cancellationToken);
         foreach (var bay in bays)
         {
             await ExecuteStepAsync(bay, cancellationToken);

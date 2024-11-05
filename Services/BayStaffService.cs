@@ -8,9 +8,7 @@ namespace Services;
 
 public sealed class BayStaffService(ModelDbContext context) : IAgentService<BayStaff>
 {
-    private readonly ModelDbContext _context = context;
-
-    public async Task InitializeAgentShiftAsync(BayStaff bayStaff, OperatingHour operatingHour, CancellationToken cancellationToken)
+    private async Task InitializeAgentShiftAsync(BayStaff bayStaff, OperatingHour operatingHour, CancellationToken cancellationToken)
     {
         if (operatingHour.Duration == null) return;
             
@@ -44,7 +42,7 @@ public sealed class BayStaffService(ModelDbContext context) : IAgentService<BayS
         bayStaff.Shifts.Add(shift);
     }
 
-    public async Task InitializeAgentShiftsAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    private async Task InitializeAgentShiftsAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var operatingHours = context.OperatingHours.Where(
             x => x.HubId == bayStaff.Hub.Id
@@ -88,7 +86,7 @@ public sealed class BayStaffService(ModelDbContext context) : IAgentService<BayS
 
     public async Task ExecuteStepAsync(CancellationToken cancellationToken)
     {
-        var bayStaffs = await _context.BayStaffs.ToListAsync(cancellationToken);
+        var bayStaffs = await context.BayStaffs.ToListAsync(cancellationToken);
         foreach (var bayStaff in bayStaffs)
         {
             await ExecuteStepAsync(bayStaff, cancellationToken);

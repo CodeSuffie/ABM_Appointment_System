@@ -8,9 +8,7 @@ namespace Services;
 
 public sealed class HubService(ModelDbContext context) : IAgentService<Hub>
 {
-    private readonly ModelDbContext _context = context;
-    
-    public async Task InitializeAgentOperatingHourAsync(Hub hub, TimeSpan startTime, CancellationToken cancellationToken)
+    private static async Task InitializeAgentOperatingHourAsync(Hub hub, TimeSpan startTime, CancellationToken cancellationToken)
     {
         if (ModelConfig.Random.NextDouble() >
             AgentConfig.HubAverageOperatingDays) return;
@@ -38,15 +36,15 @@ public sealed class HubService(ModelDbContext context) : IAgentService<Hub>
         hub.OperatingHours.Add(operatingHour);
     }
 
-    public async Task InitializeAgentOperatingHoursAsync(Hub hub, CancellationToken cancellationToken)
+    private static async Task InitializeAgentOperatingHoursAsync(Hub hub, CancellationToken cancellationToken)
     {
         for (var i = 0; i < ModelConfig.ModelTime.Days; i++)
         {
             await InitializeAgentOperatingHourAsync(hub, TimeSpan.FromDays(i), cancellationToken);
         }
     }
-    
-    public async Task InitializeAgentParkingSpotAsync(Hub hub, CancellationToken cancellationToken)
+
+    private static async Task InitializeAgentParkingSpotAsync(Hub hub, CancellationToken cancellationToken)
     {
         var parkingSpot = new ParkingSpot {
             Hub = hub
@@ -57,7 +55,7 @@ public sealed class HubService(ModelDbContext context) : IAgentService<Hub>
         hub.ParkingSpots.Add(parkingSpot);
     }
 
-    public async Task InitializeAgentParkingSpotsAsync(Hub hub, CancellationToken cancellationToken)
+    private static async Task InitializeAgentParkingSpotsAsync(Hub hub, CancellationToken cancellationToken)
     {
         for (var i = 0; i < AgentConfig.ParkingSpotCountPerHub; i++)
         {
@@ -94,7 +92,7 @@ public sealed class HubService(ModelDbContext context) : IAgentService<Hub>
 
     public async Task ExecuteStepAsync(CancellationToken cancellationToken)
     {
-        var hubs = await _context.Hubs.ToListAsync(cancellationToken);
+        var hubs = await context.Hubs.ToListAsync(cancellationToken);
         foreach (var hub in hubs)
         {
             await ExecuteStepAsync(hub, cancellationToken);

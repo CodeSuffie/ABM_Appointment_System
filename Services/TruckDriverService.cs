@@ -9,9 +9,7 @@ namespace Services;
 
 public sealed class TruckDriverService(ModelDbContext context) : IAgentService<TruckDriver>
 {
-    private readonly ModelDbContext _context = context;
-    
-    public async Task InitializeAgentShiftAsync(TruckDriver truckDriver, TimeSpan startTime, CancellationToken cancellationToken)
+    private static async Task InitializeAgentShiftAsync(TruckDriver truckDriver, TimeSpan startTime, CancellationToken cancellationToken)
     {
         if (ModelConfig.Random.NextDouble() >
             AgentConfig.TruckDriverAverageWorkDays) return;
@@ -37,7 +35,7 @@ public sealed class TruckDriverService(ModelDbContext context) : IAgentService<T
         truckDriver.Shifts.Add(shift);
     }
 
-    public async Task InitializeAgentShiftsAsync(TruckDriver truckDriver, CancellationToken cancellationToken)
+    private static async Task InitializeAgentShiftsAsync(TruckDriver truckDriver, CancellationToken cancellationToken)
     {
         for (var i = 0; i < ModelConfig.ModelTime.Days; i++)
         {
@@ -77,7 +75,7 @@ public sealed class TruckDriverService(ModelDbContext context) : IAgentService<T
 
     public async Task ExecuteStepAsync(CancellationToken cancellationToken)
     {
-        var truckDrivers = await _context.TruckDrivers.ToListAsync(cancellationToken);
+        var truckDrivers = await context.TruckDrivers.ToListAsync(cancellationToken);
         foreach (var truckDriver in truckDrivers)
         {
             await ExecuteStepAsync(truckDriver, cancellationToken);

@@ -8,9 +8,7 @@ namespace Services;
 
 public sealed class TruckCompanyService(ModelDbContext context) : IAgentService<TruckCompany>
 {
-    private readonly ModelDbContext _context = context;
-
-    public async Task InitializeAgentTrucksAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    private static async Task InitializeAgentTrucksAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
         for (var i = 0; i < AgentConfig.TruckCountPerTruckCompany; i++)
         {
@@ -53,7 +51,7 @@ public sealed class TruckCompanyService(ModelDbContext context) : IAgentService<
 
     public async Task ExecuteStepAsync(CancellationToken cancellationToken)
     {
-        var truckCompanies = await _context.TruckCompanies.ToListAsync(cancellationToken);
+        var truckCompanies = await context.TruckCompanies.ToListAsync(cancellationToken);
         foreach (var truckCompany in truckCompanies)
         {
             await ExecuteStepAsync(truckCompany, cancellationToken);

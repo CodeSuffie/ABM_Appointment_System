@@ -2,6 +2,7 @@ namespace Services.Abstractions;
 
 public interface IAgentService
 {
+    Task InitializeAgentAsync(CancellationToken cancellationToken);
     Task InitializeAgentsAsync(CancellationToken cancellationToken);
     Task ExecuteStepAsync(CancellationToken cancellationToken);
 }

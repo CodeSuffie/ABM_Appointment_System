@@ -8,13 +8,16 @@ namespace Services;
 
 public sealed class CustomerService(ModelDbContext context) : IAgentService<Customer>
 {
-    private readonly ModelDbContext _context = context;
-
+    public async Task InitializeAgentAsync(CancellationToken cancellationToken)
+    {
+        context.Customers.Add(new Customer());
+    }
+    
     public async Task InitializeAgentsAsync(CancellationToken cancellationToken)
     {
         for (var i = 0; i < AgentConfig.CustomerCount; i++)
         {
-            context.Customers.Add(new Customer());
+            await InitializeAgentAsync(cancellationToken);
         }
         
         await context.SaveChangesAsync(cancellationToken);
@@ -27,7 +30,7 @@ public sealed class CustomerService(ModelDbContext context) : IAgentService<Cust
     
     public async Task ExecuteStepAsync(CancellationToken cancellationToken)
     {
-        var customers = await _context.Customers.ToListAsync(cancellationToken);
+        var customers = await context.Customers.ToListAsync(cancellationToken);
         foreach (var customer in customers)
         {
             await ExecuteStepAsync(customer, cancellationToken);
