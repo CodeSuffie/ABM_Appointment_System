@@ -8,69 +8,14 @@ namespace Services;
 
 public sealed class HubService(ModelDbContext context) : IAgentService<Hub>
 {
-    private static async Task InitializeAgentOperatingHourAsync(Hub hub, TimeSpan startTime, CancellationToken cancellationToken)
-    {
-        if (ModelConfig.Random.NextDouble() >
-            AgentConfig.HubAverageOperatingDays) return;
-            
-        var maxShiftStart = TimeSpan.FromDays(1) - 
-                            AgentConfig.OperatingHourAverageLength;
-            
-        if (maxShiftStart < TimeSpan.Zero) return;      // Hub Operating Hours are longer than 1 day?
-            
-        var operatingHourHour = ModelConfig.Random.Next(maxShiftStart.Hours);
-        var operatingHourMinutes = operatingHourHour == maxShiftStart.Hours ?
-            ModelConfig.Random.Next(maxShiftStart.Minutes) :
-            ModelConfig.Random.Next(ModelConfig.MinutesPerHour);
-
-        var operatingHour = new OperatingHour {
-            Hub = hub,
-            StartTime = startTime + new TimeSpan(
-                operatingHourHour,
-                operatingHourMinutes,
-                0
-            ),
-            Duration = AgentConfig.OperatingHourAverageLength,
-        };
-            
-        hub.OperatingHours.Add(operatingHour);
-    }
-
-    private static async Task InitializeAgentOperatingHoursAsync(Hub hub, CancellationToken cancellationToken)
-    {
-        for (var i = 0; i < ModelConfig.ModelTime.Days; i++)
-        {
-            await InitializeAgentOperatingHourAsync(hub, TimeSpan.FromDays(i), cancellationToken);
-        }
-    }
-
-    private static async Task InitializeAgentParkingSpotAsync(Hub hub, CancellationToken cancellationToken)
-    {
-        var parkingSpot = new ParkingSpot {
-            Hub = hub
-        };
-        
-        // TODO: Add Location
-            
-        hub.ParkingSpots.Add(parkingSpot);
-    }
-
-    private static async Task InitializeAgentParkingSpotsAsync(Hub hub, CancellationToken cancellationToken)
-    {
-        for (var i = 0; i < AgentConfig.ParkingSpotCountPerHub; i++)
-        {
-            await InitializeAgentParkingSpotAsync(hub, cancellationToken);
-        }
-    }
-    
     public async Task InitializeAgentAsync(CancellationToken cancellationToken)
     {
         var hub = new Hub();
         
         // TODO: Add Location
         
-        await InitializeAgentOperatingHoursAsync(hub, cancellationToken);
-        await InitializeAgentParkingSpotsAsync(hub, cancellationToken);
+        await OperatingHourService.InitializeObjectsAsync(hub, cancellationToken);
+        await ParkingSpotService.InitializeObjectsAsync(hub, cancellationToken);
         
         context.Hubs.Add(hub);
     }

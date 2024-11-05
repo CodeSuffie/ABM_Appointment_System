@@ -8,71 +8,6 @@ namespace Services;
 
 public sealed class BayStaffService(ModelDbContext context) : IAgentService<BayStaff>
 {
-    private static double GetBayStaffWorkChance(BayStaff bayStaff, CancellationToken cancellationToken)
-    {
-        return AgentConfig.BayStaffAverageWorkDays / AgentConfig.HubAverageOperatingDays;
-    }
-
-    private Bay GetBay(BayStaff bayStaff, CancellationToken cancellationToken)
-    {
-        var bays = context.Bays.Where(
-            x => x.HubId == bayStaff.Hub.Id
-        ).ToList();
-        
-        var bay = bays[ModelConfig.Random.Next(bays.Count)];
-        return bay;
-    }
-    
-    private BayShift? GetNewBayShift(BayStaff bayStaff, OperatingHour operatingHour, CancellationToken cancellationToken)
-    {
-        var maxShiftStart = operatingHour.Duration!.Value - 
-                            AgentConfig.BayShiftAverageLength;
-            
-        if (maxShiftStart < TimeSpan.Zero) return null;
-
-        var bay = GetBay(bayStaff, cancellationToken);
-            
-        var shiftHour = ModelConfig.Random.Next(maxShiftStart.Hours);
-        var shiftMinutes = shiftHour == maxShiftStart.Hours ?
-            ModelConfig.Random.Next(maxShiftStart.Minutes) :
-            ModelConfig.Random.Next(ModelConfig.MinutesPerHour);
-        
-        var bayShift = new BayShift {
-            BayStaff = bayStaff,
-            Bay = bay,
-            StartTime = operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0),
-            Duration = AgentConfig.BayShiftAverageLength,
-        };
-
-        return bayShift;
-    }
-    
-    private async Task InitializeAgentShiftAsync(BayStaff bayStaff, OperatingHour operatingHour, CancellationToken cancellationToken)
-    {
-        if (operatingHour.Duration == null) return;
-            
-        if (ModelConfig.Random.NextDouble() >
-            GetBayStaffWorkChance(bayStaff, cancellationToken)) return;
-            
-        var bayShift = GetNewBayShift(bayStaff, operatingHour, cancellationToken);
-        if (bayShift != null)
-        {
-            bayStaff.Shifts.Add(bayShift);
-        }
-    }
-
-    private async Task InitializeAgentShiftsAsync(BayStaff bayStaff, CancellationToken cancellationToken)
-    {
-        var operatingHours = context.OperatingHours.Where(
-            x => x.HubId == bayStaff.Hub.Id
-        );
-        
-        foreach (var operatingHour in operatingHours)
-        {
-            await InitializeAgentShiftAsync(bayStaff, operatingHour, cancellationToken);
-        }
-    }
-
     public async Task InitializeAgentAsync(CancellationToken cancellationToken)
     {
         var hubs = context.Hubs.ToList();
@@ -83,7 +18,15 @@ public sealed class BayStaffService(ModelDbContext context) : IAgentService<BayS
             Hub = hub
         };
         
-        await InitializeAgentShiftsAsync(bayStaff, cancellationToken);
+        var operatingHours = context.OperatingHours.Where(
+            x => x.HubId == bayStaff.Hub.Id
+        ).ToList();
+        
+        var bays = context.Bays.Where(
+            x => x.HubId == bayStaff.Hub.Id
+        ).ToList();
+        
+        await BayShiftService.InitializeObjectsAsync(bayStaff, operatingHours, bays, cancellationToken);
         
         context.BayStaffs.Add(bayStaff);
     }
