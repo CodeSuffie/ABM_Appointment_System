@@ -8,23 +8,29 @@ namespace Services;
 
 public sealed class BayService(ModelDbContext context)
 {
-    public async Task InitializeObjectAsync(Hub hub, CancellationToken cancellationToken)
+    public async Task InitializeObjectAsync(Hub hub, int i, CancellationToken cancellationToken)
     {
-        var bay = new Bay
+        var location = new Location
         {
-            Hub = hub
+            LocationType = LocationType.BaySpot,
+            XLocation = AgentConfig.BayLocations[i, 0],
+            YLocation = AgentConfig.BayLocations[i, 1],
         };
         
-        // TODO: Add Location
+        var bay = new Bay
+        {
+            Hub = hub,
+            Location = location
+        };
         
         hub.Bays.Add(bay);
     }
 
     public async Task InitializeObjectsAsync(Hub hub, CancellationToken cancellationToken)
     {
-        for (var i = 0; i < AgentConfig.BayCount; i++)
+        for (var i = 0; i < AgentConfig.BayLocations.Length; i++)
         {
-            await InitializeObjectAsync(hub, cancellationToken);
+            await InitializeObjectAsync(hub, i, cancellationToken);
         }
     }
 }

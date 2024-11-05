@@ -6,7 +6,10 @@ using Settings;
 
 namespace Services;
 
-public sealed class VendorService(ModelDbContext context) : IAgentService<Vendor>
+public sealed class VendorService(
+    ModelDbContext context,
+    StockService stockService
+    ) : IAgentService<Vendor>
 {
     public async Task InitializeAgentAsync(CancellationToken cancellationToken)
     {
@@ -23,7 +26,7 @@ public sealed class VendorService(ModelDbContext context) : IAgentService<Vendor
             TruckCompanies = vendorTruckCompanies.ToList()
         };
         
-        // TODO: Add Stocks
+        await stockService.InitializeObjectsAsync(vendor, cancellationToken);
         
         context.Vendors.Add(vendor);
     }

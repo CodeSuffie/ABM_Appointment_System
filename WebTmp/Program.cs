@@ -22,6 +22,8 @@ hostBuilder.Services.AddScoped<TruckShiftService>();
 hostBuilder.Services.AddScoped<OperatingHourService>();
 hostBuilder.Services.AddScoped<ParkingSpotService>();
 hostBuilder.Services.AddScoped<BayService>();
+hostBuilder.Services.AddScoped<StockService>();
+hostBuilder.Services.AddScoped<ProductService>();
 
 hostBuilder.Services.AddHostedService<ModelStepper>();
 

@@ -20,4 +20,10 @@ public static class ModelConfig
     
     // BayWork
     public const int FetchWorkTime = 9;
+    
+    // Location
+    public const int MaxX = 200;
+    public const int MaxY = 200;
+    
+    public const int MinDistanceBetween = 9;
 }

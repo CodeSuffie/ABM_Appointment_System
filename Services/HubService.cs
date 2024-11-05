@@ -9,6 +9,7 @@ namespace Services;
 public sealed class HubService(
     ModelDbContext context, 
     OperatingHourService operatingHourService, 
+    LocationService locationService,
     ParkingSpotService parkingSpotService,
     BayService bayService
     ) : IAgentService<Hub>
@@ -17,7 +18,7 @@ public sealed class HubService(
     {
         var hub = new Hub();
         
-        // TODO: Add Location
+        await locationService.InitializeObjectAsync(hub, cancellationToken);
         
         await operatingHourService.InitializeObjectsAsync(hub, cancellationToken);
         await parkingSpotService.InitializeObjectsAsync(hub, cancellationToken);

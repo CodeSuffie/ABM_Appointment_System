@@ -18,8 +18,6 @@ public sealed class TruckShiftService(ModelDbContext context)
         var shiftMinutes = shiftHour == maxShiftStart.Hours
             ? ModelConfig.Random.Next(maxShiftStart.Minutes)
             : ModelConfig.Random.Next(ModelConfig.MinutesPerHour);
-        
-        // TODO: Add Trips
 
         var truckShift = new TruckShift {
             TruckDriver = truckDriver,

@@ -10,14 +10,11 @@ public class TripConfiguration : IEntityTypeConfiguration<Trip>
         builder.HasOne(x => x.TruckShift)
             .WithMany();
 
-        builder.HasOne(x => x.Truck)
-            .WithMany();
-
         builder.HasOne(x => x.CurrentDestination)
             .WithOne();
 
-        builder.HasOne(x => x.Load)
-            .WithOne();
+        builder.HasOne(x => x.Truck)
+            .WithMany();
 
         builder.HasOne(x => x.Work)
             .WithOne(x => x.Trip)

@@ -6,30 +6,20 @@ using Settings;
 
 namespace Services;
 
-public sealed class TruckCompanyService(ModelDbContext context) : IAgentService<TruckCompany>
+public sealed class TruckCompanyService(
+    ModelDbContext context,
+    LocationService locationService,
+    TruckService truckService
+    ) : IAgentService<TruckCompany>
 {
-    private static async Task InitializeAgentTrucksAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
-    {
-        for (var i = 0; i < AgentConfig.TruckCountPerTruckCompany; i++)
-        {
-            truckCompany.Trucks.Add(new Truck
-            {
-                TruckCompany = truckCompany,
-                Capacity = AgentConfig.TruckAverageCapacity
-            });
-        }
-    }
+    
     
     public async Task InitializeAgentAsync(CancellationToken cancellationToken)
     {
-        var hubs = context.Hubs.ToList();
-        var hub = hubs[ModelConfig.Random.Next(hubs.Count)];
-
         var truckCompany = new TruckCompany();
         
-        // TODO: Add Location
-        
-        await InitializeAgentTrucksAsync(truckCompany, cancellationToken);
+        await locationService.InitializeObjectAsync(truckCompany, cancellationToken);
+        await truckService.InitializeObjectsAsync(truckCompany, cancellationToken);
         
         context.TruckCompanies.Add(truckCompany);
     }
