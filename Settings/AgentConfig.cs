@@ -39,7 +39,7 @@ public static class AgentConfig
     
     // Hub
     public const int HubCount = 9;
-    public const int HubAverageOperatingDays = 1;
+    public const double HubAverageOperatingDays = 1;
     public const int ParkingSpotCountPerHub = 9;
     
     // OperatingHour

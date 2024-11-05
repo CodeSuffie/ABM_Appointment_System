@@ -9,31 +9,45 @@ namespace Services;
 
 public sealed class AdminStaffService(ModelDbContext context) : IAgentService<AdminStaff>
 {
-    private static async Task InitializeAgentShiftAsync(AdminStaff adminStaff, OperatingHour operatingHour, CancellationToken cancellationToken)
+    private static double GetAdminStaffWorkChance(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        if (operatingHour.Duration == null) return;
-            
-        if (ModelConfig.Random.NextDouble() >
-            AgentConfig.AdminStaffAverageWorkDays) return;
-        // TODO: So the Work Day amount is depended on the Operating Day amount for their Hub???
-            
-        var maxShiftStart = operatingHour.Duration.Value - 
+        return AgentConfig.AdminStaffAverageWorkDays / AgentConfig.HubAverageOperatingDays;
+    }
+
+    private static AdminShift? GetNewAdminShift(AdminStaff adminStaff, OperatingHour operatingHour, CancellationToken cancellationToken)
+    {
+        var maxShiftStart = operatingHour.Duration!.Value - 
                             AgentConfig.AdminShiftAverageLength;
             
-        if (maxShiftStart < TimeSpan.Zero) return;
+        if (maxShiftStart < TimeSpan.Zero) return null;
             
         var shiftHour = ModelConfig.Random.Next(maxShiftStart.Hours);
         var shiftMinutes = shiftHour == maxShiftStart.Hours ?
             ModelConfig.Random.Next(maxShiftStart.Minutes) :
             ModelConfig.Random.Next(ModelConfig.MinutesPerHour);
 
-        var shift = new AdminShift {
+        var adminShift = new AdminShift {
             AdminStaff = adminStaff,
             StartTime = operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0),
             Duration = AgentConfig.AdminShiftAverageLength
         };
+
+        return adminShift;
+    }
+    
+    private static async Task InitializeAgentShiftAsync(AdminStaff adminStaff, OperatingHour operatingHour, CancellationToken cancellationToken)
+    {
+        if (operatingHour.Duration == null) return;
             
-        adminStaff.Shifts.Add(shift);
+        if (ModelConfig.Random.NextDouble() >
+            GetAdminStaffWorkChance(adminStaff, cancellationToken)) return;
+        // TODO: So the Work Day amount is depended on the Operating Day amount for their Hub???
+
+        var adminShift = GetNewAdminShift(adminStaff, operatingHour, cancellationToken);
+        if (adminShift != null)
+        {
+            adminStaff.Shifts.Add(adminShift);
+        }
     }
 
     private async Task InitializeAgentShiftsAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
