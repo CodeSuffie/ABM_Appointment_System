@@ -1,9 +1,10 @@
+using Database;
 using Database.Models;
 using Settings;
 
 namespace Services;
 
-public static class OperatingHourService
+public sealed class OperatingHourService(ModelDbContext context)
 {
     private static OperatingHour? GetNewObject(Hub hub, TimeSpan startTime, CancellationToken cancellationToken)
     {
@@ -42,7 +43,7 @@ public static class OperatingHourService
         }
     }
 
-    public static async Task InitializeObjectsAsync(Hub hub, CancellationToken cancellationToken)
+    public async Task InitializeObjectsAsync(Hub hub, CancellationToken cancellationToken)
     {
         for (var i = 0; i < ModelConfig.ModelTime.Days; i++)
         {

@@ -5,7 +5,7 @@ using Settings;
 
 namespace Services;
 
-public static class TruckShiftService
+public sealed class TruckShiftService(ModelDbContext context)
 {
     private static TruckShift? GetNewObject(TruckDriver truckDriver, TimeSpan startTime, CancellationToken cancellationToken)
     {
@@ -42,7 +42,7 @@ public static class TruckShiftService
         }
     }
 
-    public static async Task InitializeObjectsAsync(TruckDriver truckDriver, CancellationToken cancellationToken)
+    public async Task InitializeObjectsAsync(TruckDriver truckDriver, CancellationToken cancellationToken)
     {
         for (var i = 0; i < ModelConfig.ModelTime.Days; i++)
         {

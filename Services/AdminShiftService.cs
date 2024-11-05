@@ -4,7 +4,7 @@ using Settings;
 
 namespace Services;
 
-public static class AdminShiftService
+public sealed class AdminShiftService(ModelDbContext context)
 {
     private static double GetAdminStaffWorkChance(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
@@ -46,8 +46,12 @@ public static class AdminShiftService
         }
     }
 
-    public static async Task InitializeObjectsAsync(AdminStaff adminStaff, List<OperatingHour> operatingHours, CancellationToken cancellationToken)
+    public async Task InitializeObjectsAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
+        var operatingHours = context.OperatingHours.Where(
+            x => x.HubId == adminStaff.Hub.Id
+        ).ToList();
+        
         foreach (var operatingHour in operatingHours)
         {
             await InitializeObjectAsync(adminStaff, operatingHour, cancellationToken);

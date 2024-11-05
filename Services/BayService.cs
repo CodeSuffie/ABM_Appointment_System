@@ -6,45 +6,25 @@ using Settings;
 
 namespace Services;
 
-public sealed class BayService(ModelDbContext context) : IAgentService<Bay>
+public sealed class BayService(ModelDbContext context)
 {
-    public async Task InitializeAgentAsync(CancellationToken cancellationToken)
+    public async Task InitializeObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
-        var hubs = context.Hubs.ToList();
-        var hub = hubs[ModelConfig.Random.Next(hubs.Count)];
-
         var bay = new Bay
         {
             Hub = hub
         };
         
         // TODO: Add Location
-        // TODO: Add AvailableLoads
         
-        context.Bays.Add(bay);
+        hub.Bays.Add(bay);
     }
 
-    public async Task InitializeAgentsAsync(CancellationToken cancellationToken)
+    public async Task InitializeObjectsAsync(Hub hub, CancellationToken cancellationToken)
     {
         for (var i = 0; i < AgentConfig.BayCount; i++)
         {
-            await InitializeAgentAsync(cancellationToken);
-        }
-        
-        await context.SaveChangesAsync(cancellationToken);
-    }
-    
-    public async Task ExecuteStepAsync(Bay bay, CancellationToken cancellationToken)
-    {
-        // TODO: Do stuff
-    }
-
-    public async Task ExecuteStepAsync(CancellationToken cancellationToken)
-    {
-        var bays = await context.Bays.ToListAsync(cancellationToken);
-        foreach (var bay in bays)
-        {
-            await ExecuteStepAsync(bay, cancellationToken);
+            await InitializeObjectAsync(hub, cancellationToken);
         }
     }
 }

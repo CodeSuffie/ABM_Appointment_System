@@ -6,7 +6,12 @@ using Settings;
 
 namespace Services;
 
-public sealed class HubService(ModelDbContext context) : IAgentService<Hub>
+public sealed class HubService(
+    ModelDbContext context, 
+    OperatingHourService operatingHourService, 
+    ParkingSpotService parkingSpotService,
+    BayService bayService
+    ) : IAgentService<Hub>
 {
     public async Task InitializeAgentAsync(CancellationToken cancellationToken)
     {
@@ -14,8 +19,9 @@ public sealed class HubService(ModelDbContext context) : IAgentService<Hub>
         
         // TODO: Add Location
         
-        await OperatingHourService.InitializeObjectsAsync(hub, cancellationToken);
-        await ParkingSpotService.InitializeObjectsAsync(hub, cancellationToken);
+        await operatingHourService.InitializeObjectsAsync(hub, cancellationToken);
+        await parkingSpotService.InitializeObjectsAsync(hub, cancellationToken);
+        await bayService.InitializeObjectsAsync(hub, cancellationToken);
         
         context.Hubs.Add(hub);
     }

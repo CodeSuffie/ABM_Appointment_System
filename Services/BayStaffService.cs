@@ -6,7 +6,10 @@ using Settings;
 
 namespace Services;
 
-public sealed class BayStaffService(ModelDbContext context) : IAgentService<BayStaff>
+public sealed class BayStaffService(
+    ModelDbContext context, 
+    BayShiftService bayShiftService
+    ) : IAgentService<BayStaff>
 {
     public async Task InitializeAgentAsync(CancellationToken cancellationToken)
     {
@@ -18,15 +21,7 @@ public sealed class BayStaffService(ModelDbContext context) : IAgentService<BayS
             Hub = hub
         };
         
-        var operatingHours = context.OperatingHours.Where(
-            x => x.HubId == bayStaff.Hub.Id
-        ).ToList();
-        
-        var bays = context.Bays.Where(
-            x => x.HubId == bayStaff.Hub.Id
-        ).ToList();
-        
-        await BayShiftService.InitializeObjectsAsync(bayStaff, operatingHours, bays, cancellationToken);
+        await bayShiftService.InitializeObjectsAsync(bayStaff, cancellationToken);
         
         context.BayStaffs.Add(bayStaff);
     }

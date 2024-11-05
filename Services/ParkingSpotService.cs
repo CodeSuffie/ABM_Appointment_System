@@ -1,9 +1,10 @@
+using Database;
 using Database.Models;
 using Settings;
 
 namespace Services;
 
-public static class ParkingSpotService
+public sealed class ParkingSpotService(ModelDbContext context)
 {
     public static async Task InitializeObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
@@ -16,7 +17,7 @@ public static class ParkingSpotService
         hub.ParkingSpots.Add(parkingSpot);
     }
 
-    public static async Task InitializeObjectsAsync(Hub hub, CancellationToken cancellationToken)
+    public async Task InitializeObjectsAsync(Hub hub, CancellationToken cancellationToken)
     {
         for (var i = 0; i < AgentConfig.ParkingSpotCountPerHub; i++)
         {

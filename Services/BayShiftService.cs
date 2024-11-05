@@ -1,9 +1,10 @@
+using Database;
 using Database.Models;
 using Settings;
 
 namespace Services;
 
-public static class BayShiftService
+public sealed class BayShiftService(ModelDbContext context)
 {
     private static double GetBayStaffWorkChance(BayStaff bayStaff, CancellationToken cancellationToken)
     {
@@ -48,8 +49,16 @@ public static class BayShiftService
         }
     }
 
-    public static async Task InitializeObjectsAsync(BayStaff bayStaff, List<OperatingHour> operatingHours, List<Bay> bays, CancellationToken cancellationToken)
+    public async Task InitializeObjectsAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
+        var operatingHours = context.OperatingHours.Where(
+            x => x.HubId == bayStaff.Hub.Id
+        ).ToList();
+        
+        var bays = context.Bays.Where(
+            x => x.HubId == bayStaff.Hub.Id
+        ).ToList();
+        
         foreach (var operatingHour in operatingHours)
         {
             await InitializeObjectAsync(bayStaff, operatingHour, bays, cancellationToken);

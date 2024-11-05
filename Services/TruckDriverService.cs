@@ -7,7 +7,10 @@ using Settings;
 
 namespace Services;
 
-public sealed class TruckDriverService(ModelDbContext context) : IAgentService<TruckDriver>
+public sealed class TruckDriverService(
+    ModelDbContext context, 
+    TruckShiftService truckShiftService
+    ) : IAgentService<TruckDriver>
 {
     public async Task InitializeAgentAsync(CancellationToken cancellationToken)
     {
@@ -19,7 +22,7 @@ public sealed class TruckDriverService(ModelDbContext context) : IAgentService<T
             TruckCompany = truckCompany
         };
         
-        await TruckShiftService.InitializeObjectsAsync(truckDriver, cancellationToken);
+        await truckShiftService.InitializeObjectsAsync(truckDriver, cancellationToken);
         
         context.TruckDrivers.Add(truckDriver);
     }
