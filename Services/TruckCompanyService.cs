@@ -1,6 +1,5 @@
 using Database;
 using Database.Models;
-using Microsoft.EntityFrameworkCore;
 using Services.Abstractions;
 using Settings;
 
@@ -8,27 +7,25 @@ namespace Services;
 
 public sealed class TruckCompanyService(
     ModelDbContext context,
-    LocationService locationService,
-    TruckService truckService
-    ) : IAgentService<TruckCompany>
+    LocationService locationService
+    ) : IInitializationService, IStepperService<TruckCompany>
 {
-    
-    
-    public async Task InitializeAgentAsync(CancellationToken cancellationToken)
+    public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var truckCompany = new TruckCompany();
         
         await locationService.InitializeObjectAsync(truckCompany, cancellationToken);
-        await truckService.InitializeObjectsAsync(truckCompany, cancellationToken);
+        // Initially no Trips are created
         
-        context.TruckCompanies.Add(truckCompany);
+        context.TruckCompanies
+            .Add(truckCompany);
     }
 
-    public async Task InitializeAgentsAsync(CancellationToken cancellationToken)
+    public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
         for (var i = 0; i < AgentConfig.TruckCompanyCount; i++)
         {
-            await InitializeAgentAsync(cancellationToken);
+            await InitializeObjectAsync(cancellationToken);
         }
         
         await context.SaveChangesAsync(cancellationToken);
@@ -36,13 +33,17 @@ public sealed class TruckCompanyService(
     
     public async Task ExecuteStepAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
+        throw new NotImplementedException();
         // TODO: Do stuff
     }
 
     public async Task ExecuteStepAsync(CancellationToken cancellationToken)
     {
-        var truckCompanies = await context.TruckCompanies.ToListAsync(cancellationToken);
-        foreach (var truckCompany in truckCompanies)
+        var truckCompanies = context.TruckCompanies
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+        
+        await foreach (var truckCompany in truckCompanies)
         {
             await ExecuteStepAsync(truckCompany, cancellationToken);
         }

@@ -1,13 +1,10 @@
+using Database.Abstractions;
+
 namespace Database.Models;
 
-public class Hub
+public class Hub : Location
 {
-    public long Id { get; set; }
     // public string Name { get; set; } = "";
-
-    public Location Location { get; set; } = new();
-    public long LocationId { get; set; }
-    
     public List<OperatingHour> OperatingHours { get; set; } = [];
     
     public List<AdminStaff> AdminStaffs { get; set; } = [];

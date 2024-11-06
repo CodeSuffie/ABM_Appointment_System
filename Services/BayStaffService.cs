@@ -9,11 +9,16 @@ namespace Services;
 public sealed class BayStaffService(
     ModelDbContext context, 
     BayShiftService bayShiftService
-    ) : IAgentService<BayStaff>
+    ) : IInitializationService, IStepperService<BayStaff>
 {
-    public async Task InitializeAgentAsync(CancellationToken cancellationToken)
+    public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
-        var hubs = context.Hubs.ToList();
+        var hubs = await context.Hubs
+            .ToListAsync(cancellationToken);
+        
+        if (hubs.Count <= 0) 
+            throw new Exception("There was no Hub to assign this new BayStaff to.");
+        
         var hub = hubs[ModelConfig.Random.Next(hubs.Count)];
         
         var bayStaff = new BayStaff
@@ -23,14 +28,15 @@ public sealed class BayStaffService(
         
         await bayShiftService.InitializeObjectsAsync(bayStaff, cancellationToken);
         
-        context.BayStaffs.Add(bayStaff);
+        context.BayStaffs
+            .Add(bayStaff);
     }
 
-    public async Task InitializeAgentsAsync(CancellationToken cancellationToken)
+    public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
         for (var i = 0; i < AgentConfig.BayStaffCount; i++)
         {
-            await InitializeAgentAsync(cancellationToken);
+            await InitializeObjectAsync(cancellationToken);
         }
         
         await context.SaveChangesAsync(cancellationToken);
@@ -38,13 +44,17 @@ public sealed class BayStaffService(
 
     public async Task ExecuteStepAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
+        throw new NotImplementedException();
         // TODO: Do stuff
     }
 
     public async Task ExecuteStepAsync(CancellationToken cancellationToken)
     {
-        var bayStaffs = await context.BayStaffs.ToListAsync(cancellationToken);
-        foreach (var bayStaff in bayStaffs)
+        var bayStaffs = context.BayStaffs
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+        
+        await foreach (var bayStaff in bayStaffs)
         {
             await ExecuteStepAsync(bayStaff, cancellationToken);
         }

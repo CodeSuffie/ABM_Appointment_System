@@ -1,24 +1,38 @@
 using Database;
 using Database.Models;
+using Microsoft.EntityFrameworkCore;
 using Settings;
 
 namespace Services;
 
 public sealed class BayShiftService(ModelDbContext context)
 {
-    private static double GetBayStaffWorkChance(BayStaff bayStaff, CancellationToken cancellationToken)
+    private double GetBayStaffWorkChance(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         return AgentConfig.BayStaffAverageWorkDays / AgentConfig.HubAverageOperatingDays;
     }
     
-    private static BayShift? GetNewObject(BayStaff bayStaff, OperatingHour operatingHour, List<Bay> bays, CancellationToken cancellationToken)
+    private async Task<BayShift> GetNewObject(
+        BayStaff bayStaff, 
+        OperatingHour operatingHour, 
+        CancellationToken cancellationToken)
     {
         var maxShiftStart = operatingHour.Duration!.Value - 
                             AgentConfig.BayShiftAverageLength;
             
-        if (maxShiftStart < TimeSpan.Zero) return null;
+        if (maxShiftStart < TimeSpan.Zero) 
+            throw new Exception("This BayStaff its BayShiftLength is longer than the Hub its OperatingHourLength.");
+        
+        // ---
+        var bays = await context.Bays
+            .Where(x => x.HubId == bayStaff.Hub.Id)
+            .ToListAsync(cancellationToken);
+
+        if (bays.Count <= 0) 
+            throw new Exception("There was no Bay assigned to the Hub of this BayStaff.");
 
         var bay = bays[ModelConfig.Random.Next(bays.Count)];
+        // -- TODO: Move to separate method
             
         var shiftHour = ModelConfig.Random.Next(maxShiftStart.Hours);
         var shiftMinutes = shiftHour == maxShiftStart.Hours ?
@@ -35,33 +49,30 @@ public sealed class BayShiftService(ModelDbContext context)
         return bayShift;
     }
     
-    public static async Task InitializeObjectAsync(BayStaff bayStaff, OperatingHour operatingHour, List<Bay> bays, CancellationToken cancellationToken)
+    public async Task InitializeObjectAsync(
+        BayStaff bayStaff, 
+        OperatingHour operatingHour, 
+        CancellationToken cancellationToken)
     {
         if (operatingHour.Duration == null) return;
             
         if (ModelConfig.Random.NextDouble() >
             GetBayStaffWorkChance(bayStaff, cancellationToken)) return;
             
-        var bayShift = GetNewObject(bayStaff, operatingHour, bays, cancellationToken);
-        if (bayShift != null)
-        {
-            bayStaff.Shifts.Add(bayShift);
-        }
+        var bayShift = await GetNewObject(bayStaff, operatingHour, cancellationToken);
+        bayStaff.Shifts.Add(bayShift);
     }
 
     public async Task InitializeObjectsAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        var operatingHours = context.OperatingHours.Where(
-            x => x.HubId == bayStaff.Hub.Id
-        ).ToList();
+        var operatingHours = context.OperatingHours
+            .Where(x => x.HubId == bayStaff.Hub.Id)
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
         
-        var bays = context.Bays.Where(
-            x => x.HubId == bayStaff.Hub.Id
-        ).ToList();
-        
-        foreach (var operatingHour in operatingHours)
+        await foreach (var operatingHour in operatingHours)
         {
-            await InitializeObjectAsync(bayStaff, operatingHour, bays, cancellationToken);
+            await InitializeObjectAsync(bayStaff, operatingHour, cancellationToken);
         }
     }
 }

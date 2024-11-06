@@ -3,7 +3,7 @@ using Services.Abstractions;
 
 namespace WebTmp;
 
-public class ModelStepper(IEnumerable<IAgentService> agentServices) : BackgroundService
+public class ModelStepper(IEnumerable<IInitializationService> agentServices) : BackgroundService
 {
     private async Task InitializeModelAsync(CancellationToken cancellationToken)
     {
@@ -11,7 +11,7 @@ public class ModelStepper(IEnumerable<IAgentService> agentServices) : Background
         
         foreach (var agentService in agentServices)
         {
-            await agentService.InitializeAgentsAsync(cancellationToken);
+            await agentService.InitializeObjectsAsync(cancellationToken);
         }
     }
     

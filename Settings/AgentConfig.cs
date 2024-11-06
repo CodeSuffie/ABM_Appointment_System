@@ -16,32 +16,11 @@ public static class AgentConfig
     // BayShift
     public static TimeSpan BayShiftAverageLength = TimeSpan.FromHours(8);
 
-    // TruckDriver
-    public const int TruckDriverCount = 9;
-    public const double TruckDriverAverageWorkDays = 0.7;
-
-    // TruckShift
-    public static TimeSpan TruckShiftAverageLength = TimeSpan.FromHours(8);
-
-    // Customer
-    public const int CustomerCount = 9;
-
-    // Vendor
-    public const int VendorCount = 9;
-    public const int TruckCompanyCountPerVendor = 3;
-    public const int StockCountPerVendor = 9;
-
-    // Stock
-    public const int StockAverageCount = 9;
-
-    // Product
-    public const int ProductAverageVolume = 9;
-
     // TruckCompany
     public const int TruckCompanyCount = 9;
-    public const int TruckCountPerTruckCompany = 3;
 
     // Truck
+    public const int TruckCount = 9;
     public const int TruckAverageCapacity = 100;
 
     // Hub

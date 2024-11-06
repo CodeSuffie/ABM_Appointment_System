@@ -1,34 +1,51 @@
 using Database;
 using Database.Models;
+using Microsoft.EntityFrameworkCore;
+using Services.Abstractions;
 using Settings;
 
 namespace Services;
 
-public sealed class ParkingSpotService(ModelDbContext context)
+public sealed class ParkingSpotService(
+    ModelDbContext context,
+    LocationService locationService
+    ) : IInitializationService
 {
-    public static async Task InitializeObjectAsync(Hub hub, int i, CancellationToken cancellationToken)
+    private async Task<ParkingSpot> GetNewAgentAsync(Hub hub, CancellationToken cancellationToken)
     {
-        var location = new Location
-        {
-            LocationType = LocationType.ParkingSpot,
-            XLocation = AgentConfig.ParkingSpotLocations[i, 0],
-            YLocation = AgentConfig.ParkingSpotLocations[i, 1],
-        };
-        
         var parkingSpot = new ParkingSpot
         {
             Hub = hub,
-            Location = location
         };
-            
-        hub.ParkingSpots.Add(parkingSpot);
+
+        var parkingSpotCount = await context.ParkingSpots
+            .CountAsync(x => x.HubId == hub.Id, cancellationToken);
+        
+        await locationService.InitializeObjectAsync(parkingSpot, parkingSpotCount, cancellationToken);
+
+        return parkingSpot;
     }
 
-    public async Task InitializeObjectsAsync(Hub hub, CancellationToken cancellationToken)
+    public async Task InitializeObjectAsync(CancellationToken cancellationToken)
+    {
+        var hubs = context.Hubs
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+        
+        await foreach (var hub in hubs)
+        {
+            var parkingSpot = await GetNewAgentAsync(hub, cancellationToken);
+            hub.ParkingSpots.Add(parkingSpot);
+        }
+    }
+
+    public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
         for (var i = 0; i < AgentConfig.ParkingSpotLocations.Length; i++)
         {
-            await InitializeObjectAsync(hub, i, cancellationToken);
+            await InitializeObjectAsync(cancellationToken);
         }
+        
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

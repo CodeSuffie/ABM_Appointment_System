@@ -7,17 +7,10 @@ public class TruckCompanyConfiguration : IEntityTypeConfiguration<TruckCompany>
 {
     public void Configure(EntityTypeBuilder<TruckCompany> builder)
     {
-        builder.HasOne(x => x.Location)
-            .WithOne();
-
         builder.HasMany(x => x.Trucks)
             .WithOne();
         
-        builder.HasMany(x => x.TruckDrivers)
-            .WithOne(x => x.TruckCompany)
-            .HasForeignKey(x => x.TruckCompanyId);
-
-        builder.HasMany(x => x.Vendors)
-            .WithMany(x => x.TruckCompanies);
+        builder.HasMany(x => x.UnloadLoads)
+            .WithOne();
     }
 }

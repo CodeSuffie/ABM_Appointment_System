@@ -10,8 +10,5 @@ public class ParkingSpotConfiguration : IEntityTypeConfiguration<ParkingSpot>
         builder.HasOne(x => x.Hub)
             .WithMany(x => x.ParkingSpots)
             .HasForeignKey(x => x.HubId);
-        
-        builder.HasOne(x => x.Location)
-            .WithOne();
     }
 }

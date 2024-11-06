@@ -9,11 +9,16 @@ namespace Services;
 public sealed class AdminStaffService(
     ModelDbContext context, 
     AdminShiftService adminShiftService
-    ) : IAgentService<AdminStaff>
+    ) : IInitializationService, IStepperService<AdminStaff>
 {
-    public async Task InitializeAgentAsync(CancellationToken cancellationToken)
+    public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
-        var hubs = context.Hubs.ToList();
+        var hubs = await context.Hubs
+            .ToListAsync(cancellationToken);
+        
+        if (hubs.Count <= 0)
+            throw new Exception("There was no Hub to assign this new AdminStaff to.");
+        
         var hub = hubs[ModelConfig.Random.Next(hubs.Count)];
         
         var adminStaff = new AdminStaff
@@ -23,14 +28,15 @@ public sealed class AdminStaffService(
         
         await adminShiftService.InitializeObjectsAsync(adminStaff, cancellationToken);
         
-        context.AdminStaffs.Add(adminStaff);
+        context.AdminStaffs
+            .Add(adminStaff);
     }
 
-    public async Task InitializeAgentsAsync(CancellationToken cancellationToken)
+    public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
         for (var i = 0; i < AgentConfig.AdminStaffCount; i++)
         {
-            await InitializeAgentAsync(cancellationToken);
+            await InitializeObjectAsync(cancellationToken);
         }
         
         await context.SaveChangesAsync(cancellationToken);
@@ -38,12 +44,15 @@ public sealed class AdminStaffService(
 
     public async Task ExecuteStepAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
+        throw new NotImplementedException();
         // TODO: Do stuff
     }
 
     public async Task ExecuteStepAsync(CancellationToken cancellationToken)
     {
-        var adminStaffs = await context.AdminStaffs.ToListAsync(cancellationToken);
+        var adminStaffs = await context.AdminStaffs
+            .ToListAsync(cancellationToken);
+        
         foreach (var adminStaff in adminStaffs)
         {
             await ExecuteStepAsync(adminStaff, cancellationToken);

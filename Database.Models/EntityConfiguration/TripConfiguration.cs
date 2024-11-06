@@ -7,11 +7,8 @@ public class TripConfiguration : IEntityTypeConfiguration<Trip>
 {
     public void Configure(EntityTypeBuilder<Trip> builder)
     {
-        builder.HasOne(x => x.TruckShift)
-            .WithMany();
-
         builder.HasOne(x => x.CurrentDestination)
-            .WithOne();
+            .WithMany();
 
         builder.HasOne(x => x.Truck)
             .WithMany();

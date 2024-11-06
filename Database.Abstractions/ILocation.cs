@@ -1,8 +1,6 @@
-using Database.Abstractions;
+namespace Database.Abstractions;
 
-namespace Database.Models;
-
-public class Location : ILocation
+public interface ILocation
 {
     public long Id { get; set; }
     
