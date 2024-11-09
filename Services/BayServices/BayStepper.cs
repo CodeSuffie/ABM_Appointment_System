@@ -6,13 +6,13 @@ namespace Services.BayServices;
 
 public sealed class BayStepper(ModelDbContext context) : IStepperService<Bay>
 {
-    public Task ExecuteStepAsync(Bay bay, CancellationToken cancellationToken)
+    public Task StepAsync(Bay bay, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
         // TODO: Do stuff
     }
 
-    public async Task ExecuteStepAsync(CancellationToken cancellationToken)
+    public async Task StepAsync(CancellationToken cancellationToken)
     {
         var bays = context.Bays
             .AsAsyncEnumerable()
@@ -20,7 +20,7 @@ public sealed class BayStepper(ModelDbContext context) : IStepperService<Bay>
         
         await foreach (var bay in bays)
         {
-            await ExecuteStepAsync(bay, cancellationToken);
+            await StepAsync(bay, cancellationToken);
         }
     }
 }

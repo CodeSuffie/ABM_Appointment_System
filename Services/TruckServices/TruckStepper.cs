@@ -6,13 +6,13 @@ namespace Services.TruckServices;
 
 public sealed class TruckStepper(ModelDbContext context): IStepperService<Truck>
 {
-    public async Task ExecuteStepAsync(Truck truck, CancellationToken cancellationToken)
+    public async Task StepAsync(Truck truck, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
         // TODO: Do stuff
     }
 
-    public async Task ExecuteStepAsync(CancellationToken cancellationToken)
+    public async Task StepAsync(CancellationToken cancellationToken)
     {
         var trucks = context.Trucks
             .AsAsyncEnumerable()
@@ -20,7 +20,7 @@ public sealed class TruckStepper(ModelDbContext context): IStepperService<Truck>
         
         await foreach (var truck in trucks)
         {
-            await ExecuteStepAsync(truck, cancellationToken);
+            await StepAsync(truck, cancellationToken);
         }
     }
 }

@@ -6,13 +6,13 @@ namespace Services.HubServices;
 
 public sealed class HubStepper(ModelDbContext context) : IStepperService<Hub>
 {
-    public async Task ExecuteStepAsync(Hub hub, CancellationToken cancellationToken)
+    public async Task StepAsync(Hub hub, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
         // TODO: Do stuff
     }
 
-    public async Task ExecuteStepAsync(CancellationToken cancellationToken)
+    public async Task StepAsync(CancellationToken cancellationToken)
     {
         var hubs = context.Hubs
             .AsAsyncEnumerable()
@@ -20,7 +20,7 @@ public sealed class HubStepper(ModelDbContext context) : IStepperService<Hub>
         
         await foreach (var hub in hubs)
         {
-            await ExecuteStepAsync(hub, cancellationToken);
+            await StepAsync(hub, cancellationToken);
         }
     }
 }

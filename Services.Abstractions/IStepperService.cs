@@ -2,10 +2,10 @@ namespace Services.Abstractions;
 
 public interface IStepperService
 {
-    Task ExecuteStepAsync(CancellationToken cancellationToken);
+    Task StepAsync(CancellationToken cancellationToken);
 }
 
 public interface IStepperService<in TModel> : IStepperService where TModel : class
 {
-    Task ExecuteStepAsync(TModel entity, CancellationToken cancellationToken);
+    Task StepAsync(TModel entity, CancellationToken cancellationToken);
 }

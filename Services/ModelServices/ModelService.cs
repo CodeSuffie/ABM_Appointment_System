@@ -20,7 +20,7 @@ public sealed class ModelService(
         
         while (!cancellationToken.IsCancellationRequested)
         {
-            await modelStepper.ExecuteStepAsync(cancellationToken);
+            await modelStepper.StepAsync(cancellationToken);
         }
     }
 }

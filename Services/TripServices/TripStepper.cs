@@ -6,13 +6,13 @@ namespace Services.TripServices;
 
 public sealed class TripStepper(ModelDbContext context) : IStepperService<Trip>
 {
-    public async Task ExecuteStepAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task StepAsync(Trip trip, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
         // TODO: Do stuff
     }
 
-    public async Task ExecuteStepAsync(CancellationToken cancellationToken)
+    public async Task StepAsync(CancellationToken cancellationToken)
     {
         var trips = context.Trips
             .AsAsyncEnumerable()
@@ -20,7 +20,7 @@ public sealed class TripStepper(ModelDbContext context) : IStepperService<Trip>
         
         await foreach (var trip in trips)
         {
-            await ExecuteStepAsync(trip, cancellationToken);
+            await StepAsync(trip, cancellationToken);
         }
     }
 }
