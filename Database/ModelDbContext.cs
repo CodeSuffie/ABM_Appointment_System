@@ -32,7 +32,7 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
     {
         optionsBuilder.UseSqlite(WebConfig.DbConnectionString);
     }
-
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new TruckCompanyConfiguration());

@@ -1,31 +1,14 @@
 using Database;
-using Database.Models;
-using Microsoft.EntityFrameworkCore;
 using Services.Abstractions;
 using Settings;
 
-namespace Services;
+namespace Services.ParkingSpotServices;
 
-public sealed class ParkingSpotService(
+public sealed class ParkingSpotInitialize(
     ModelDbContext context,
-    LocationService locationService
-    ) : IInitializationService
+    ParkingSpotService parkingSpotService,
+    LocationService locationService) : IInitializationService
 {
-    private async Task<ParkingSpot> GetNewAgentAsync(Hub hub, CancellationToken cancellationToken)
-    {
-        var parkingSpot = new ParkingSpot
-        {
-            Hub = hub,
-        };
-
-        var parkingSpotCount = await context.ParkingSpots
-            .CountAsync(x => x.HubId == hub.Id, cancellationToken);
-        
-        await locationService.InitializeObjectAsync(parkingSpot, parkingSpotCount, cancellationToken);
-
-        return parkingSpot;
-    }
-
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var hubs = context.Hubs
@@ -34,7 +17,10 @@ public sealed class ParkingSpotService(
         
         await foreach (var hub in hubs)
         {
-            var parkingSpot = await GetNewAgentAsync(hub, cancellationToken);
+            var parkingSpot = await parkingSpotService.GetNewObjectAsync(hub, cancellationToken);
+        
+            await locationService.InitializeObjectAsync(parkingSpot, cancellationToken);
+            
             hub.ParkingSpots.Add(parkingSpot);
         }
     }

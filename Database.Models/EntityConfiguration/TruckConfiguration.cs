@@ -12,9 +12,11 @@ public class TruckConfiguration : IEntityTypeConfiguration<Truck>
             .HasForeignKey(x => x.TruckCompanyId);
 
         builder.HasOne(x => x.DropOffLoad)
-            .WithOne(x => x.Truck);
+            .WithOne(x => x.Truck)
+            .HasForeignKey<DropOffLoad>(x => x.TruckId);
         
         builder.HasOne(x => x.PickUpLoad)
-            .WithOne(x => x.Truck);
+            .WithOne(x => x.Truck)
+            .HasForeignKey<PickUpLoad>(x => x.TruckId);
     }
 }

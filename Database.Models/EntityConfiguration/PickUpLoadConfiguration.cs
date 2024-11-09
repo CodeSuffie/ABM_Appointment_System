@@ -14,6 +14,7 @@ public class PickUpLoadConfiguration : IEntityTypeConfiguration<PickUpLoad>
             .WithMany();
         
         builder.HasOne(x => x.Truck)
-            .WithOne(x => x.PickUpLoad);
+            .WithOne(x => x.PickUpLoad)
+            .HasForeignKey<PickUpLoad>(x => x.TruckId);
     }
 }

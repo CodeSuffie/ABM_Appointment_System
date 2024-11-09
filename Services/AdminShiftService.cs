@@ -1,24 +1,22 @@
 using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Services.AdminStaffServices;
 using Settings;
 
 namespace Services;
 
-public sealed class AdminShiftService(ModelDbContext context)
+public sealed class AdminShiftService(
+    ModelDbContext context,
+    AdminStaffService adminStaffService) 
 {
-    private static double GetAdminStaffWorkChance(AdminStaff adminStaff, CancellationToken cancellationToken)
-    {
-        return AgentConfig.AdminStaffAverageWorkDays / AgentConfig.HubAverageOperatingDays;
-    }
-
-    private async Task<AdminShift> GetNewObject(
-        AdminStaff adminStaff, 
-        OperatingHour operatingHour, 
+    private async Task<TimeSpan> GetStartTimeAsync(
+        AdminStaff adminStaff,
+        OperatingHour operatingHour,
         CancellationToken cancellationToken)
     {
         var maxShiftStart = operatingHour.Duration!.Value - 
-                            AgentConfig.AdminShiftAverageLength;
+                            adminStaff.AverageShiftLength;
             
         if (maxShiftStart < TimeSpan.Zero) 
             throw new Exception("This AdminStaff its AdminShiftLength is longer than the Hub its OperatingHourLength.");
@@ -28,30 +26,26 @@ public sealed class AdminShiftService(ModelDbContext context)
             ModelConfig.Random.Next(maxShiftStart.Minutes) :
             ModelConfig.Random.Next(ModelConfig.MinutesPerHour);
 
-        var adminShift = new AdminShift {
-            AdminStaff = adminStaff,
-            StartTime = operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0),
-            Duration = AgentConfig.AdminShiftAverageLength
-        };
-
-        return adminShift;
+        return operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0);
     }
     
-    public async Task InitializeObjectAsync(
+    public async Task<AdminShift> GetNewObjectAsync(
         AdminStaff adminStaff, 
         OperatingHour operatingHour, 
         CancellationToken cancellationToken)
     {
-        if (operatingHour.Duration == null) return;
-            
-        if (ModelConfig.Random.NextDouble() >
-            GetAdminStaffWorkChance(adminStaff, cancellationToken)) return;
+        var startTime = await GetStartTimeAsync(adminStaff, operatingHour, cancellationToken);
+        
+        var adminShift = new AdminShift {
+            AdminStaff = adminStaff,
+            StartTime = startTime,
+            Duration = adminStaff.AverageShiftLength
+        };
 
-        var adminShift = await GetNewObject(adminStaff, operatingHour, cancellationToken);
-        adminStaff.Shifts.Add(adminShift);
+        return adminShift;
     }
 
-    public async Task InitializeObjectsAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    public async Task GetNewObjectsAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var operatingHours = context.OperatingHours
             .Where(x => x.HubId == adminStaff.Hub.Id)
@@ -60,12 +54,14 @@ public sealed class AdminShiftService(ModelDbContext context)
         
         await foreach (var operatingHour in operatingHours)
         {
-            await InitializeObjectAsync(adminStaff, operatingHour, cancellationToken);
+            if (operatingHour.Duration == null) continue;
+            
+            if (ModelConfig.Random.NextDouble() >
+                adminStaffService.GetWorkChance(adminStaff, cancellationToken)) continue;
+            
+            var adminShift = await GetNewObjectAsync(adminStaff, operatingHour, cancellationToken);
+            
+            adminStaff.Shifts.Add(adminShift);
         }
-    }
-
-    public Task ExecuteStepAsync(CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
     }
 }

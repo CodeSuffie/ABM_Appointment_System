@@ -14,6 +14,7 @@ public class DropOffLoadConfiguration : IEntityTypeConfiguration<DropOffLoad>
             .WithMany();
         
         builder.HasOne(x => x.Truck)
-            .WithOne(x => x.DropOffLoad);
+            .WithOne(x => x.DropOffLoad)
+            .HasForeignKey<DropOffLoad>(x => x.TruckId);
     }
 }

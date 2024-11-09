@@ -26,11 +26,11 @@ public static class AgentConfig
     // Hub
     public const int HubCount = 9;
     public const double HubAverageOperatingDays = 1;
-
-    // Location
+    
     public const int HubXSize = 9;
     public const int HubYSize = 4;
 
+    // ParkingSpot
     public static int[,] ParkingSpotLocations =
     {
         {0, 2},
@@ -44,6 +44,7 @@ public static class AgentConfig
         {4, 2}
     };
     
+    // Bay
     public static int[,] BayLocations =
     {
         {0, 0}, 

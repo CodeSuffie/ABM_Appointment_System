@@ -8,12 +8,15 @@ public class WorkConfiguration : IEntityTypeConfiguration<Work>
     public void Configure(EntityTypeBuilder<Work> builder)
     {
         builder.HasOne(x => x.Trip)
-            .WithOne();
+            .WithOne(x => x.Work)
+            .HasForeignKey<Trip>(x => x.WorkId);
 
         builder.HasOne(x => x.AdminStaff)
-            .WithOne();
+            .WithOne(x => x.Work)
+            .HasForeignKey<AdminStaff>(x => x.WorkId);
 
         builder.HasOne(x => x.BayStaff)
-            .WithOne();
+            .WithOne(x => x.Work)
+            .HasForeignKey<BayStaff>(x => x.WorkId);
     }
 }

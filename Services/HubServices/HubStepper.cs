@@ -2,11 +2,11 @@ using Database;
 using Database.Models;
 using Services.Abstractions;
 
-namespace Services;
+namespace Services.HubServices;
 
-public sealed class TripService(ModelDbContext context) : IStepperService<Trip>
+public sealed class HubStepper(ModelDbContext context) : IStepperService<Hub>
 {
-    public async Task ExecuteStepAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task ExecuteStepAsync(Hub hub, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
         // TODO: Do stuff
@@ -14,13 +14,13 @@ public sealed class TripService(ModelDbContext context) : IStepperService<Trip>
 
     public async Task ExecuteStepAsync(CancellationToken cancellationToken)
     {
-        var trips = context.Trips
+        var hubs = context.Hubs
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         
-        await foreach (var trip in trips)
+        await foreach (var hub in hubs)
         {
-            await ExecuteStepAsync(trip, cancellationToken);
+            await ExecuteStepAsync(hub, cancellationToken);
         }
     }
 }

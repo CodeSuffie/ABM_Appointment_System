@@ -3,29 +3,49 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Services.Abstractions;
 using Services;
-using WebTmp;
+using Services.AdminStaffServices;
+using Services.BayServices;
+using Services.BayStaffServices;
+using Services.HubServices;
+using Services.ModelService;
+using Services.ModelServices;
+using Services.ParkingSpotServices;
+using Services.TripServices;
+using Services.TruckCompanyServices;
+using Services.TruckServices;
 
 var hostBuilder = new HostApplicationBuilder(args);
 hostBuilder.Services.AddDbContext<ModelDbContext>();
 
+hostBuilder.Services.AddScoped<HubService>();
+hostBuilder.Services.AddScoped<IInitializationService, HubInitialize>();
+hostBuilder.Services.AddScoped<IStepperService,        HubStepper>();
 
-hostBuilder.Services.AddScoped<IInitializationService, HubService>();
-hostBuilder.Services.AddScoped<IInitializationService, TruckCompanyService>();
-hostBuilder.Services.AddScoped<IInitializationService, AdminStaffService>();
-hostBuilder.Services.AddScoped<IInitializationService, BayService>();
-hostBuilder.Services.AddScoped<IInitializationService, BayStaffService>();
-hostBuilder.Services.AddScoped<IInitializationService, ParkingSpotService>();
-hostBuilder.Services.AddScoped<IInitializationService, TruckService>();
+hostBuilder.Services.AddScoped<TruckCompanyService>();
+hostBuilder.Services.AddScoped<IInitializationService, TruckCompanyInitialize>();
+hostBuilder.Services.AddScoped<IStepperService,        TruckCompanyStepper>();
 
+hostBuilder.Services.AddScoped<AdminStaffService>();
+hostBuilder.Services.AddScoped<IInitializationService, AdminStaffInitialize>();
+hostBuilder.Services.AddScoped<IStepperService,        AdminStaffStepper>();
 
-hostBuilder.Services.AddScoped<IStepperService, HubService>();
-hostBuilder.Services.AddScoped<IStepperService, TruckCompanyService>();
-hostBuilder.Services.AddScoped<IStepperService, AdminStaffService>();
-hostBuilder.Services.AddScoped<IStepperService, BayService>();
-hostBuilder.Services.AddScoped<IStepperService, BayStaffService>();
-hostBuilder.Services.AddScoped<IStepperService, TripService>();
-hostBuilder.Services.AddScoped<IStepperService, TruckService>();
+hostBuilder.Services.AddScoped<BayService>();
+hostBuilder.Services.AddScoped<IInitializationService, BayInitialize>();
+hostBuilder.Services.AddScoped<IStepperService,        BayStepper>();
 
+hostBuilder.Services.AddScoped<BayStaffService>();
+hostBuilder.Services.AddScoped<IInitializationService, BayStaffInitialize>();
+hostBuilder.Services.AddScoped<IStepperService,        BayStaffStepper>();
+
+hostBuilder.Services.AddScoped<ParkingSpotService>();
+hostBuilder.Services.AddScoped<IInitializationService, ParkingSpotInitialize>();
+
+hostBuilder.Services.AddScoped<TripService>();
+hostBuilder.Services.AddScoped<IStepperService,        TripStepper>();
+
+hostBuilder.Services.AddScoped<TruckService>();
+hostBuilder.Services.AddScoped<IInitializationService, TruckInitialize>();
+hostBuilder.Services.AddScoped<IStepperService,        TruckStepper>();
 
 hostBuilder.Services.AddScoped<AdminShiftService>();
 hostBuilder.Services.AddScoped<BayShiftService>();
@@ -35,7 +55,9 @@ hostBuilder.Services.AddScoped<OperatingHourService>();
 hostBuilder.Services.AddScoped<PickUpLoadService>();
 
 
-hostBuilder.Services.AddHostedService<ModelStepper>();
+hostBuilder.Services.AddScoped<ModelInitialize>();
+hostBuilder.Services.AddScoped<ModelStepper>();
+hostBuilder.Services.AddHostedService<ModelService>();
 
 
 var host = hostBuilder.Build();
