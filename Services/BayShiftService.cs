@@ -62,7 +62,7 @@ public sealed class BayShiftService(
             if (operatingHour.Duration == null) continue;
             
             if (ModelConfig.Random.NextDouble() >
-                bayStaffService.GetWorkChance(bayStaff, cancellationToken)) continue;
+                await bayStaffService.GetWorkChanceAsync(bayStaff, cancellationToken)) continue;
 
             var bayShift = await GetNewObjectAsync(bayStaff, operatingHour, cancellationToken);
             bayStaff.Shifts.Add(bayShift);

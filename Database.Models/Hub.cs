@@ -21,4 +21,6 @@ public class Hub : ILocation
     
     public List<ParkingSpot> ParkingSpots { get; set; } = [];
     public List<Bay> Bays { get; set; } = [];
+
+    public List<Trip> Trips { get; set; } = [];
 }

@@ -6,8 +6,11 @@ public class Load
     
     public LoadType LoadType { get; set; }
 
-    public TruckCompany? TruckCompany { get; set; }
-    public long TruckCompanyId { get; set; }
+    public TruckCompany? TruckCompanyStart { get; set; }
+    public long TruckCompanyStartId { get; set; }
+    
+    public TruckCompany? TruckCompanyEnd { get; set; }
+    public long TruckCompanyEndId { get; set; }
 
     public Hub? Hub { get; set; }
     public long HubId { get; set; }

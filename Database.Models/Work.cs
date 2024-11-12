@@ -7,7 +7,7 @@ public class Work
     public long Id { get; set; }
     
     public TimeSpan StartTime { get; set; }
-    public TimeSpan Duration { get; set; }
+    public TimeSpan? Duration { get; set; }
 
     public WorkType WorkType { get; set; }
     

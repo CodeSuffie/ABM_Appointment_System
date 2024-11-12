@@ -57,7 +57,7 @@ public sealed class AdminShiftService(
             if (operatingHour.Duration == null) continue;
             
             if (ModelConfig.Random.NextDouble() >
-                adminStaffService.GetWorkChance(adminStaff, cancellationToken)) continue;
+                await adminStaffService.GetWorkChanceAsync(adminStaff, cancellationToken)) continue;
             
             var adminShift = await GetNewObjectAsync(adminStaff, operatingHour, cancellationToken);
             

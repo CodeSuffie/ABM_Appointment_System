@@ -10,8 +10,7 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
     public DbSet<TruckCompany> TruckCompanies { get; set; }
     public DbSet<Truck> Trucks { get; set; }
     
-    public DbSet<Load> DropOffLoads { get; set; }
-    public DbSet<PickUpLoad> PickUpLoads { get; set; }
+    public DbSet<Load> Loads { get; set; }
     public DbSet<Trip> Trips { get; set; }
     
     public DbSet<Hub> Hubs { get; set; }
@@ -39,7 +38,6 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
         modelBuilder.ApplyConfiguration(new TruckConfiguration());
         
         modelBuilder.ApplyConfiguration(new LoadConfiguration());
-        modelBuilder.ApplyConfiguration(new PickUpLoadConfiguration());
         modelBuilder.ApplyConfiguration(new TripConfiguration());
         
         modelBuilder.ApplyConfiguration(new HubConfiguration());

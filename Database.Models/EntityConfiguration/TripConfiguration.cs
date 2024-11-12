@@ -18,6 +18,10 @@ public class TripConfiguration : IEntityTypeConfiguration<Trip>
         builder.HasOne(x => x.Truck)
             .WithOne(x => x.Trip)
             .HasForeignKey<Truck>(x => x.TripId);
+        
+        builder.HasOne(x => x.Hub)
+            .WithMany(x => x.Trips)
+            .HasForeignKey(x => x.HubId);
 
         builder.HasOne(x => x.Work)
             .WithOne(x => x.Trip)

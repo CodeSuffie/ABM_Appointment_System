@@ -1,5 +1,6 @@
 using Database;
 using Database.Models;
+using Microsoft.EntityFrameworkCore;
 using Services.HubServices;
 using Settings;
 
@@ -23,10 +24,27 @@ public sealed class AdminStaffService(
         return adminStaff;
     }
     
-    public double GetWorkChance(AdminStaff adminStaff, CancellationToken cancellationToken)
+    public async Task<Hub> GetHubForAdminStaffAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var hub = context.Hubs.FirstOrDefault(x => x.Id == adminStaff.HubId);
+        var hub = await context.Hubs
+            .FirstOrDefaultAsync(x => x.Id == adminStaff.HubId, cancellationToken);
         if (hub == null) throw new Exception("This AdminStaff did not have a Hub assigned.");
+
+        return hub;
+    }
+    
+    public async Task<Work?> GetWorkForAdminStaffAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    {
+        var work = await context.Works
+            .FirstOrDefaultAsync(x => x.AdminStaff != null &&
+                                      x.AdminStaffId == adminStaff.Id, cancellationToken);
+        
+        return work;
+    }
+    
+    public async Task<double> GetWorkChanceAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    {
+        var hub = await GetHubForAdminStaffAsync(adminStaff, cancellationToken);
         
         return adminStaff.WorkChance / hub.OperatingChance;
     }

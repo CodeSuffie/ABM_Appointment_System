@@ -7,7 +7,10 @@ public class LoadConfiguration : IEntityTypeConfiguration<Load>
 {
     public void Configure(EntityTypeBuilder<Load> builder)
     {
-        builder.HasOne(x => x.TruckCompany)
+        builder.HasOne(x => x.TruckCompanyStart)
+            .WithMany();
+        
+        builder.HasOne(x => x.TruckCompanyEnd)
             .WithMany();
         
         builder.HasOne(x => x.Hub)
