@@ -7,7 +7,6 @@ using Services.AdminStaffServices;
 using Services.BayServices;
 using Services.BayStaffServices;
 using Services.HubServices;
-using Services.ModelService;
 using Services.ModelServices;
 using Services.ParkingSpotServices;
 using Services.TripServices;
@@ -49,10 +48,9 @@ hostBuilder.Services.AddScoped<IStepperService,        TruckStepper>();
 
 hostBuilder.Services.AddScoped<AdminShiftService>();
 hostBuilder.Services.AddScoped<BayShiftService>();
-hostBuilder.Services.AddScoped<DropOffLoadService>();
+hostBuilder.Services.AddScoped<LoadService>();
 hostBuilder.Services.AddScoped<LocationService>();
 hostBuilder.Services.AddScoped<OperatingHourService>();
-hostBuilder.Services.AddScoped<PickUpLoadService>();
 
 
 hostBuilder.Services.AddScoped<ModelInitialize>();

@@ -10,7 +10,10 @@ public sealed class AdminStaffStepper(ModelDbContext context) : IStepperService<
     public async Task StepAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
-        // TODO: Do stuff
+        // TODO: If no active shift, wait
+        // TODO: If free, and no waiting Truck, wait
+        // TODO: Otherwise alert next Truck I am free
+        // TODO: If not free, continue handling Check-In
     }
 
     public async Task StepAsync(CancellationToken cancellationToken)

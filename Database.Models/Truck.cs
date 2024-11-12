@@ -9,9 +9,6 @@ public class Truck
     public TruckCompany TruckCompany { get; set; } = new();
     public long TruckCompanyId { get; set; }
     
-    public DropOffLoad? DropOffLoad { get; set; }
-    public long? DropOffLoadId { get; set; }
-    
-    public PickUpLoad? PickUpLoad { get; set; }
-    public long? PickUpLoadId { get; set; }
+    public Trip? Trip { get; set; }
+    public long? TripId { get; set; }
 }

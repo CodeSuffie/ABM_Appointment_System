@@ -3,15 +3,15 @@ using Database.Models;
 
 namespace Services;
 
-public class PickUpLoadService(ModelDbContext context)
+public class LoadService(ModelDbContext context)
 {
-    public async Task InitializeObjectAsync(CancellationToken cancellationToken)
+    public async Task<Load> SelectDropOffAsync(CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
         // TODO: Create
     }
-    
-    public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
+
+    public async Task<Load> SelectPickUpAsync(CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
         // TODO: Create

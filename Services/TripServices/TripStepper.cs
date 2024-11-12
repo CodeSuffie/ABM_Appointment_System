@@ -9,7 +9,7 @@ public sealed class TripStepper(ModelDbContext context) : IStepperService<Trip>
     public async Task StepAsync(Trip trip, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
-        // TODO: Do stuff
+        // TODO: May not be needed
     }
 
     public async Task StepAsync(CancellationToken cancellationToken)

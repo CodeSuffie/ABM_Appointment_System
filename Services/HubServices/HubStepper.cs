@@ -9,7 +9,7 @@ public sealed class HubStepper(ModelDbContext context) : IStepperService<Hub>
     public async Task StepAsync(Hub hub, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
-        // TODO: Do stuff
+        // TODO: Create new Staff Shifts
     }
 
     public async Task StepAsync(CancellationToken cancellationToken)

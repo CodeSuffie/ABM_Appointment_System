@@ -9,7 +9,9 @@ public sealed class TruckStepper(ModelDbContext context): IStepperService<Truck>
     public async Task StepAsync(Truck truck, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
-        // TODO: Do stuff
+        // TODO: If no active Trip, claim new Trip
+        // TODO: If possible, complete Trip
+        // TODO: Otherwise, continue Trip
     }
 
     public async Task StepAsync(CancellationToken cancellationToken)

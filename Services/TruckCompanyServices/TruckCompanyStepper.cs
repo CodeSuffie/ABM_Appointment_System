@@ -9,7 +9,7 @@ public sealed class TruckCompanyStepper(ModelDbContext context) : IStepperServic
     public async Task StepAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
-        // TODO: Do stuff
+        // TODO: Create ew Trips
     }
 
     public async Task StepAsync(CancellationToken cancellationToken)
