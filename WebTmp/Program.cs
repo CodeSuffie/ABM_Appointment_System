@@ -51,6 +51,7 @@ hostBuilder.Services.AddScoped<BayShiftService>();
 hostBuilder.Services.AddScoped<LoadService>();
 hostBuilder.Services.AddScoped<LocationService>();
 hostBuilder.Services.AddScoped<OperatingHourService>();
+hostBuilder.Services.AddScoped<WorkService>();
 
 
 hostBuilder.Services.AddScoped<ModelInitialize>();

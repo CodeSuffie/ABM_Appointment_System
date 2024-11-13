@@ -8,18 +8,19 @@ public static class ModelConfig
     public const int MinutesPerHour = 60;
     
     public static TimeSpan ModelTime = TimeSpan.FromDays(7);
+    public static TimeSpan ModelStep = TimeSpan.FromMinutes(1);
     
-    // AdminWork
-    public const int AdminWorkTime = 9;
+    // WorkType.CheckIn
+    public static TimeSpan CheckInWorkTime = TimeSpan.FromMinutes(9);
     
-    // UnloadWork
-    public const int UnloadWorkTime = 9;
+    // WorkType.DropOff
+    public static TimeSpan DropOffWorkTime = TimeSpan.FromMinutes(9);
     
-    // PickupWork
-    public const int PickupWorkTime = 9;
+    // WorkType.PickUp
+    public static TimeSpan PickUpWorkTime = TimeSpan.FromMinutes(9);
     
     // BayWork
-    public const int FetchWorkTime = 9;
+    public static TimeSpan FetchWorkTime = TimeSpan.FromMinutes(9);
     
     // Location
     public const int MaxX = 200;

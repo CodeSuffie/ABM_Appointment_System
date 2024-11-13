@@ -9,39 +9,45 @@ namespace Services.AdminStaffServices;
 public sealed class AdminStaffStepper(
     ModelDbContext context,
     AdminStaffService adminStaffService,
+    AdminShiftService adminShiftService,
+    WorkService workService,
     HubService hubService) : IStepperService<AdminStaff>
 {
+    public async Task<bool> IsWorkingAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    {
+        var shift = await adminShiftService.GetCurrentShiftAsync(adminStaff, cancellationToken);
+        return shift != null;
+    }
+    
     public async Task AlertFreeAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var hub = await adminStaffService.GetHubForAdminStaffAsync(adminStaff, cancellationToken);
         
         var trip = await hubService.GetNextCheckInTripAsync(hub, cancellationToken);
         if (trip == null) return;
-        
-        // TODO: Build workService.AddWorkAsync(adminStaff, trip, cancellationToken)
-    }
 
-    public async Task<bool> CheckFreeAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+        await workService.AddWorkAsync(adminStaff, trip, cancellationToken);
+    }
+    
+    public async Task HandleWorkAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var work = await adminStaffService.GetWorkForAdminStaffAsync(adminStaff, cancellationToken);
-        return work == null;
-    }
-
-    public async Task<bool> CheckWorkingAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
-    {
-        // TODO: If no active shift, wait
-        return true;
+        if (work == null)
+        {
+            await AlertFreeAsync(adminStaff, cancellationToken);
+        }
+        else if (await workService.IsWorkCompletedAsync(work, cancellationToken))
+        {
+            await workService.RemoveWorkAsync(work, cancellationToken);
+        }
     }
     
     public async Task StepAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        // TODO: If not free, continue handling Check-In (in WorkService)
+        // TODO: Fix cases where adminStaff has work assigned at end of shift
+        if (!await IsWorkingAsync(adminStaff, cancellationToken)) return;
 
-        if (!await CheckWorkingAsync(adminStaff, cancellationToken)) return;
-
-        if (!await CheckFreeAsync(adminStaff, cancellationToken)) return;
-        
-        await AlertFreeAsync(adminStaff, cancellationToken);
+        await HandleWorkAsync(adminStaff, cancellationToken);
     }
 
     public async Task StepAsync(CancellationToken cancellationToken)

@@ -42,6 +42,14 @@ public sealed class BayStaffService(
         return work;
     }
     
+    public async Task<IQueryable<BayShift>> GetShiftsForBayStaffAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    {
+        var shifts = context.BayShifts
+            .Where(x => x.BayStaffId == bayStaff.Id);
+
+        return shifts;
+    }
+    
     public async Task<double> GetWorkChanceAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var hub = await GetHubForBayStaffAsync(bayStaff, cancellationToken);

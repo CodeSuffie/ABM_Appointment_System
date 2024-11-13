@@ -41,6 +41,14 @@ public sealed class AdminStaffService(
         
         return work;
     }
+
+    public async Task<IQueryable<AdminShift>> GetShiftsForAdminStaffAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    {
+        var shifts = context.AdminShifts
+            .Where(x => x.AdminStaffId == adminStaff.Id);
+
+        return shifts;
+    }
     
     public async Task<double> GetWorkChanceAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {

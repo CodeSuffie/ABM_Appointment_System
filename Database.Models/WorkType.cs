@@ -4,8 +4,8 @@ public enum WorkType
 {
     Travel,
     CheckIn,
-    Unload,
-    Pickup,
+    DropOff,
+    PickUp,
     WaitCheckIn,
     WaitBay,
     Fetch,
