@@ -15,7 +15,7 @@ public class Load
     public Hub? Hub { get; set; }
     public long HubId { get; set; }
     
-    public Hub? Bay { get; set; }
+    public Bay? Bay { get; set; }
     public long BayId { get; set; }
     
     public Trip? DropOffTrip { get; set; }

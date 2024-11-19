@@ -61,7 +61,9 @@ public sealed class TripService(
         if (parkingSpot == null) return;
         
         await parkingSpotService.AlertFreeAsync(parkingSpot, cancellationToken);
+        
         await bayService.AddTripAsync(bay, trip, cancellationToken);
+        await workService.AddWorkAsync(trip, bay, cancellationToken);
     }
 
     // TODO: Repository

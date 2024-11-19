@@ -21,4 +21,5 @@ public class Bay : ILocation
     
     public List<BayShift> Shifts { get; set; } = [];
     public List<Load> Loads { get; set; } = [];
+    public List<Work> Works { get; set; } = [];
 }

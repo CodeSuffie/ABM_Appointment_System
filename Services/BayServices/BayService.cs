@@ -12,7 +12,9 @@ public sealed class BayService(
     ModelDbContext context,
     BayShiftService bayShiftService,
     TripService tripService,
-    HubService hubService)
+    HubService hubService,
+    LoadService loadService,
+    WorkService workService)
 {
     public async Task<Bay> GetNewObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
@@ -72,6 +74,15 @@ public sealed class BayService(
     }
     
     // TODO: Repository
+    public async Task<IQueryable<Work>> GetShiftsForAdminStaffAsync(Bay bay, CancellationToken cancellationToken)
+    {
+        var works = context.Works
+            .Where(x => x.Bay != null && x.BayId == bay.Id);
+
+        return works;
+    }
+    
+    // TODO: Repository
     public async Task RemoveTripAsync(Bay bay, Trip trip, CancellationToken cancellationToken)
     {
         trip.Bay = null;
@@ -90,6 +101,40 @@ public sealed class BayService(
         
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task StartDropOffAsync(Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
+    {
+        await workService.AddWorkAsync(bay, bayStaff, WorkType.DropOff, cancellationToken);
+        await workService.ChangeWorkLoadAsync(bay, cancellationToken);
+    }
+    
+    public async Task StartFetchAsync(Trip trip, Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
+    {
+        var pickUpLoad = tripService.GetPickUpLoadForTripAsync(trip, cancellationToken);
+        if (pickUpLoad != null)
+        {
+            var pickUpLoadBay = loadService.GetBayForLoadAsync(pickUpLoad, cancellationToken);
+            if (pickUpLoadBay != null)
+            {
+                if (pickUpLoadBay.Id != bay.Id)
+                {
+                    await workService.AddWorkAsync(bay, bayStaff, WorkType.Fetch, cancellationToken);
+                    return;
+                }
+
+                tripService.AlertFetchedAsync(trip, cancellationToken);
+            }
+            else
+            {
+                // TODO: Log that Load has not arrived yet
+            }
+        }
+    }
+    
+    public async Task StartPickUpAsync(CancellationToken cancellationToken)
+    {
+        
+    }
     
     public async Task AlertFreeAsync(Bay bay, CancellationToken cancellationToken)
     {
@@ -106,13 +151,62 @@ public sealed class BayService(
         if (newTrip != null)
         {
             await tripService.AlertFreeAsync(newTrip, bay, cancellationToken);
-            // TODO: Start Work
+            // TODO: Start AdminStaff Work
         }
     }
 
     public async Task AlertFreeAsync(Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        var trip = GetTripForBayAsync(bay, cancellationToken);
+        var trip = await GetTripForBayAsync(bay, cancellationToken);
+        if (trip == null)
+            throw new Exception("The Trip assigned to this Bay has been removed but its BayStaff has just completed" +
+                                "Work for that Trip and AlertFree has not been called by the Bay");
+
+        var works = (await GetWorksForBayAsync(bay, cancellationToken))
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        var startedDropOff = false;
+        var startedFetch = false;
+        var startedPickUp = false;
+        
+        await foreach (var work in works)
+        {
+            if (work.WorkType == work.DropOff)
+            {
+                startedDropOff = true;
+            }
+            else if (work.WorkType == work.Fetch)
+            {
+                startedFetch = true;
+            }
+            else if (work.WorkType == work.PickUp)
+            {
+                startedPickUp = true;
+            }
+        }
+
+        if (startedDropOff && startedPickUp ||
+            startedDropOff && trip.DroppedOff ||
+            startedDropOff && trip.PickedUp ||
+            startedPickUp && trip.PickedUp)
+            throw new Exception("DropOff or PickUp Work are not being executed in the correct order.");
+        
+        if (trip is { DroppedOff: false, PickedUp: false } && !startedPickUp)
+        {
+            if (startedDropOff && !startedFetch && trip is { Fetched: false })
+            {
+                await StartFetchAsync(trip, bay, bayStaff, cancellationToken);
+            }
+            else
+            {
+                await StartDropOffAsync(bay, bayStaff, cancellationToken);
+            }
+        }
+        else if (trip is {DroppedOff: true, PickedUp: false})
+        {
+            
+        }
         
         // TODO: If Truck at my Bay, If PickUp Load is not available at this Bay, and no one else is fetching it, fetch the Load
         // TODO: If Truck at my Bay, continue handling their Trip

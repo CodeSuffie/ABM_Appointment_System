@@ -10,7 +10,7 @@ public sealed class WorkService(
     ModelService modelService
     )
 {
-    public async Task<Work> GetNewObjectAsync(Trip trip, WorkType workType, CancellationToken cancellationToken)
+    public async Task<Work> GetNewObjectAsync(WorkType workType, CancellationToken cancellationToken)
     {
         var startTime = await modelService.GetModelTimeAsync(cancellationToken);
         var duration = await GetWorkTimeAsync(workType, cancellationToken);
@@ -20,7 +20,6 @@ public sealed class WorkService(
             StartTime = startTime,
             Duration = duration,
             WorkType = workType,
-            Trip = trip
         };
 
         return work;
@@ -40,7 +39,8 @@ public sealed class WorkService(
     
     public async Task AddWorkAsync(Trip trip, WorkType workType, CancellationToken cancellationToken)
     {
-        var work = await GetNewObjectAsync(trip, workType, cancellationToken);
+        var work = await GetNewObjectAsync(workType, cancellationToken);
+        work.Trip = trip;
 
         // TODO: Repository
         await context.Works
@@ -51,8 +51,8 @@ public sealed class WorkService(
     
     public async Task AddWorkAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var work = await GetNewObjectAsync(trip, WorkType.CheckIn, cancellationToken);
-        
+        var work = await GetNewObjectAsync(WorkType.CheckIn, cancellationToken);
+        work.Trip = trip;
         work.AdminStaff = adminStaff;
 
         // TODO: Repository
@@ -61,11 +61,24 @@ public sealed class WorkService(
         
         await context.SaveChangesAsync(cancellationToken);
     }
-    
-    public async Task AddWorkAsync(Trip trip, BayStaff bayStaff, WorkType workType, CancellationToken cancellationToken)
+
+    public async Task AddWorkAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
     {
-        var work = await GetNewObjectAsync(trip, workType, cancellationToken);
+        var work = await GetNewObjectAsync(WorkType.Bay, cancellationToken);
+        work.Trip = trip;
+        work.Bay = bay;
+
+        // TODO: Repository
+        await context.Works
+            .AddAsync(work, cancellationToken);
         
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task AddWorkAsync(Bay bay, BayStaff bayStaff, WorkType workType, CancellationToken cancellationToken)
+    {
+        var work = await GetNewObjectAsync(workType, cancellationToken);
+        work.Bay = bay;
         work.BayStaff = bayStaff;
 
         // TODO: Repository

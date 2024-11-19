@@ -5,6 +5,9 @@ public class Trip
     public long Id { get; set; }
 
     public bool CheckedIn { get; set; }
+    public bool DroppedOff { get; set; }
+    public bool Fetched { get; set; }
+    public bool PickedUp { get; set; }
     
     public Load? DropOff { get; set; }
     public long? DropOffId { get; set; }
