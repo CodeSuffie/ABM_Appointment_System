@@ -70,53 +70,34 @@ public sealed class BayShiftService(
             bayStaff.Shifts.Add(bayShift);
         }
     }
-    
-    public async Task<BayShift?> GetCurrentShiftAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+
+    public async Task<bool> IsCurrentShiftAsync(BayShift bayShift, CancellationToken cancellationToken)
     {
         var modelTime = await modelService.GetModelTimeAsync(cancellationToken);
         
+        if (bayShift.Duration == null)
+            throw new Exception("The shift for this BayStaff does not have a Duration.");
+            
+        var endTime = (TimeSpan)(bayShift.StartTime + bayShift.Duration);
+        
+        return modelTime >= bayShift.StartTime && modelTime <= endTime;
+    }
+    
+    public async Task<BayShift?> GetCurrentBayShiftForBayStaffAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    {
         var shifts = (await bayStaffService.GetShiftsForBayStaffAsync(bayStaff, cancellationToken))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
 
         await foreach (var shift in shifts)
         {
-            if (shift.Duration == null)
-                throw new Exception("The shift for this AdminStaff does not have a Duration.");
-            
-            var endTime = (TimeSpan)(shift.StartTime + shift.Duration);
-            if (modelTime >= shift.StartTime && modelTime <= endTime)
+            if (await IsCurrentShiftAsync(shift, cancellationToken))
             {
                 return shift;
             }
         }
 
         return null;
-    }
-    
-    public async Task<List<BayShift>> GetCurrentShiftsAsync(Bay bay, CancellationToken cancellationToken)
-    {
-        var modelTime = await modelService.GetModelTimeAsync(cancellationToken);
-        
-        var shifts = (await bayService.GetShiftsForBayAsync(bay, cancellationToken))
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken);
-
-        var currentShifts = new List<BayShift>();
-
-        await foreach (var shift in shifts)
-        {
-            if (shift.Duration == null)
-                throw new Exception("The shift assigned to this Bay does not have a Duration.");
-            
-            var endTime = (TimeSpan)(shift.StartTime + shift.Duration);
-            if (modelTime >= shift.StartTime && modelTime <= endTime)
-            {
-                currentShifts.Add(shift);
-            }
-        }
-
-        return currentShifts;
     }
 
     public async Task<Bay?> GetBayForBayShiftAsync(BayShift bayShift, CancellationToken cancellationToken)
@@ -125,17 +106,5 @@ public sealed class BayShiftService(
             .FirstOrDefaultAsync(x => x.Id == bayShift.BayId, cancellationToken);
         
         return bay;
-    }
-
-    public async Task<bool> DoesShiftEndInAsync(BayShift bayShift, TimeSpan time, CancellationToken cancellationToken)
-    {
-        if (bayShift.Duration == null)
-            throw new Exception("The given BayShift does not have a Duration.");
-            
-        var modelTime = await modelService.GetModelTimeAsync(cancellationToken);
-        
-        var endTime = (TimeSpan)(bayShift.StartTime + bayShift.Duration);
-
-        return modelTime + time > endTime;
     }
 }

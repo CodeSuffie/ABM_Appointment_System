@@ -41,7 +41,7 @@ public sealed class HubService(
         var trips = context.Trips
             .Where(x => x.HubId == hub.Id)
             .Where(x => x.Work != null && 
-                        x.Work.WorkType != WorkType.Travel);
+                        x.Work.WorkType != WorkType.TravelHub);
 
         return trips;
     }

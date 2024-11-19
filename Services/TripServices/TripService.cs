@@ -13,15 +13,6 @@ public sealed class TripService(
     ParkingSpotService parkingSpotService,
     BayService bayService) 
 {
-    // TODO: Repository
-    public async Task<Work?> GetWorkForTripAsync(Trip trip, CancellationToken cancellationToken)
-    {
-        var work = await context.Works
-            .FirstOrDefaultAsync(x => x.TripId == trip.Id, cancellationToken);
-        
-        return work;
-    }
-    
     public async Task<Trip?> GetNewObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
         var dropOff = await loadService.SelectUnclaimedDropOffAsync(truckCompany, cancellationToken);
@@ -44,10 +35,39 @@ public sealed class TripService(
         {
             DropOff = dropOff,
             PickUp = pickUp,
-            CheckedIn = false
         };
 
         return trip;
+    }
+    
+    // TODO: Repository
+    public async Task<Work?> GetWorkForTripAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        var work = await context.Works
+            .FirstOrDefaultAsync(x => x.TripId == trip.Id, cancellationToken);
+        
+        return work;
+    }
+    
+    // TODO: Repository
+    private async Task<ParkingSpot?> GetParkingSpotForTripAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+        // TODO: Get Parking Spot for Trip
+    }
+
+    // TODO: Repository
+    public async Task<Load?> GetPickUpLoadForTripAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+        // TODO: Get PickUpLoad for Trip
+    }
+
+    // TODO: Repository
+    public async Task<Load?> GetDropOffLoadForTripAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+        // TODO: Get DropOffLoad for Trip
     }
     
     public async Task AlertFreeAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
@@ -66,10 +86,19 @@ public sealed class TripService(
         await workService.AddWorkAsync(trip, bay, cancellationToken);
     }
 
-    // TODO: Repository
-    private async Task<ParkingSpot?> GetParkingSpotForTripAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task AlertCheckInCompleteAsync(Trip trip, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
-        // TODO: Get Parking Spot for Trip
+        // TODO: Remove My Work
+        // TODO: Add Work for BayWait
     }
+
+    public async Task AlertBayWorkCompleteAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+        // TODO: Remove My Work
+        // TODO: Add Work for TravelHome
+    }
+
+    
 }

@@ -30,7 +30,6 @@ hostBuilder.Services.AddScoped<IStepperService,        AdminStaffStepper>();
 
 hostBuilder.Services.AddScoped<BayService>();
 hostBuilder.Services.AddScoped<IInitializationService, BayInitialize>();
-hostBuilder.Services.AddScoped<IStepperService,        BayStepper>();
 
 hostBuilder.Services.AddScoped<BayStaffService>();
 hostBuilder.Services.AddScoped<IInitializationService, BayStaffInitialize>();

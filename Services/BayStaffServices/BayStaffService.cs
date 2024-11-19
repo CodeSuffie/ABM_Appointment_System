@@ -59,6 +59,4 @@ public sealed class BayStaffService(
         
         return bayStaff.WorkChance / hub.OperatingChance;
     }
-    
-    
 }

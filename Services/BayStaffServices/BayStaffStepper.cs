@@ -14,40 +14,32 @@ public sealed class BayStaffStepper(
     WorkService workService,
     BayService bayService) : IStepperService<BayStaff>
 {
-    public async Task AlertBayAvailabilityAsync(BayShift bayShift, Bay bay, CancellationToken cancellationToken)
-    {
-        if (!bay.Opened)
-        {
-            await bayService.AlertShiftStartAsync(bay, cancellationToken);
-        }
-
-        if (await bayShiftService.DoesShiftEndInAsync(bayShift, 1 * ModelConfig.ModelStep, cancellationToken))
-        {
-            await bayService.AlertShiftEndAsync(bay, cancellationToken);
-        }
-    }
-    
     public async Task StepAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        // TODO: Fix cases where bayStaff has work assigned at end of shift
-        
-        var shift = await bayShiftService.GetCurrentShiftAsync(bayStaff, cancellationToken);
-        if (shift == null) return;
-        
-        var bay = await bayShiftService.GetBayForBayShiftAsync(shift, cancellationToken);
-        if (bay == null)
-            throw new Exception("This BayShift did not have a Bay assigned.");
-
-        await AlertBayAvailabilityAsync(shift, bay, cancellationToken);
-        
         var work = await bayStaffService.GetWorkForBayStaffAsync(bayStaff, cancellationToken);
-        if (work == null)
+        
+        if (work != null)
         {
-            await bayService.AlertFreeAsync(bay, bayStaff, cancellationToken);
+            if (await workService.IsWorkCompletedAsync(work, cancellationToken))
+            {
+                var bay = await workService.GetBayForWorkAsync(work, cancellationToken);
+                if (bay == null)
+                    throw new Exception("The Work this BayStaff is doing is not being done for any Bay.");
+                
+                await bayService.AlertBayWorkCompleteAsync(work.WorkType, bay, cancellationToken);
+                await workService.RemoveWorkAsync(work, cancellationToken);
+            }
         }
-        else if (await workService.IsWorkCompletedAsync(work, cancellationToken))
+        else
         {
-            await workService.RemoveWorkAsync(work, cancellationToken);
+            var shift = await bayShiftService.GetCurrentBayShiftForBayStaffAsync(bayStaff, cancellationToken);
+            if (shift == null) return;
+
+            var bay = await bayShiftService.GetBayForBayShiftAsync(shift, cancellationToken);
+            if (bay == null)
+                    throw new Exception("This BayShift did not have a Bay assigned.");
+                
+            await bayService.AlertFreeAsync(bay, bayStaff, cancellationToken);
         }
     }
 

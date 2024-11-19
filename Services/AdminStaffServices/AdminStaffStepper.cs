@@ -15,12 +15,6 @@ public sealed class AdminStaffStepper(
     WorkService workService,
     HubService hubService) : IStepperService<AdminStaff>
 {
-    public async Task<bool> IsWorkingAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
-    {
-        var shift = await adminShiftService.GetCurrentShiftAsync(adminStaff, cancellationToken);
-        return shift != null;
-    }
-    
     public async Task AlertFreeAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var hub = await adminStaffService.GetHubForAdminStaffAsync(adminStaff, cancellationToken);
@@ -31,25 +25,29 @@ public sealed class AdminStaffStepper(
         await tripService.AlertFreeAsync(trip, adminStaff, cancellationToken);
     }
     
-    public async Task HandleWorkAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
-    {
-        var work = await adminStaffService.GetWorkForAdminStaffAsync(adminStaff, cancellationToken);
-        if (work == null)
-        {
-            await AlertFreeAsync(adminStaff, cancellationToken);
-        }
-        else if (await workService.IsWorkCompletedAsync(work, cancellationToken))
-        {
-            await workService.RemoveWorkAsync(work, cancellationToken);
-        }
-    }
-    
     public async Task StepAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        // TODO: Fix cases where adminStaff has work assigned at end of shift
-        if (!await IsWorkingAsync(adminStaff, cancellationToken)) return;
-
-        await HandleWorkAsync(adminStaff, cancellationToken);
+        var work = await adminStaffService.GetWorkForAdminStaffAsync(adminStaff, cancellationToken);
+        
+        if (work != null)
+        {
+            if (await workService.IsWorkCompletedAsync(work, cancellationToken))
+            {
+                var trip = await workService.GetTripForWorkAsync(work, cancellationToken);
+                if (trip == null)
+                    throw new Exception("The Work this BayStaff is doing is not being done for any Bay.");
+                
+                await tripService.AlertCheckInCompleteAsync(trip, cancellationToken);
+                await workService.RemoveWorkAsync(work, cancellationToken);
+            }
+        }
+        else
+        {
+            var shift = await adminShiftService.GetCurrentShiftAsync(adminStaff, cancellationToken);
+            if (shift == null) return;
+                
+            await AlertFreeAsync(adminStaff, cancellationToken);
+        }
     }
 
     public async Task StepAsync(CancellationToken cancellationToken)

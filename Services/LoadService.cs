@@ -76,4 +76,10 @@ public class LoadService(
         var pickUp = pickUps[ModelConfig.Random.Next(pickUps.Count)];
         return pickUp;
     }
+
+    public async Task<Bay?> GetBayForLoadAsync(Load load, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+        // TODO: Get Bay for Load
+    }
 }

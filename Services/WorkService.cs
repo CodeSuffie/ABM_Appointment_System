@@ -1,5 +1,6 @@
 using Database;
 using Database.Models;
+using Microsoft.EntityFrameworkCore;
 using Services.ModelServices;
 using Settings;
 
@@ -7,8 +8,7 @@ namespace Services;
 
 public sealed class WorkService(
     ModelDbContext context,
-    ModelService modelService
-    )
+    ModelService modelService)
 {
     public async Task<Work> GetNewObjectAsync(WorkType workType, CancellationToken cancellationToken)
     {
@@ -35,6 +35,26 @@ public sealed class WorkService(
             WorkType.Fetch => ModelConfig.FetchWorkTime,
             _ => null
         };
+    }
+    
+    public async Task<Bay?> GetBayForWorkAsync(Work work, CancellationToken cancellationToken)
+    {
+        if (work.BayId == null) return null;
+        
+        var bay = await context.Bays
+            .FirstOrDefaultAsync(x => x.Id == work.BayId, cancellationToken);
+
+        return bay;
+    }
+
+    public async Task<Trip?> GetTripForWorkAsync(Work work, CancellationToken cancellationToken)
+    {
+        if (work.TripId == null) return null;
+        
+        var trip = await context.Trips
+            .FirstOrDefaultAsync(x => x.Id == work.TripId, cancellationToken);
+
+        return trip;
     }
     
     public async Task AddWorkAsync(Trip trip, WorkType workType, CancellationToken cancellationToken)
@@ -105,5 +125,11 @@ public sealed class WorkService(
         var modelTime = await modelService.GetModelTimeAsync(cancellationToken);
         
         return endTime <= modelTime;
+    }
+
+    public async Task AdaptWorkLoadAsync(Bay bay, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+        // TODO: Adapt the workload at the bay to include new changes such as additional manpower
     }
 }
