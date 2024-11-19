@@ -38,30 +38,44 @@ public sealed class WorkService(
         };
     }
     
-    public async Task AddWorkAsync(AdminStaff adminStaff, Trip trip, CancellationToken cancellationToken)
+    public async Task AddWorkAsync(Trip trip, WorkType workType, CancellationToken cancellationToken)
+    {
+        var work = await GetNewObjectAsync(trip, workType, cancellationToken);
+
+        // TODO: Repository
+        await context.Works
+            .AddAsync(work, cancellationToken);
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task AddWorkAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var work = await GetNewObjectAsync(trip, WorkType.CheckIn, cancellationToken);
         
         work.AdminStaff = adminStaff;
 
+        // TODO: Repository
         await context.Works
             .AddAsync(work, cancellationToken);
         
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task AddWorkAsync(BayStaff bayStaff, Trip trip, WorkType workType, CancellationToken cancellationToken)
+    public async Task AddWorkAsync(Trip trip, BayStaff bayStaff, WorkType workType, CancellationToken cancellationToken)
     {
         var work = await GetNewObjectAsync(trip, workType, cancellationToken);
         
         work.BayStaff = bayStaff;
 
+        // TODO: Repository
         await context.Works
             .AddAsync(work, cancellationToken);
 
         await context.SaveChangesAsync(cancellationToken);
     }
     
+    // TODO: Repository
     public async Task RemoveWorkAsync(Work work, CancellationToken cancellationToken)
     {
         context.Works
@@ -79,6 +93,4 @@ public sealed class WorkService(
         
         return endTime <= modelTime;
     }
-
-    
 }

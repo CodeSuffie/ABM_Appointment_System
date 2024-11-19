@@ -16,7 +16,13 @@ public class Trip
     public long? TruckId { get; set; }
     
     public Hub? Hub { get; set; }
-    public long HubId { get; set; }
+    public long? HubId { get; set; }
+        
+    public ParkingSpot? ParkingSpot { get; set; }
+    public long? ParkingSpotId { get; set; }
+    
+    public Bay? Bay { get; set; }
+    public long? BayId { get; set; }
     
     public Work? Work { get; set; }
     public long? WorkId { get; set; }

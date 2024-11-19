@@ -3,6 +3,7 @@ using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Services.Abstractions;
 using Services.HubServices;
+using Services.TripServices;
 
 namespace Services.AdminStaffServices;
 
@@ -10,6 +11,7 @@ public sealed class AdminStaffStepper(
     ModelDbContext context,
     AdminStaffService adminStaffService,
     AdminShiftService adminShiftService,
+    TripService tripService,
     WorkService workService,
     HubService hubService) : IStepperService<AdminStaff>
 {
@@ -26,7 +28,7 @@ public sealed class AdminStaffStepper(
         var trip = await hubService.GetNextCheckInTripAsync(hub, cancellationToken);
         if (trip == null) return;
 
-        await workService.AddWorkAsync(adminStaff, trip, cancellationToken);
+        await tripService.AlertFreeAsync(trip, adminStaff, cancellationToken);
     }
     
     public async Task HandleWorkAsync(AdminStaff adminStaff, CancellationToken cancellationToken)

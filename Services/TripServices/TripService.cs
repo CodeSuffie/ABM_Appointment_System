@@ -1,13 +1,19 @@
 using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Services.BayServices;
+using Services.ParkingSpotServices;
 
 namespace Services.TripServices;
 
 public sealed class TripService(
     ModelDbContext context,
-    LoadService loadService) 
+    LoadService loadService,
+    WorkService workService,
+    ParkingSpotService parkingSpotService,
+    BayService bayService) 
 {
+    // TODO: Repository
     public async Task<Work?> GetWorkForTripAsync(Trip trip, CancellationToken cancellationToken)
     {
         var work = await context.Works
@@ -42,5 +48,26 @@ public sealed class TripService(
         };
 
         return trip;
+    }
+    
+    public async Task AlertFreeAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
+    {
+        await workService.AddWorkAsync(trip, adminStaff, cancellationToken);
+    }
+
+    public async Task AlertFreeAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
+    {
+        var parkingSpot = await GetParkingSpotForTripAsync(trip, cancellationToken);
+        if (parkingSpot == null) return;
+        
+        await parkingSpotService.AlertFreeAsync(parkingSpot, cancellationToken);
+        await bayService.AddTripAsync(bay, trip, cancellationToken);
+    }
+
+    // TODO: Repository
+    private async Task<ParkingSpot?> GetParkingSpotForTripAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+        // TODO: Get Parking Spot for Trip
     }
 }

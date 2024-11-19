@@ -24,6 +24,7 @@ public sealed class AdminStaffService(
         return adminStaff;
     }
     
+    // TODO: Repository
     public async Task<Hub> GetHubForAdminStaffAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var hub = await context.Hubs
@@ -33,6 +34,7 @@ public sealed class AdminStaffService(
         return hub;
     }
     
+    // TODO: Repository
     public async Task<Work?> GetWorkForAdminStaffAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var work = await context.Works
@@ -42,6 +44,7 @@ public sealed class AdminStaffService(
         return work;
     }
 
+    // TODO: Repository
     public async Task<IQueryable<AdminShift>> GetShiftsForAdminStaffAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var shifts = context.AdminShifts

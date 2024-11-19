@@ -24,6 +24,7 @@ public sealed class BayStaffService(
         return bayStaff;
     }
     
+    // TODO: Repository
     public async Task<Hub> GetHubForBayStaffAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var hub = await context.Hubs
@@ -33,6 +34,7 @@ public sealed class BayStaffService(
         return hub;
     }
     
+    // TODO: Repository
     public async Task<Work?> GetWorkForBayStaffAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var work = await context.Works
@@ -42,6 +44,7 @@ public sealed class BayStaffService(
         return work;
     }
     
+    // TODO: Repository
     public async Task<IQueryable<BayShift>> GetShiftsForBayStaffAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var shifts = context.BayShifts

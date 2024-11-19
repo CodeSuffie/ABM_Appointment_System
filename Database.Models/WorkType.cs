@@ -6,6 +6,7 @@ public enum WorkType
     CheckIn,
     DropOff,
     PickUp,
+    WaitParking,
     WaitCheckIn,
     WaitBay,
     Fetch,

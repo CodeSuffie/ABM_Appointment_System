@@ -13,5 +13,5 @@ public class TruckCompany : ILocation
     
     public List<Truck> Trucks { get; set; } = [];
 
-    public List<DropOffLoad> UnloadLoads { get; set; } = [];
+    public List<Load> DropOffLoads { get; set; } = [];
 }

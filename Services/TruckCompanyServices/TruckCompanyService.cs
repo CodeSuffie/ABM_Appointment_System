@@ -18,6 +18,7 @@ public sealed class TruckCompanyService(ModelDbContext context)
         return truckCompany;
     }
     
+    // TODO: Repository
     public async Task<TruckCompany> SelectTruckCompanyAsync(CancellationToken cancellationToken)
     {
         var truckCompanies = await context.TruckCompanies

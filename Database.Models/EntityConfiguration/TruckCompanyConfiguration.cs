@@ -10,7 +10,7 @@ public class TruckCompanyConfiguration : IEntityTypeConfiguration<TruckCompany>
         builder.HasMany(x => x.Trucks)
             .WithOne();
         
-        builder.HasMany(x => x.UnloadLoads)
+        builder.HasMany(x => x.DropOffLoads)
             .WithOne();
     }
 }

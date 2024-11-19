@@ -23,6 +23,7 @@ public sealed class HubService(
         return hub;
     }
 
+    // TODO: Repository
     public async Task<Hub> SelectHubAsync(CancellationToken cancellationToken)
     {
         var hubs = await context.Hubs
@@ -34,6 +35,7 @@ public sealed class HubService(
         return hub;
     }
 
+    // TODO: Repository
     public async Task<IQueryable<Trip>> GetTripsAtHubAsync(Hub hub, CancellationToken cancellationToken)
     {
         var trips = context.Trips
@@ -43,7 +45,34 @@ public sealed class HubService(
 
         return trips;
     }
+    
+    // TODO: Repository
+    public async Task<Trip?> GetNextParkingTripAsync(Hub hub, CancellationToken cancellationToken)
+    {
+        var allTrips = await GetTripsAtHubAsync(hub, cancellationToken);
+        
+        var trips = allTrips
+            .Where(x => x.Work != null &&
+                        x.Work.WorkType == WorkType.WaitParking)
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
 
+        Trip? nextTrip = null;
+        TimeSpan? earliestStart = null;
+        
+        await foreach (var trip in trips)
+        {
+            var work = await tripService.GetWorkForTripAsync(trip, cancellationToken);
+            if (nextTrip != null && (work == null ||
+                                     (work.StartTime > earliestStart))) continue;
+            nextTrip = trip;
+            earliestStart = work?.StartTime;
+        }
+
+        return nextTrip;
+    }
+
+    // TODO: Repository
     public async Task<Trip?> GetNextCheckInTripAsync(Hub hub, CancellationToken cancellationToken)
     {
         var allTrips = await GetTripsAtHubAsync(hub, cancellationToken);
@@ -69,6 +98,7 @@ public sealed class HubService(
         return nextTrip;
     }
     
+    // TODO: Repository
     public async Task<Trip?> GetNextBayTripAsync(Hub hub, CancellationToken cancellationToken)
     {
         var allTrips = await GetTripsAtHubAsync(hub, cancellationToken);

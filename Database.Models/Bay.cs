@@ -10,10 +10,14 @@ public class Bay : ILocation
     public int YSize { get; set; }
     public int XLocation { get; set; }
     public int YLocation { get; set; }
+    
     public bool Opened { get; set; }
     
     public Hub Hub { get; set; } = new();
     public long HubId { get; set; }
+    
+    public Trip? Trip { get; set; }
+    public long? TripId { get; set; }
     
     public List<BayShift> Shifts { get; set; } = [];
     public List<Load> Loads { get; set; } = [];
