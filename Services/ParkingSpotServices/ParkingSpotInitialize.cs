@@ -1,17 +1,18 @@
-using Database;
+using Repositories;
 using Services.Abstractions;
 using Settings;
 
 namespace Services.ParkingSpotServices;
 
 public sealed class ParkingSpotInitialize(
-    ModelDbContext context,
     ParkingSpotService parkingSpotService,
-    LocationService locationService) : IInitializationService
+    LocationService locationService,
+    HubRepository hubRepository,
+    ParkingSpotRepository parkingSpotRepository) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
-        var hubs = context.Hubs
+        var hubs = (await hubRepository.GetHubsAsync(cancellationToken))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         
@@ -20,8 +21,8 @@ public sealed class ParkingSpotInitialize(
             var parkingSpot = await parkingSpotService.GetNewObjectAsync(hub, cancellationToken);
         
             await locationService.InitializeObjectAsync(parkingSpot, cancellationToken);
-            
-            hub.ParkingSpots.Add(parkingSpot);
+
+            await parkingSpotRepository.SetParkingSpotHubAsync(parkingSpot, hub, cancellationToken);
         }
     }
 
@@ -31,7 +32,5 @@ public sealed class ParkingSpotInitialize(
         {
             await InitializeObjectAsync(cancellationToken);
         }
-        
-        await context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,5 +1,6 @@
 using Database;
 using Database.Models;
+using Repositories;
 using Services.Abstractions;
 using Services.BayServices;
 using Services.HubServices;
@@ -9,17 +10,18 @@ namespace Services.BayStaffServices;
 
 public sealed class BayStaffStepper(
     ModelDbContext context,
-    BayStaffService bayStaffService,
-    BayShiftService bayShiftService,
+    WorkRepository workRepository,
+    BayRepository bayRepository,
+    BayShiftRepository bayShiftRepository,
     WorkService workService,
     BayService bayService) : IStepperService<BayStaff>
 {
     public async Task GetNewWorkAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        var shift = await bayShiftService.GetCurrentBayShiftForBayStaffAsync(bayStaff, cancellationToken);
+        var shift = await bayShiftRepository.GetCurrentAsync(bayStaff, cancellationToken);
         if (shift == null) return;
 
-        var bay = await bayShiftService.GetBayForBayShiftAsync(shift, cancellationToken);
+        var bay = await bayRepository.GetBayByShiftAsync(shift, cancellationToken);
         if (bay == null)
             throw new Exception("This BayShift did not have a Bay assigned.");
                 
@@ -28,17 +30,17 @@ public sealed class BayStaffStepper(
 
     public async Task WorkCompleteAsync(Work work, CancellationToken cancellationToken)
     {
-        var bay = await workService.GetBayForWorkAsync(work, cancellationToken);
+        var bay = await bayRepository.GetBayByWorkAsync(work, cancellationToken);
         if (bay == null)
             throw new Exception("The Work this BayStaff is doing is not being done for any Bay.");
             
         await bayService.AlertBayWorkCompleteAsync(work.WorkType, bay, cancellationToken);
-        await workService.RemoveWorkAsync(work, cancellationToken);
+        await workRepository.RemoveWorkAsync(work, cancellationToken);
     }
     
     public async Task StepAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        var work = await bayStaffService.GetWorkForBayStaffAsync(bayStaff, cancellationToken);
+        var work = await workRepository.GetWorkByStaffAsync(bayStaff, cancellationToken);
         
         if (work == null)
         {

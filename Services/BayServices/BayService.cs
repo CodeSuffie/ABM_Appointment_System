@@ -1,20 +1,19 @@
-using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
-using Services.HubServices;
-using Services.ModelServices;
+using Repositories;
 using Services.TripServices;
 using Settings;
 
 namespace Services.BayServices;
 
 public sealed class BayService(
-    ModelDbContext context,
-    BayShiftService bayShiftService,
+    HubRepository hubRepository,
     TripService tripService,
-    HubService hubService,
-    LoadService loadService,
-    WorkService workService)
+    WorkService workService,
+    BayRepository bayRepository,
+    TripRepository tripRepository,
+    LoadRepository loadRepository,
+    WorkRepository workRepository)
 {
     public async Task<Bay> GetNewObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
@@ -29,115 +28,35 @@ public sealed class BayService(
         return bay;
     }
 
-    // TODO: Repository
-    public async Task<Bay> SelectBayByStaff(BayStaff bayStaff, CancellationToken cancellationToken)
+    public async Task<Bay> SelectBayByHubAsync(Hub hub, CancellationToken cancellationToken)
     {
-        var bays = await context.Bays
-            .Where(x => x.HubId == bayStaff.Hub.Id)
+        var bays = await (await bayRepository.GetBaysByHubAsync(hub, cancellationToken))
             .ToListAsync(cancellationToken);
 
         if (bays.Count <= 0) 
-            throw new Exception("There was no Bay assigned to the Hub of this BayStaff.");
+            throw new Exception("There was no Bay assigned to this Hub.");
 
         var bay = bays[ModelConfig.Random.Next(bays.Count)];
         return bay;
     }
 
-    // TODO: Repository
-    private async Task<Trip?> GetTripForBayAsync(Bay bay, CancellationToken cancellationToken)
-    {
-        var trip = await context.Trips
-            .FirstOrDefaultAsync(t=> t.Bay != null && t.BayId == bay.Id, cancellationToken);
-        
-        return trip;
-    }
-    
-    // TODO: Repository
-    private async Task<Hub?> GetHubForBayAsync(Bay bay, CancellationToken cancellationToken)
-    {
-        var hub = await context.Hubs
-            .FirstOrDefaultAsync(h=> h.Id == bay.HubId, cancellationToken);
-
-        // if (hub == null)
-        //     throw new Exception("There was no Hub assigned to this Bay.");
-        
-        return hub;
-    }
-    
-    // TODO: Repository
-    public async Task<IQueryable<BayShift>> GetBayShiftsForBayAsync(Bay bay, CancellationToken cancellationToken)
-    {
-        var shifts = context.BayShifts
-            .Where(x => x.BayId == bay.Id);
-
-        return shifts;
-    }
-    
-    // TODO: Repository
-    public async Task<List<BayShift>> GetCurrentBayShiftsForBayAsync(Bay bay, CancellationToken cancellationToken)
-    { 
-        var shifts = (await GetBayShiftsForBayAsync(bay, cancellationToken))
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken);
-    
-        var currentShifts = new List<BayShift>();
-    
-        await foreach (var shift in shifts)
-        {
-            if (await bayShiftService.IsCurrentShiftAsync(shift, cancellationToken))
-            {
-                currentShifts.Add(shift);
-            }
-        }
-        
-        return currentShifts;
-    }
-
-    // TODO: Repository
-    public async Task SetBayStatusAsync(Bay bay, BayStatus status, CancellationToken cancellationToken)
-    {
-        bay.BayStatus = status;
-        
-        await context.SaveChangesAsync(cancellationToken);
-    }
-    
-    // TODO: Repository
-    public async Task RemoveTripAsync(Bay bay, Trip trip, CancellationToken cancellationToken)
-    {
-        trip.Bay = null;
-        bay.Trip = null;
-        
-        await context.SaveChangesAsync(cancellationToken);
-    }
-    
-    // TODO: Repository
-    public async Task AddTripAsync(Bay bay, Trip trip, CancellationToken cancellationToken)
-    {
-        // TODO: If already an active ParkingSpot or Bay, throw Exception or Log
-        
-        trip.Bay = bay;
-        bay.Trip = trip;
-        
-        await context.SaveChangesAsync(cancellationToken);
-    }
-
     public async Task StartDropOffAsync(Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        await workService.AddWorkAsync(bay, bayStaff, WorkType.DropOff, cancellationToken);
+        await workRepository.AddWorkAsync(bay, bayStaff, WorkType.DropOff, cancellationToken);
         await workService.AdaptWorkLoadAsync(bay, cancellationToken);
     }
     
     public async Task StartFetchAsync(Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        var trip = await GetTripForBayAsync(bay, cancellationToken);
+        var trip = await tripRepository.GetTripByBayAsync(bay, cancellationToken);
         if (trip == null)
             throw new Exception("Cannot start a Fetch Work Job for a BayStaff at a Bay that has no Trip assigned.");
         
-        var pickUpLoad = await tripService.GetPickUpLoadForTripAsync(trip, cancellationToken);
+        var pickUpLoad = await loadRepository.GetPickUpLoadByTripAsync(trip, cancellationToken);
         
         if (pickUpLoad != null)
         {
-            var pickUpLoadBay = await loadService.GetBayForLoadAsync(pickUpLoad, cancellationToken);
+            var pickUpLoadBay = await bayRepository.GetBayByLoadAsync(pickUpLoad, cancellationToken);
             
             if (pickUpLoadBay == null)
             {
@@ -155,7 +74,7 @@ public sealed class BayService(
             
             else if (pickUpLoadBay.Id != bay.Id)
             {
-                await workService.AddWorkAsync(bay, bayStaff, WorkType.Fetch, cancellationToken);
+                await workRepository.AddWorkAsync(bay, bayStaff, WorkType.Fetch, cancellationToken);
                 return;
             }
         }
@@ -167,50 +86,29 @@ public sealed class BayService(
     
     public async Task StartPickUpAsync(Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        await workService.AddWorkAsync(bay, bayStaff, WorkType.PickUp, cancellationToken);
+        await workRepository.AddWorkAsync(bay, bayStaff, WorkType.PickUp, cancellationToken);
         await workService.AdaptWorkLoadAsync(bay, cancellationToken);
     }
     
     
     public async Task AlertFreeAsync(Bay bay, CancellationToken cancellationToken)
     {
-        var oldTrip = await GetTripForBayAsync(bay, cancellationToken);
+        // TODO: AlertDone to Trip?
+        var oldTrip = await tripRepository.GetTripByBayAsync(bay, cancellationToken);
         if (oldTrip != null)
         {
-            await RemoveTripAsync(bay, oldTrip, cancellationToken);
+            await tripRepository.RemoveTripBayAsync(oldTrip, bay, cancellationToken);
         }
 
-        var hub = await GetHubForBayAsync(bay, cancellationToken);
+        var hub = await hubRepository.GetHubByBayAsync(bay, cancellationToken);
         if (hub == null) return;
         
-        var newTrip = await hubService.GetNextBayTripAsync(hub, cancellationToken);
+        var newTrip = await tripRepository.GetNextTripByHubByWorkTypeAsync(hub, WorkType.WaitBay, cancellationToken);
         if (newTrip != null)
         {
             await tripService.AlertFreeAsync(newTrip, bay, cancellationToken);
-            await SetBayStatusAsync(bay, BayStatus.Claimed, cancellationToken);
+            await bayRepository.SetBayStatusAsync(bay, BayStatus.Claimed, cancellationToken);
         }
-    }
-    
-    public async Task RemoveLoadAsync(Bay bay, Load load, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-        // TODO: Remove Load from Bay
-    }
-    
-    public async Task AddLoadAsync(Bay bay, Load load, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-        // TODO: Add Load to Bay
-    }
-    
-    public async Task MoveLoadAsync(Bay bay, Load load, CancellationToken cancellationToken)
-    {
-        var oldBay = await loadService.GetBayForLoadAsync(load, cancellationToken);
-        if (oldBay == null)
-            throw new Exception("This Load cannot be moved to another Bay since it is not located at a Bay");
-        
-        await RemoveLoadAsync(oldBay, load, cancellationToken);
-        await AddLoadAsync(bay, load, cancellationToken);
     }
 
     public async Task AlertDroppedOffAsync(Bay bay, CancellationToken cancellationToken)
@@ -218,26 +116,26 @@ public sealed class BayService(
         switch (bay.BayStatus)
         {
             case BayStatus.DroppingOffStarted:
-                await SetBayStatusAsync(bay, BayStatus.WaitingFetchStart, cancellationToken);
+                await bayRepository.SetBayStatusAsync(bay, BayStatus.WaitingFetchStart, cancellationToken);
                 break;
             case BayStatus.FetchStarted:
-                await SetBayStatusAsync(bay, BayStatus.WaitingFetch, cancellationToken);
+                await bayRepository.SetBayStatusAsync(bay, BayStatus.WaitingFetch, cancellationToken);
                 break;
             case BayStatus.FetchFinished:
-                await SetBayStatusAsync(bay, BayStatus.PickUpStarted, cancellationToken);
+                await bayRepository.SetBayStatusAsync(bay, BayStatus.PickUpStarted, cancellationToken);
                 break;
             default:
                 // TODO: Log the miss
                 return;
         }
 
-        var trip = await GetTripForBayAsync(bay, cancellationToken);
+        var trip = await tripRepository.GetTripByBayAsync(bay, cancellationToken);
         if (trip == null) return;
 
-        var dropOffLoad = await tripService.GetDropOffLoadForTripAsync(trip, cancellationToken);
+        var dropOffLoad = await loadRepository.GetDropOffLoadByTripAsync(trip, cancellationToken);
         if (dropOffLoad != null)
         {
-            await AddLoadAsync(bay, dropOffLoad, cancellationToken);
+            await loadRepository.SetLoadBayAsync(dropOffLoad, bay, cancellationToken);
         }
     }
 
@@ -246,11 +144,11 @@ public sealed class BayService(
         switch (bay.BayStatus)
         {
             case BayStatus.FetchStarted:
-                await SetBayStatusAsync(bay, BayStatus.FetchFinished, cancellationToken);
+                await bayRepository.SetBayStatusAsync(bay, BayStatus.FetchFinished, cancellationToken);
                 break;
             
             case BayStatus.WaitingFetch:
-                await SetBayStatusAsync(bay, BayStatus.PickUpStarted, cancellationToken);
+                await bayRepository.SetBayStatusAsync(bay, BayStatus.PickUpStarted, cancellationToken);
                 break;
             
             default:
@@ -258,13 +156,13 @@ public sealed class BayService(
                 return;
         }
         
-        var trip = await GetTripForBayAsync(bay, cancellationToken);
+        var trip = await tripRepository.GetTripByBayAsync(bay, cancellationToken);
         if (trip == null) return;
 
-        var pickUpLoad = await tripService.GetPickUpLoadForTripAsync(trip, cancellationToken);
+        var pickUpLoad = await loadRepository.GetPickUpLoadByTripAsync(trip, cancellationToken);
         if (pickUpLoad != null)
         {
-            await MoveLoadAsync(bay, pickUpLoad, cancellationToken);
+            await loadRepository.SetLoadBayAsync(pickUpLoad, bay, cancellationToken);
         }
     }
 
@@ -272,15 +170,15 @@ public sealed class BayService(
     {
         if (bay.BayStatus == BayStatus.PickUpStarted)
         { 
-            await SetBayStatusAsync(bay, BayStatus.Free, cancellationToken);
+            await bayRepository.SetBayStatusAsync(bay, BayStatus.Free, cancellationToken);
             
-            var trip = await GetTripForBayAsync(bay, cancellationToken);
+            var trip = await tripRepository.GetTripByBayAsync(bay, cancellationToken);
             if (trip == null) return;
 
-            var pickUpLoad = await tripService.GetPickUpLoadForTripAsync(trip, cancellationToken);
+            var pickUpLoad = await loadRepository.GetPickUpLoadByTripAsync(trip, cancellationToken);
             if (pickUpLoad != null)
             {
-                await RemoveLoadAsync(bay, pickUpLoad, cancellationToken);
+                await loadRepository.RemoveLoadBayAsync(pickUpLoad, bay, cancellationToken);
             }
             
             await tripService.AlertBayWorkCompleteAsync(trip, cancellationToken);
@@ -342,7 +240,7 @@ public sealed class BayService(
 
         if (bay.BayStatus == BayStatus.Closed)
         {
-            await SetBayStatusAsync(bay, BayStatus.Free, cancellationToken);
+            await bayRepository.SetBayStatusAsync(bay, BayStatus.Free, cancellationToken);
         }
 
         if (bay.BayStatus == BayStatus.Free)
@@ -352,7 +250,7 @@ public sealed class BayService(
         
         if (bay.BayStatus == BayStatus.Claimed)
         {
-            await SetBayStatusAsync(bay, BayStatus.DroppingOffStarted, cancellationToken);
+            await bayRepository.SetBayStatusAsync(bay, BayStatus.DroppingOffStarted, cancellationToken);
             await StartDropOffAsync(bay, bayStaff, cancellationToken);
             return;
         }

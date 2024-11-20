@@ -1,16 +1,15 @@
-using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Repositories;
 using Services.AdminStaffServices;
-using Services.ModelServices;
 using Settings;
 
 namespace Services;
 
 public sealed class AdminShiftService(
-    ModelDbContext context,
     AdminStaffService adminStaffService,
-    ModelService modelService) 
+    HubRepository hubRepository,
+    OperatingHourRepository operatingHourRepository) 
 {
     private async Task<TimeSpan> GetStartTimeAsync(
         AdminStaff adminStaff,
@@ -49,8 +48,8 @@ public sealed class AdminShiftService(
 
     public async Task GetNewObjectsAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var operatingHours = context.OperatingHours
-            .Where(x => x.HubId == adminStaff.Hub.Id)
+        var hub = await hubRepository.GetHubByStaffAsync(adminStaff, cancellationToken);
+        var operatingHours = (await operatingHourRepository.GetOperatingHoursByHubAsync(hub, cancellationToken))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         
@@ -65,28 +64,5 @@ public sealed class AdminShiftService(
             
             adminStaff.Shifts.Add(adminShift);
         }
-    }
-
-    public async Task<AdminShift?> GetCurrentShiftAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
-    {
-        var modelTime = await modelService.GetModelTimeAsync(cancellationToken);
-        
-        var shifts = (await adminStaffService.GetShiftsForAdminStaffAsync(adminStaff, cancellationToken))
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken);
-
-        await foreach (var shift in shifts)
-        {
-            if (shift.Duration == null)
-                throw new Exception("The shift for this AdminStaff does not have a Duration.");
-            
-            var endTime = (TimeSpan)(shift.StartTime + shift.Duration);
-            if (modelTime >= shift.StartTime && modelTime <= endTime)
-            {
-                return shift;
-            }
-        }
-
-        return null;
     }
 }

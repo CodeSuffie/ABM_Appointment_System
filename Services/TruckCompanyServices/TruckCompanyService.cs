@@ -1,11 +1,12 @@
-using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Repositories;
 using Settings;
 
 namespace Services.TruckCompanyServices;
 
-public sealed class TruckCompanyService(ModelDbContext context) 
+public sealed class TruckCompanyService(
+    TruckCompanyRepository truckCompanyRepository) 
 {
     public async Task<TruckCompany> GetNewObjectAsync(CancellationToken cancellationToken)
     {
@@ -21,7 +22,7 @@ public sealed class TruckCompanyService(ModelDbContext context)
     // TODO: Repository
     public async Task<TruckCompany> SelectTruckCompanyAsync(CancellationToken cancellationToken)
     {
-        var truckCompanies = await context.TruckCompanies
+        var truckCompanies = await (await truckCompanyRepository.GetTruckCompaniesAsync(cancellationToken))
             .ToListAsync(cancellationToken);
         
         if (truckCompanies.Count <= 0) 

@@ -1,13 +1,13 @@
-using Database;
+using Repositories;
 using Services.Abstractions;
 using Settings;
 
 namespace Services.TruckCompanyServices;
 
 public sealed class TruckCompanyInitialize(
-    ModelDbContext context,
     TruckCompanyService truckCompanyService,
-    LocationService locationService) : IInitializationService
+    LocationService locationService,
+    TruckCompanyRepository truckCompanyRepository) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
@@ -15,9 +15,8 @@ public sealed class TruckCompanyInitialize(
         
         await locationService.InitializeObjectAsync(truckCompany, cancellationToken);
         // Initially no Trips are created
-        
-        context.TruckCompanies
-            .Add(truckCompany);
+
+        await truckCompanyRepository.AddAsync(truckCompany, cancellationToken);
     }
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
@@ -26,7 +25,5 @@ public sealed class TruckCompanyInitialize(
         {
             await InitializeObjectAsync(cancellationToken);
         }
-        
-        await context.SaveChangesAsync(cancellationToken);
     }
 }

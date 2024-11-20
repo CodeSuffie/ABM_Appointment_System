@@ -1,14 +1,13 @@
-using Database;
 using Database.Models;
-using Microsoft.EntityFrameworkCore;
+using Repositories;
 using Services.HubServices;
 using Settings;
 
 namespace Services.BayStaffServices;
 
 public sealed class BayStaffService(
-    ModelDbContext context,
-    HubService hubService) 
+    HubService hubService,
+    HubRepository hubRepository) 
 {
     public async Task<BayStaff> GetNewObjectAsync(CancellationToken cancellationToken)
     {
@@ -24,38 +23,9 @@ public sealed class BayStaffService(
         return bayStaff;
     }
     
-    // TODO: Repository
-    public async Task<Hub> GetHubForBayStaffAsync(BayStaff bayStaff, CancellationToken cancellationToken)
-    {
-        var hub = await context.Hubs
-            .FirstOrDefaultAsync(x => x.Id == bayStaff.HubId, cancellationToken);
-        if (hub == null) throw new Exception("This BayStaff did not have a Hub assigned.");
-
-        return hub;
-    }
-    
-    // TODO: Repository
-    public async Task<Work?> GetWorkForBayStaffAsync(BayStaff bayStaff, CancellationToken cancellationToken)
-    {
-        var work = await context.Works
-            .FirstOrDefaultAsync(x => x.BayStaff != null &&
-                                      x.BayStaffId == bayStaff.Id, cancellationToken);
-        
-        return work;
-    }
-    
-    // TODO: Repository
-    public async Task<IQueryable<BayShift>> GetShiftsForBayStaffAsync(BayStaff bayStaff, CancellationToken cancellationToken)
-    {
-        var shifts = context.BayShifts
-            .Where(x => x.BayStaffId == bayStaff.Id);
-
-        return shifts;
-    }
-    
     public async Task<double> GetWorkChanceAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        var hub = await GetHubForBayStaffAsync(bayStaff, cancellationToken);
+        var hub = await hubRepository.GetHubByStaffAsync(bayStaff, cancellationToken);
         
         return bayStaff.WorkChance / hub.OperatingChance;
     }

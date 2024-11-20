@@ -1,10 +1,9 @@
-using Database;
 using Database.Models;
 using Settings;
 
 namespace Services;
 
-public sealed class OperatingHourService(ModelDbContext context)
+public sealed class OperatingHourService()
 {
     private async Task<TimeSpan> GetStartTimeAsync(
         Hub hub, 

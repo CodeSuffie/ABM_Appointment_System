@@ -1,14 +1,14 @@
-using Database;
+using Repositories;
 using Services.Abstractions;
 using Settings;
 
 namespace Services.HubServices;
 
 public sealed class HubInitialize(
-    ModelDbContext context,  
     HubService hubService,
     OperatingHourService operatingHourService, 
-    LocationService locationService) : IInitializationService
+    LocationService locationService,
+    HubRepository hubRepository) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
@@ -16,9 +16,8 @@ public sealed class HubInitialize(
         
         await locationService.InitializeObjectAsync(hub, cancellationToken);
         await operatingHourService.GetNewObjectsAsync(hub, cancellationToken);
-        
-        context.Hubs
-            .Add(hub);
+
+        await hubRepository.AddAsync(hub, cancellationToken);
     }
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
@@ -27,7 +26,5 @@ public sealed class HubInitialize(
         {
             await InitializeObjectAsync(cancellationToken);
         }
-        
-        await context.SaveChangesAsync(cancellationToken);
     }
 }

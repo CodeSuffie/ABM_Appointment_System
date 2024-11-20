@@ -1,22 +1,22 @@
 using Database;
+using Repositories;
 using Services.Abstractions;
 using Settings;
 
 namespace Services.BayStaffServices;
 
 public sealed class BayStaffInitialize(
-    ModelDbContext context, 
     BayStaffService bayStaffService,
-    BayShiftService bayShiftService) : IInitializationService
+    BayShiftService bayShiftService,
+    BayStaffRepository bayStaffRepository) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var bayStaff = await bayStaffService.GetNewObjectAsync(cancellationToken);
         
         await bayShiftService.GetNewObjectsAsync(bayStaff, cancellationToken);
-        
-        context.BayStaffs
-            .Add(bayStaff);
+
+        await bayStaffRepository.AddAsync(bayStaff, cancellationToken);
     }
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
@@ -25,7 +25,5 @@ public sealed class BayStaffInitialize(
         {
             await InitializeObjectAsync(cancellationToken);
         }
-        
-        await context.SaveChangesAsync(cancellationToken);
     }
 }

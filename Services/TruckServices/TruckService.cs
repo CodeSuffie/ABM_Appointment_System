@@ -1,13 +1,10 @@
-using Database;
 using Database.Models;
 using Services.TruckCompanyServices;
 using Settings;
 
 namespace Services.TruckServices;
 
-public sealed class TruckService(
-    ModelDbContext context,
-    TruckCompanyService truckCompanyService)
+public sealed class TruckService(TruckCompanyService truckCompanyService)
 {
     public async Task<Truck> GetNewObjectAsync(CancellationToken cancellationToken)
     {

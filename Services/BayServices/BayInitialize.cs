@@ -1,17 +1,19 @@
 using Database;
+using Repositories;
 using Services.Abstractions;
 using Settings;
 
 namespace Services.BayServices;
 
 public sealed class BayInitialize(
-    ModelDbContext context,
     BayService bayService,
-    LocationService locationService) : IInitializationService
+    LocationService locationService,
+    HubRepository hubRepository,
+    BayRepository bayRepository) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
-        var hubs = context.Hubs
+        var hubs = (await hubRepository.GetHubsAsync(cancellationToken))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         
@@ -20,8 +22,8 @@ public sealed class BayInitialize(
             var bay = await bayService.GetNewObjectAsync(hub, cancellationToken);
         
             await locationService.InitializeObjectAsync(bay, cancellationToken);
-            
-            hub.Bays.Add(bay);
+
+            await bayRepository.SetBayHubAsync(bay, hub, cancellationToken);
         }
     }
 
@@ -31,7 +33,5 @@ public sealed class BayInitialize(
         {
             await InitializeObjectAsync(cancellationToken);
         }
-        
-        await context.SaveChangesAsync(cancellationToken);
     }
 }

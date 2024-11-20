@@ -1,22 +1,22 @@
 using Database;
+using Repositories;
 using Services.Abstractions;
 using Settings;
 
 namespace Services.AdminStaffServices;
 
 public sealed class AdminStaffInitialize(
-    ModelDbContext context, 
     AdminStaffService adminStaffService,
-    AdminShiftService adminShiftService) : IInitializationService
+    AdminShiftService adminShiftService,
+    AdminStaffRepository adminStaffRepository) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var adminStaff = await adminStaffService.GetNewObjectAsync(cancellationToken);
         
         await adminShiftService.GetNewObjectsAsync(adminStaff, cancellationToken);
-        
-        context.AdminStaffs
-            .Add(adminStaff);
+
+        await adminStaffRepository.AddAsync(adminStaff, cancellationToken);
     }
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
@@ -25,7 +25,5 @@ public sealed class AdminStaffInitialize(
         {
             await InitializeObjectAsync(cancellationToken);
         }
-        
-        await context.SaveChangesAsync(cancellationToken);
     }
 }

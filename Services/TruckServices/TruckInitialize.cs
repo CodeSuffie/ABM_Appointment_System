@@ -1,19 +1,19 @@
 using Database;
+using Repositories;
 using Services.Abstractions;
 using Settings;
 
 namespace Services.TruckServices;
 
 public sealed class TruckInitialize(
-    ModelDbContext context,
-    TruckService truckService) : IInitializationService
+    TruckService truckService,
+    TruckRepository truckRepository) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var truck = await truckService.GetNewObjectAsync(cancellationToken);
-        
-        context.Trucks
-            .Add(truck);
+
+        await truckRepository.AddAsync(truck, cancellationToken);
     }
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
@@ -22,7 +22,5 @@ public sealed class TruckInitialize(
         {
             await InitializeObjectAsync(cancellationToken);
         }
-        
-        await context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,6 +1,5 @@
-using Database;
 using Database.Models;
-using Microsoft.EntityFrameworkCore;
+using Repositories;
 using Services.HubServices;
 using Services.TruckCompanyServices;
 using Settings;
@@ -8,9 +7,9 @@ using Settings;
 namespace Services;
 
 public class LoadService(
-    ModelDbContext context,
     TruckCompanyService truckCompanyService,
-    HubService hubService)
+    HubService hubService,
+    LoadRepository loadRepository)
 {
     public async Task<Load> GetNewObjectAsync(CancellationToken cancellationToken)
     {
@@ -35,16 +34,13 @@ public class LoadService(
         for (var i = 0; i < count; i++)
         {
             var load = await GetNewObjectAsync(cancellationToken);
-            context.Loads.Add(load);
+            await loadRepository.AddLoadAsync(load, cancellationToken);
         }
     }
     
     public async Task<Load?> SelectUnclaimedDropOffAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var dropOffs = await context.Loads
-            .Where(x => x.DropOffTrip == null)
-            .Where(x => x.TruckCompanyStartId == truckCompany.Id)
-            .ToListAsync(cancellationToken);
+        var dropOffs = await loadRepository.GetUnclaimedDropOffLoadsByTruckCompanyAsync(truckCompany, cancellationToken);
 
         if (dropOffs.Count <= 0) return null;
         
@@ -54,9 +50,7 @@ public class LoadService(
     
     public async Task<Load?> SelectUnclaimedPickUpAsync(CancellationToken cancellationToken)
     {
-        var pickUps = await context.Loads
-            .Where(x => x.PickUpTrip == null)
-            .ToListAsync(cancellationToken);
+        var pickUps = await loadRepository.GetUnclaimedPickUpLoadsAsync(cancellationToken);
 
         if (pickUps.Count <= 0) return null;
         
@@ -66,20 +60,11 @@ public class LoadService(
 
     public async Task<Load?> SelectUnclaimedPickUpAsync(Hub hub, CancellationToken cancellationToken)
     {
-        var pickUps = await context.Loads
-            .Where(x => x.PickUpTrip == null)
-            .Where(x => x.HubId == hub.Id)
-            .ToListAsync(cancellationToken);
+        var pickUps = await loadRepository.GetUnclaimedPickUpLoadsByHubAsync(hub, cancellationToken);
 
         if (pickUps.Count <= 0) return null;
         
         var pickUp = pickUps[ModelConfig.Random.Next(pickUps.Count)];
         return pickUp;
-    }
-
-    public async Task<Bay?> GetBayForLoadAsync(Load load, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-        // TODO: Get Bay for Load
     }
 }

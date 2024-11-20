@@ -1,6 +1,7 @@
 using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Repositories;
 using Services.Abstractions;
 using Services.HubServices;
 using Services.TripServices;
@@ -9,20 +10,21 @@ namespace Services.AdminStaffServices;
 
 public sealed class AdminStaffStepper(
     ModelDbContext context,
-    AdminStaffService adminStaffService,
-    AdminShiftService adminShiftService,
+    HubRepository hubRepository,
+    WorkRepository workRepository,
+    AdminShiftRepository adminShiftRepository,
     TripService tripService,
     WorkService workService,
-    HubService hubService) : IStepperService<AdminStaff>
+    TripRepository tripRepository) : IStepperService<AdminStaff>
 {
      public async Task GetNewWorkAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
      {
-         var shift = await adminShiftService.GetCurrentShiftAsync(adminStaff, cancellationToken);
+         var shift = await adminShiftRepository.GetCurrentAsync(adminStaff, cancellationToken);
          if (shift == null) return;
                  
-         var hub = await adminStaffService.GetHubForAdminStaffAsync(adminStaff, cancellationToken);
+         var hub = await hubRepository.GetHubByStaffAsync(adminStaff, cancellationToken);
          
-         var trip = await hubService.GetNextCheckInTripAsync(hub, cancellationToken);
+         var trip = await tripRepository.GetNextTripByHubByWorkTypeAsync(hub, WorkType.WaitCheckIn, cancellationToken);
          if (trip == null) return;
  
          await tripService.AlertFreeAsync(trip, adminStaff, cancellationToken);
@@ -30,17 +32,17 @@ public sealed class AdminStaffStepper(
      
     public async Task WorkCompleteAsync(Work work, CancellationToken cancellationToken)
     {
-        var trip = await workService.GetTripForWorkAsync(work, cancellationToken);
+        var trip = await tripRepository.GetTripByWorkAsync(work, cancellationToken);
         if (trip == null)
             throw new Exception("The Work this BayStaff is doing is not being done for any Bay.");
                 
         await tripService.AlertCheckInCompleteAsync(trip, cancellationToken);
-        await workService.RemoveWorkAsync(work, cancellationToken);
+        await workRepository.RemoveWorkAsync(work, cancellationToken);
     }
     
     public async Task StepAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var work = await adminStaffService.GetWorkForAdminStaffAsync(adminStaff, cancellationToken);
+        var work = await workRepository.GetWorkByStaffAsync(adminStaff, cancellationToken);
         
         if (work == null)
         {

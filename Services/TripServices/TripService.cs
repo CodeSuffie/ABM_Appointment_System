@@ -1,17 +1,16 @@
-using Database;
 using Database.Models;
-using Microsoft.EntityFrameworkCore;
-using Services.BayServices;
+using Repositories;
 using Services.ParkingSpotServices;
 
 namespace Services.TripServices;
 
 public sealed class TripService(
-    ModelDbContext context,
     LoadService loadService,
-    WorkService workService,
+    WorkRepository workRepository,
     ParkingSpotService parkingSpotService,
-    BayService bayService) 
+    ParkingSpotRepository parkingSpotRepository,
+    TripRepository tripRepository,
+    HubRepository hubRepository) 
 {
     public async Task<Trip?> GetNewObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
@@ -24,8 +23,7 @@ public sealed class TripService(
         }
         else
         {
-            var hub = await context.Hubs
-                .FirstOrDefaultAsync(x => x.Id == dropOff.HubId, cancellationToken);
+            var hub = await hubRepository.GetHubByLoadAsync(dropOff, cancellationToken);
             if (hub == null) throw new Exception("DropOff Load was not matched on a valid Hub.");
             
             pickUp = await loadService.SelectUnclaimedPickUpAsync(hub, cancellationToken);
@@ -40,50 +38,20 @@ public sealed class TripService(
         return trip;
     }
     
-    // TODO: Repository
-    public async Task<Work?> GetWorkForTripAsync(Trip trip, CancellationToken cancellationToken)
-    {
-        var work = await context.Works
-            .FirstOrDefaultAsync(x => x.TripId == trip.Id, cancellationToken);
-        
-        return work;
-    }
-    
-    // TODO: Repository
-    private async Task<ParkingSpot?> GetParkingSpotForTripAsync(Trip trip, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-        // TODO: Get Parking Spot for Trip
-    }
-
-    // TODO: Repository
-    public async Task<Load?> GetPickUpLoadForTripAsync(Trip trip, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-        // TODO: Get PickUpLoad for Trip
-    }
-
-    // TODO: Repository
-    public async Task<Load?> GetDropOffLoadForTripAsync(Trip trip, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-        // TODO: Get DropOffLoad for Trip
-    }
-    
     public async Task AlertFreeAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        await workService.AddWorkAsync(trip, adminStaff, cancellationToken);
+        await workRepository.AddWorkAsync(trip, adminStaff, cancellationToken);
     }
 
     public async Task AlertFreeAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
     {
-        var parkingSpot = await GetParkingSpotForTripAsync(trip, cancellationToken);
+        var parkingSpot = await parkingSpotRepository.GetParkingSpotByTripAsync(trip, cancellationToken);
         if (parkingSpot == null) return;
         
         await parkingSpotService.AlertFreeAsync(parkingSpot, cancellationToken);
         
-        await bayService.AddTripAsync(bay, trip, cancellationToken);
-        await workService.AddWorkAsync(trip, bay, cancellationToken);
+        await tripRepository.SetTripBayAsync(trip, bay, cancellationToken);
+        await workRepository.AddWorkAsync(trip, bay, cancellationToken);
     }
 
     public async Task AlertCheckInCompleteAsync(Trip trip, CancellationToken cancellationToken)
@@ -99,6 +67,4 @@ public sealed class TripService(
         // TODO: Remove My Work
         // TODO: Add Work for TravelHome
     }
-
-    
 }

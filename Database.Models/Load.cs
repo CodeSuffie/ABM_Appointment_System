@@ -13,10 +13,10 @@ public class Load
     public long TruckCompanyEndId { get; set; }
 
     public Hub? Hub { get; set; }
-    public long HubId { get; set; }
+    public long? HubId { get; set; }
     
     public Bay? Bay { get; set; }
-    public long BayId { get; set; }
+    public long? BayId { get; set; }
     
     public Trip? DropOffTrip { get; set; }
     public long? DropOffTripId { get; set; }
