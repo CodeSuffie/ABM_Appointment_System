@@ -8,72 +8,97 @@ public sealed class LoadRepository(
     ModelDbContext context,
     BayRepository bayRepository)
 {
-    public async Task<List<Load>> GetUnclaimedDropOffLoadsByTruckCompanyAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public async Task<IQueryable<Load>> GetByStartAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var dropOffs = await context.Loads
-            .Where(x => x.DropOffTrip == null)
-            .Where(x => x.TruckCompanyStartId == truckCompany.Id)
-            .ToListAsync(cancellationToken);
+        var loads = context.Loads
+            .Where(l => l.TruckCompanyStartId == truckCompany.Id);
+
+        return loads;
+    }
+    
+    public async Task<IQueryable<Load>> GetByEndAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    {
+        var loads = context.Loads
+            .Where(l => l.TruckCompanyEndId == truckCompany.Id);
+
+        return loads;
+    }
+    
+    public async Task<IQueryable<Load>> GetAsync(Hub hub, CancellationToken cancellationToken)
+    {
+        var loads = context.Loads
+            .Where(l => l.HubId == hub.Id);
+
+        return loads;
+    }
+    
+    public async Task<Load?> GetPickUpAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        var load = await context.Loads
+            .FirstOrDefaultAsync(l => l.PickUpTripId == trip.Id, cancellationToken);
+
+        return load;
+    }
+    
+    public async Task<Load?> GetDropOffAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        var load = await context.Loads
+            .FirstOrDefaultAsync(l => l.DropOffTripId == trip.Id, cancellationToken);
+
+        return load;
+    }
+    
+    public async Task<IQueryable<Load>> GetUnclaimedDropOffAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    {
+        var dropOffs = (await GetByStartAsync(truckCompany, cancellationToken))
+            .Where(l => l.DropOffTrip == null);
 
         return dropOffs;
     }
     
-    public async Task<List<Load>> GetUnclaimedPickUpLoadsByHubAsync(Hub hub, CancellationToken cancellationToken)
+    public async Task<IQueryable<Load>> GetUnclaimedPickUpAsync(CancellationToken cancellationToken)
     {
-        var pickUps = await context.Loads
-            .Where(x => x.PickUpTrip == null)
-            .Where(x => x.HubId == hub.Id)
-            .ToListAsync(cancellationToken);
+        var pickUps = context.Loads
+            .Where(l => l.PickUpTrip == null);
 
         return pickUps;
     }
     
-    public async Task<List<Load>> GetUnclaimedPickUpLoadsAsync(CancellationToken cancellationToken)
+    public async Task<IQueryable<Load>> GetUnclaimedPickUpAsync(Hub hub, CancellationToken cancellationToken)
     {
-        var pickUps = await context.Loads
-            .Where(x => x.PickUpTrip == null)
-            .ToListAsync(cancellationToken);
+        var pickUps = (await GetAsync(hub, cancellationToken))
+            .Where(l => l.PickUpTrip == null);
 
         return pickUps;
     }
     
-    public async Task<Load?> GetPickUpLoadByTripAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task AddAsync(Load load, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
-        // TODO: Get PickUpLoad for Trip
-    }
-    
-    public async Task<Load?> GetDropOffLoadByTripAsync(Trip trip, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-        // TODO: Get DropOffLoad for Trip
-    }
-
-    public async Task AddLoadAsync(Load load, CancellationToken cancellationToken)
-    {
-        context.Loads.Add(load);
+        await context.Loads
+            .AddAsync(load, cancellationToken);
         
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task RemoveLoadBayAsync(Load load, Bay bay, CancellationToken cancellationToken)
+    public async Task SetAsync(Load load, Bay bay, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
-        // TODO: load.Bay = null;
-        // TODO: Bay.Loads.Remove(load);
-        // TODO: Save
-    }
-    
-    public async Task SetLoadBayAsync(Load load, Bay bay, CancellationToken cancellationToken)
-    {
-        var oldBay = await bayRepository.GetBayByLoadAsync(load, cancellationToken);
+        var oldBay = await bayRepository.GetAsync(load, cancellationToken);
         if (oldBay != null)
         {
-            await RemoveLoadBayAsync(load, oldBay, cancellationToken);
+            await UnsetAsync(load, oldBay, cancellationToken);
         }
-        throw new NotImplementedException();
-        // TODO: load.Bay = bay;
-        // TODO: Bay.Loads.Add(load);
-        // TODO: Save
+
+        load.Bay = bay;
+        bay.Loads.Add(load);
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task UnsetAsync(Load load, Bay bay, CancellationToken cancellationToken)
+    {
+        load.Bay = null;
+        bay.Loads.Remove(load);
+        
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

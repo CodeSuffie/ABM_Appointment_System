@@ -19,6 +19,9 @@ public class Trip
     public ParkingSpot? ParkingSpot { get; set; }
     public long? ParkingSpotId { get; set; }
     
+    public AdminStaff? AdminStaff { get; set; }
+    public long? AdminStaffId { get; set; }
+    
     public Bay? Bay { get; set; }
     public long? BayId { get; set; }
     

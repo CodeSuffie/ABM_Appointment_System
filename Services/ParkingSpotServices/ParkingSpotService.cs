@@ -1,12 +1,13 @@
 using Database.Models;
 using Repositories;
+using Services.TripServices;
 
 namespace Services.ParkingSpotServices;
 
 public sealed class ParkingSpotService(
     TripRepository tripRepository,
-    HubRepository hubRepository,
-    WorkRepository workRepository)
+    TripService tripService,
+    HubRepository hubRepository)
 {
     public async Task<ParkingSpot> GetNewObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
@@ -20,27 +21,29 @@ public sealed class ParkingSpotService(
         return parkingSpot;
     }
 
-    public async Task AlertClaimed(ParkingSpot parkingSpot, Trip trip, CancellationToken cancellationToken)
+    public async Task AlertClaimedAsync(ParkingSpot parkingSpot, Trip trip, CancellationToken cancellationToken)
     {
-        await tripRepository.SetTripParkingSpotAsync(trip, parkingSpot, cancellationToken);
-        await workRepository.AddWorkAsync(trip, WorkType.WaitCheckIn, cancellationToken);
+        await tripRepository.SetAsync(trip, parkingSpot, cancellationToken);
     }
 
+    public async Task AlertUnclaimedAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
+    {
+        var trip = await tripRepository.GetAsync(parkingSpot, cancellationToken);
+        if (trip == null)
+            throw new Exception("This ParkingSpot was just told to be unclaimed but no Trip is assigned");
+
+        await tripRepository.UnsetAsync(trip, parkingSpot, cancellationToken);
+    }
+    
     public async Task AlertFreeAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
-        var oldTrip = await tripRepository.GetTripByParkingSpotAsync(parkingSpot, cancellationToken);
-        if (oldTrip != null)
-        {
-            await tripRepository.RemoveTripParkingSpotAsync(oldTrip, parkingSpot, cancellationToken);
-        }
-
-        var hub = await hubRepository.GetHubByParkingSpotAsync(parkingSpot, cancellationToken);
-        if (hub == null) return;
+        var hub = await hubRepository.GetAsync(parkingSpot, cancellationToken);
+        if (hub == null) 
+            throw new Exception("This ParkingSpot was just told to be free but no Hub is assigned");
         
-        var newTrip = await tripRepository.GetNextTripByHubByWorkTypeAsync(hub, WorkType.WaitParking, cancellationToken);
-        if (newTrip != null)
-        {
-            await AlertClaimed(parkingSpot, newTrip, cancellationToken);
-        }
+        var trip = await tripService.GetNextAsync(hub, WorkType.WaitParking, cancellationToken);
+        if (trip == null) return;    // TODO: Log no waiting Trips
+        
+        await tripService.AlertFreeAsync(trip, parkingSpot, cancellationToken);
     }
 }

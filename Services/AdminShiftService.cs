@@ -9,7 +9,9 @@ namespace Services;
 public sealed class AdminShiftService(
     AdminStaffService adminStaffService,
     HubRepository hubRepository,
-    OperatingHourRepository operatingHourRepository) 
+    OperatingHourRepository operatingHourRepository,
+    AdminShiftRepository adminShiftRepository,
+    ModelRepository modelRepository) 
 {
     private async Task<TimeSpan> GetStartTimeAsync(
         AdminStaff adminStaff,
@@ -48,8 +50,8 @@ public sealed class AdminShiftService(
 
     public async Task GetNewObjectsAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var hub = await hubRepository.GetHubByStaffAsync(adminStaff, cancellationToken);
-        var operatingHours = (await operatingHourRepository.GetOperatingHoursByHubAsync(hub, cancellationToken))
+        var hub = await hubRepository.GetAsync(adminStaff, cancellationToken);
+        var operatingHours = (await operatingHourRepository.GetAsync(hub, cancellationToken))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         
@@ -64,5 +66,34 @@ public sealed class AdminShiftService(
             
             adminStaff.Shifts.Add(adminShift);
         }
+    }
+    
+    private async Task<bool> IsCurrentAsync(AdminShift adminShift, CancellationToken cancellationToken)
+    {
+        var modelTime = await modelRepository.GetTimeAsync(cancellationToken);
+        
+        if (adminShift.Duration == null)
+            throw new Exception("The shift for this AdminStaff does not have a Duration.");
+            
+        var endTime = (TimeSpan)(adminShift.StartTime + adminShift.Duration);
+        
+        return modelTime >= adminShift.StartTime && modelTime <= endTime;
+    }
+    
+    public async Task<AdminShift?> GetCurrentAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    {
+        var shifts = (await adminShiftRepository.GetAsync(adminStaff, cancellationToken))
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var shift in shifts)
+        {
+            if (await IsCurrentAsync(shift, cancellationToken))
+            {
+                return shift;
+            }
+        }
+
+        return null;
     }
 }

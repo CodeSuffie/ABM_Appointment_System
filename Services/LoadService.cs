@@ -1,4 +1,5 @@
 using Database.Models;
+using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.HubServices;
 using Services.TruckCompanyServices;
@@ -34,13 +35,14 @@ public class LoadService(
         for (var i = 0; i < count; i++)
         {
             var load = await GetNewObjectAsync(cancellationToken);
-            await loadRepository.AddLoadAsync(load, cancellationToken);
+            await loadRepository.AddAsync(load, cancellationToken);
         }
     }
     
     public async Task<Load?> SelectUnclaimedDropOffAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var dropOffs = await loadRepository.GetUnclaimedDropOffLoadsByTruckCompanyAsync(truckCompany, cancellationToken);
+        var dropOffs = await (await loadRepository.GetUnclaimedDropOffAsync(truckCompany, cancellationToken))
+            .ToListAsync(cancellationToken);
 
         if (dropOffs.Count <= 0) return null;
         
@@ -50,7 +52,8 @@ public class LoadService(
     
     public async Task<Load?> SelectUnclaimedPickUpAsync(CancellationToken cancellationToken)
     {
-        var pickUps = await loadRepository.GetUnclaimedPickUpLoadsAsync(cancellationToken);
+        var pickUps = await (await loadRepository.GetUnclaimedPickUpAsync(cancellationToken))
+            .ToListAsync(cancellationToken);
 
         if (pickUps.Count <= 0) return null;
         
@@ -60,7 +63,8 @@ public class LoadService(
 
     public async Task<Load?> SelectUnclaimedPickUpAsync(Hub hub, CancellationToken cancellationToken)
     {
-        var pickUps = await loadRepository.GetUnclaimedPickUpLoadsByHubAsync(hub, cancellationToken);
+        var pickUps = await (await loadRepository.GetUnclaimedPickUpAsync(hub, cancellationToken))
+            .ToListAsync(cancellationToken);
 
         if (pickUps.Count <= 0) return null;
         

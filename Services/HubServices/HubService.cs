@@ -1,4 +1,3 @@
-using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
@@ -23,7 +22,7 @@ public sealed class HubService(HubRepository hubRepository)
 
     public async Task<Hub> SelectHubAsync(CancellationToken cancellationToken)
     {
-        var hubs = await (await hubRepository.GetHubsAsync(cancellationToken))
+        var hubs = await (await hubRepository.GetAsync(cancellationToken))
             .ToListAsync(cancellationToken);
             
         if (hubs.Count <= 0) throw new Exception("There was no Hub to select.");

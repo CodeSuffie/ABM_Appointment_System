@@ -6,7 +6,7 @@ namespace Repositories;
 
 public sealed class TruckCompanyRepository(ModelDbContext context)
 {
-    public async Task<DbSet<TruckCompany>> GetTruckCompaniesAsync(CancellationToken cancellationToken)
+    public async Task<DbSet<TruckCompany>> GetAsync(CancellationToken cancellationToken)
     {
         var truckCompanies = context.TruckCompanies;
 

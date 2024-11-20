@@ -9,7 +9,7 @@ public sealed class WorkRepository(
     ModelDbContext context,
     ModelRepository modelRepository)
 {
-    public async Task<TimeSpan?> GetWorkTimeAsync(WorkType workType, CancellationToken cancellationToken)
+    public async Task<TimeSpan?> GetTimeAsync(WorkType workType, CancellationToken cancellationToken)
     {
         return workType switch
         {
@@ -21,10 +21,10 @@ public sealed class WorkRepository(
         };
     }
     
-    private async Task<Work> GetNewObjectAsync(WorkType workType, CancellationToken cancellationToken)
+    private async Task<Work> GetNewAsync(WorkType workType, CancellationToken cancellationToken)
     {
-        var startTime = await modelRepository.GetModelTimeAsync(cancellationToken);
-        var duration = await GetWorkTimeAsync(workType, cancellationToken);
+        var startTime = await modelRepository.GetTimeAsync(cancellationToken);
+        var duration = await GetTimeAsync(workType, cancellationToken);
         
         var work = new Work
         {
@@ -36,7 +36,7 @@ public sealed class WorkRepository(
         return work;
     }
     
-    public async Task<Work?> GetWorkByTripAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task<Work?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
         var work = await context.Works
             .FirstOrDefaultAsync(x => x.TripId == trip.Id, cancellationToken);
@@ -44,7 +44,16 @@ public sealed class WorkRepository(
         return work;
     }
     
-    public async Task<Work?> GetWorkByStaffAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    public async Task<Work?> GetAsync(Bay bay, CancellationToken cancellationToken)
+    {
+        var work = await context.Works
+            .FirstOrDefaultAsync(x => x.BayId == bay.Id && 
+                                      x.WorkType == WorkType.Bay, cancellationToken);
+        
+        return work;
+    }
+    
+    public async Task<Work?> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var work = await context.Works
             .FirstOrDefaultAsync(x => x.AdminStaff != null &&
@@ -53,7 +62,7 @@ public sealed class WorkRepository(
         return work;
     }
     
-    public async Task<Work?> GetWorkByStaffAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    public async Task<Work?> GetAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var work = await context.Works
             .FirstOrDefaultAsync(x => x.BayStaff != null &&
@@ -62,9 +71,9 @@ public sealed class WorkRepository(
         return work;
     }
     
-    public async Task AddWorkAsync(Trip trip, WorkType workType, CancellationToken cancellationToken)
+    public async Task AddAsync(Trip trip, WorkType workType, CancellationToken cancellationToken)
     {
-        var work = await GetNewObjectAsync(workType, cancellationToken);
+        var work = await GetNewAsync(workType, cancellationToken);
         work.Trip = trip;
 
         await context.Works
@@ -73,11 +82,14 @@ public sealed class WorkRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task AddWorkAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
+    public async Task AddAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var work = await GetNewObjectAsync(WorkType.CheckIn, cancellationToken);
+        var work = await GetNewAsync(WorkType.CheckIn, cancellationToken);
         work.Trip = trip;
         work.AdminStaff = adminStaff;
+        
+        trip.Work = work;
+        adminStaff.Work = work;
 
         await context.Works
             .AddAsync(work, cancellationToken);
@@ -85,11 +97,14 @@ public sealed class WorkRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task AddWorkAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
+    public async Task AddAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
     {
-        var work = await GetNewObjectAsync(WorkType.Bay, cancellationToken);
+        var work = await GetNewAsync(WorkType.Bay, cancellationToken);
         work.Trip = trip;
         work.Bay = bay;
+        
+        trip.Work = work;
+        bay.Works.Add(work);
 
         await context.Works
             .AddAsync(work, cancellationToken);
@@ -97,11 +112,14 @@ public sealed class WorkRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task AddWorkAsync(Bay bay, BayStaff bayStaff, WorkType workType, CancellationToken cancellationToken)
+    public async Task AddAsync(Bay bay, BayStaff bayStaff, WorkType workType, CancellationToken cancellationToken)
     {
-        var work = await GetNewObjectAsync(workType, cancellationToken);
-        work.Bay = bay;
+        var work = await GetNewAsync(workType, cancellationToken);
         work.BayStaff = bayStaff;
+        work.Bay = bay;
+        
+        bayStaff.Work = work;
+        bay.Works.Add(work);
 
         await context.Works
             .AddAsync(work, cancellationToken);
@@ -109,7 +127,7 @@ public sealed class WorkRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task RemoveWorkAsync(Work work, CancellationToken cancellationToken)
+    public async Task RemoveAsync(Work work, CancellationToken cancellationToken)
     {
         context.Works
             .Remove(work);

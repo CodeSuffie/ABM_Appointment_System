@@ -6,32 +6,30 @@ namespace Repositories;
 
 public sealed class HubRepository(ModelDbContext context)
 {
-    public async Task<DbSet<Hub>> GetHubsAsync(CancellationToken cancellationToken)
+    public async Task<DbSet<Hub>> GetAsync(CancellationToken cancellationToken)
     {
         var hubs = context.Hubs;
 
         return hubs;
     }
     
-    public async Task<Hub?> GetHubByParkingSpotAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
+    public async Task<Hub?> GetAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
         var hub = await context.Hubs
-            .FirstOrDefaultAsync(x => x.Id == parkingSpot.HubId, cancellationToken);
+            .FirstOrDefaultAsync(h => h.Id == parkingSpot.HubId, cancellationToken);
 
         return hub;
     }
     
-    public async Task<Hub?> GetHubByLoadAsync(Load load, CancellationToken cancellationToken)
+    public async Task<Hub?> GetAsync(Load load, CancellationToken cancellationToken)
     {
-        if (load.HubId == null) return null;
-        
         var hub = await context.Hubs
-            .FirstOrDefaultAsync(x => x.Id == load.HubId, cancellationToken);
+            .FirstOrDefaultAsync(h => h.Id == load.HubId, cancellationToken);
 
         return hub;
     }
     
-    public async Task<Hub?> GetHubByBayAsync(Bay bay, CancellationToken cancellationToken)
+    public async Task<Hub?> GetAsync(Bay bay, CancellationToken cancellationToken)
     {
         var hub = await context.Hubs
             .FirstOrDefaultAsync(h=> h.Id == bay.HubId, cancellationToken);
@@ -42,19 +40,19 @@ public sealed class HubRepository(ModelDbContext context)
         return hub;
     }
     
-    public async Task<Hub> GetHubByStaffAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    public async Task<Hub> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var hub = await context.Hubs
-            .FirstOrDefaultAsync(x => x.Id == adminStaff.HubId, cancellationToken);
+            .FirstOrDefaultAsync(h => h.Id == adminStaff.HubId, cancellationToken);
         if (hub == null) throw new Exception("This AdminStaff did not have a Hub assigned.");
 
         return hub;
     }
     
-    public async Task<Hub> GetHubByStaffAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    public async Task<Hub> GetAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var hub = await context.Hubs
-            .FirstOrDefaultAsync(x => x.Id == bayStaff.HubId, cancellationToken);
+            .FirstOrDefaultAsync(h => h.Id == bayStaff.HubId, cancellationToken);
         if (hub == null) throw new Exception("This BayStaff did not have a Hub assigned.");
 
         return hub;

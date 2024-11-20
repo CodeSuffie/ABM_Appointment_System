@@ -6,47 +6,51 @@ namespace Repositories;
 
 public sealed class BayRepository(ModelDbContext context)
 {
-    public async Task<IQueryable<Bay>> GetBaysByHubAsync(Hub hub, CancellationToken cancellationToken)
+    public async Task<IQueryable<Bay>> GetAsync(Hub hub, CancellationToken cancellationToken)
     {
         var bays = context.Bays
-            .Where(x => x.HubId == hub.Id);
+            .Where(b => b.HubId == hub.Id);
         
         return bays;
     }
     
-    public async Task<Bay?> GetBayByShiftAsync(BayShift bayShift, CancellationToken cancellationToken)
+    public async Task<Bay?> GetAsync(BayShift bayShift, CancellationToken cancellationToken)
     {
         var bay = await context.Bays
-            .FirstOrDefaultAsync(x => x.Id == bayShift.BayId, cancellationToken);
+            .FirstOrDefaultAsync(b => b.Id == bayShift.BayId, cancellationToken);
         
         return bay;
     }
     
-    public async Task<Bay?> GetBayByTripAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task<Bay?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
         var bay = await context.Bays
-            .FirstOrDefaultAsync(x => x.TripId == trip.Id, cancellationToken);
+            .FirstOrDefaultAsync(b => b.TripId == trip.Id, cancellationToken);
         
         return bay;
     }
     
-    public async Task<Bay?> GetBayByWorkAsync(Work work, CancellationToken cancellationToken)
+    public async Task<Bay?> GetAsync(Work work, CancellationToken cancellationToken)
     {
         if (work.BayId == null) return null;
         
         var bay = await context.Bays
-            .FirstOrDefaultAsync(x => x.Id == work.BayId, cancellationToken);
+            .FirstOrDefaultAsync(b => b.Id == work.BayId, cancellationToken);
 
         return bay;
     }
     
-    public async Task<Bay?> GetBayByLoadAsync(Load load, CancellationToken cancellationToken)
+    public async Task<Bay?> GetAsync(Load load, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
-        // TODO: Get Bay for Load
+        if (load.BayId == null) return null;
+        
+        var bay = await context.Bays
+            .FirstOrDefaultAsync(b => b.Id == load.BayId, cancellationToken);
+
+        return bay;
     }
     
-    public async Task SetBayHubAsync(Bay bay, Hub hub, CancellationToken cancellationToken)
+    public async Task SetAsync(Bay bay, Hub hub, CancellationToken cancellationToken)
     {
         bay.Hub = hub;
         hub.Bays.Add(bay);
@@ -54,7 +58,7 @@ public sealed class BayRepository(ModelDbContext context)
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task SetBayStatusAsync(Bay bay, BayStatus status, CancellationToken cancellationToken)
+    public async Task SetAsync(Bay bay, BayStatus status, CancellationToken cancellationToken)
     {
         bay.BayStatus = status;
         

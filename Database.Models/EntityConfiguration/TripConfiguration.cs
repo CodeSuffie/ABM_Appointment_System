@@ -27,6 +27,10 @@ public class TripConfiguration : IEntityTypeConfiguration<Trip>
             .WithOne(x => x.Trip)
             .HasForeignKey<ParkingSpot>(x => x.TripId);
         
+        builder.HasOne(x => x.AdminStaff)
+            .WithOne(x => x.Trip)
+            .HasForeignKey<AdminStaff>(x => x.TripId);
+        
         builder.HasOne(x => x.Bay)
             .WithOne(x => x.Trip)
             .HasForeignKey<Bay>(x => x.TripId);

@@ -1,6 +1,5 @@
 using Database.Models;
 using Repositories;
-using Services.ModelServices;
 
 namespace Services;
 
@@ -11,7 +10,7 @@ public sealed class WorkService(ModelRepository modelRepository)
         if (work.Duration == null) return false;
         
         var endTime = (TimeSpan)(work.StartTime + work.Duration);
-        var modelTime = await modelRepository.GetModelTimeAsync(cancellationToken);
+        var modelTime = await modelRepository.GetTimeAsync(cancellationToken);
         
         return endTime <= modelTime;
     }

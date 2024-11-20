@@ -11,7 +11,9 @@ public sealed class BayShiftService(
     HubRepository hubRepository,
     OperatingHourRepository operatingHourRepository,
     BayStaffService bayStaffService,
-    BayService bayService)
+    BayService bayService,
+    BayShiftRepository bayShiftRepository,
+    ModelRepository modelRepository)
 {
 
     private async Task<TimeSpan> GetStartTimeAsync(
@@ -54,8 +56,8 @@ public sealed class BayShiftService(
 
     public async Task GetNewObjectsAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        var hub = await hubRepository.GetHubByStaffAsync(bayStaff, cancellationToken);
-        var operatingHours = (await operatingHourRepository.GetOperatingHoursByHubAsync(hub, cancellationToken))
+        var hub = await hubRepository.GetAsync(bayStaff, cancellationToken);
+        var operatingHours = (await operatingHourRepository.GetAsync(hub, cancellationToken))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         
@@ -69,5 +71,51 @@ public sealed class BayShiftService(
             var bayShift = await GetNewObjectAsync(bayStaff, operatingHour, hub, cancellationToken);
             bayStaff.Shifts.Add(bayShift);
         }
+    }
+    
+    private async Task<bool> IsCurrentAsync(BayShift bayShift, CancellationToken cancellationToken)
+    {
+        var modelTime = await modelRepository.GetTimeAsync(cancellationToken);
+        
+        if (bayShift.Duration == null)
+            throw new Exception("The shift for this BayStaff does not have a Duration.");
+            
+        var endTime = (TimeSpan)(bayShift.StartTime + bayShift.Duration);
+        
+        return modelTime >= bayShift.StartTime && modelTime <= endTime;
+    }
+    
+    public async Task<BayShift?> GetCurrentAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    {
+        var shifts = (await bayShiftRepository.GetAsync(bayStaff, cancellationToken))
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var shift in shifts)
+        {
+            if (await IsCurrentAsync(shift, cancellationToken))
+            {
+                return shift;
+            }
+        }
+
+        return null;
+    }
+    
+    public async Task<BayShift?> GetCurrentAsync(Bay bay, CancellationToken cancellationToken)
+    {
+        var shifts = (await bayShiftRepository.GetAsync(bay, cancellationToken))
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var shift in shifts)
+        {
+            if (await IsCurrentAsync(shift, cancellationToken))
+            {
+                return shift;
+            }
+        }
+
+        return null;
     }
 }

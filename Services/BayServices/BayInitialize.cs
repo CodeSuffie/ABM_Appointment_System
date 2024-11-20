@@ -1,4 +1,3 @@
-using Database;
 using Repositories;
 using Services.Abstractions;
 using Settings;
@@ -13,7 +12,7 @@ public sealed class BayInitialize(
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
-        var hubs = (await hubRepository.GetHubsAsync(cancellationToken))
+        var hubs = (await hubRepository.GetAsync(cancellationToken))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         
@@ -23,7 +22,7 @@ public sealed class BayInitialize(
         
             await locationService.InitializeObjectAsync(bay, cancellationToken);
 
-            await bayRepository.SetBayHubAsync(bay, hub, cancellationToken);
+            await bayRepository.SetAsync(bay, hub, cancellationToken);
         }
     }
 

@@ -12,7 +12,7 @@ public sealed class ParkingSpotInitialize(
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
-        var hubs = (await hubRepository.GetHubsAsync(cancellationToken))
+        var hubs = (await hubRepository.GetAsync(cancellationToken))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         
@@ -22,7 +22,7 @@ public sealed class ParkingSpotInitialize(
         
             await locationService.InitializeObjectAsync(parkingSpot, cancellationToken);
 
-            await parkingSpotRepository.SetParkingSpotHubAsync(parkingSpot, hub, cancellationToken);
+            await parkingSpotRepository.SetAsync(parkingSpot, hub, cancellationToken);
         }
     }
 
