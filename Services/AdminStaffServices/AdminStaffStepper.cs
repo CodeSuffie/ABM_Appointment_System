@@ -15,38 +15,42 @@ public sealed class AdminStaffStepper(
     WorkService workService,
     HubService hubService) : IStepperService<AdminStaff>
 {
-    public async Task AlertFreeAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+     public async Task GetNewWorkAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+     {
+         var shift = await adminShiftService.GetCurrentShiftAsync(adminStaff, cancellationToken);
+         if (shift == null) return;
+                 
+         var hub = await adminStaffService.GetHubForAdminStaffAsync(adminStaff, cancellationToken);
+         
+         var trip = await hubService.GetNextCheckInTripAsync(hub, cancellationToken);
+         if (trip == null) return;
+ 
+         await tripService.AlertFreeAsync(trip, adminStaff, cancellationToken);
+     }
+     
+    public async Task WorkCompleteAsync(Work work, CancellationToken cancellationToken)
     {
-        var hub = await adminStaffService.GetHubForAdminStaffAsync(adminStaff, cancellationToken);
-        
-        var trip = await hubService.GetNextCheckInTripAsync(hub, cancellationToken);
-        if (trip == null) return;
-
-        await tripService.AlertFreeAsync(trip, adminStaff, cancellationToken);
+        var trip = await workService.GetTripForWorkAsync(work, cancellationToken);
+        if (trip == null)
+            throw new Exception("The Work this BayStaff is doing is not being done for any Bay.");
+                
+        await tripService.AlertCheckInCompleteAsync(trip, cancellationToken);
+        await workService.RemoveWorkAsync(work, cancellationToken);
     }
     
     public async Task StepAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var work = await adminStaffService.GetWorkForAdminStaffAsync(adminStaff, cancellationToken);
         
-        if (work != null)
+        if (work == null)
         {
-            if (await workService.IsWorkCompletedAsync(work, cancellationToken))
-            {
-                var trip = await workService.GetTripForWorkAsync(work, cancellationToken);
-                if (trip == null)
-                    throw new Exception("The Work this BayStaff is doing is not being done for any Bay.");
-                
-                await tripService.AlertCheckInCompleteAsync(trip, cancellationToken);
-                await workService.RemoveWorkAsync(work, cancellationToken);
-            }
+            await GetNewWorkAsync(adminStaff, cancellationToken);
+            return;
         }
-        else
+        
+        if (await workService.IsWorkCompletedAsync(work, cancellationToken))
         {
-            var shift = await adminShiftService.GetCurrentShiftAsync(adminStaff, cancellationToken);
-            if (shift == null) return;
-                
-            await AlertFreeAsync(adminStaff, cancellationToken);
+            await WorkCompleteAsync(work, cancellationToken);
         }
     }
 

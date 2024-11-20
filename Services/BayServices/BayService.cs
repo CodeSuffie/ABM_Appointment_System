@@ -160,6 +160,7 @@ public sealed class BayService(
             }
         }
         
+        // TODO: Not fetched but done
         await AlertFetchedAsync(bay, cancellationToken);
         await AlertFreeAsync(bay, bayStaff, cancellationToken);
     }
