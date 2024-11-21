@@ -49,6 +49,14 @@ public sealed class BayRepository(ModelDbContext context)
 
         return bay;
     }
+
+    public async Task<int> GetCountAsync(Hub hub, CancellationToken cancellationToken)
+    {
+        var bayCount = await context.Bays
+            .CountAsync(b => b.HubId == hub.Id, cancellationToken);
+
+        return bayCount;
+    }
     
     public async Task SetAsync(Bay bay, Hub hub, CancellationToken cancellationToken)
     {

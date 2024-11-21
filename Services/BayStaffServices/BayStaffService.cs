@@ -126,7 +126,6 @@ public sealed class BayStaffService(
                 if (bay.BayStatus == BayStatus.WaitingFetchStart)
                 {
                     await bayService.AlertPickedUpAsync(bay, cancellationToken);
-                    // TODO: Log Load miss
                 }
                 else
                 {

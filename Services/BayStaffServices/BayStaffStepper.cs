@@ -1,17 +1,17 @@
-using Database;
 using Database.Models;
+using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.Abstractions;
 
 namespace Services.BayStaffServices;
 
 public sealed class BayStaffStepper(
-    ModelDbContext context,
     WorkRepository workRepository,
     BayRepository bayRepository,
     BayShiftService bayShiftService,
     WorkService workService,
-    BayStaffService bayStaffService) : IStepperService<BayStaff>
+    BayStaffService bayStaffService,
+    BayStaffRepository bayStaffRepository) : IStepperService<BayStaff>
 {
     public async Task StepAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
@@ -41,7 +41,7 @@ public sealed class BayStaffStepper(
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        var bayStaffs = context.BayStaffs
+        var bayStaffs = (await bayStaffRepository.GetAsync(cancellationToken))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         

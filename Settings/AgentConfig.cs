@@ -21,7 +21,7 @@ public static class AgentConfig
 
     // Truck
     public const int TruckCount = 9;
-    public const int TruckAverageCapacity = 100;
+    public const int TruckAverageSpeed = 1;
 
     // Hub
     public const int HubCount = 9;

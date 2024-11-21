@@ -6,10 +6,10 @@ public class Bay : ILocation
 {
     public long Id { get; set; }
     
-    public int XSize { get; set; }
-    public int YSize { get; set; }
-    public int XLocation { get; set; }
-    public int YLocation { get; set; }
+    public long XSize { get; set; }
+    public long YSize { get; set; }
+    public long XLocation { get; set; }
+    public long YLocation { get; set; }
     
     public BayStatus BayStatus { get; set; }
     

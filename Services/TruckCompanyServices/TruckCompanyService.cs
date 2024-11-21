@@ -19,7 +19,6 @@ public sealed class TruckCompanyService(
         return truckCompany;
     }
     
-    // TODO: Repository
     public async Task<TruckCompany> SelectTruckCompanyAsync(CancellationToken cancellationToken)
     {
         var truckCompanies = await (await truckCompanyRepository.GetAsync(cancellationToken))
@@ -30,5 +29,11 @@ public sealed class TruckCompanyService(
             
         var truckCompany = truckCompanies[ModelConfig.Random.Next(truckCompanies.Count)];
         return truckCompany;
+    }
+
+    public async Task AlertCompleteAsync(TruckCompany truckCompany, Trip trip, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+        // TODO: Log Complete
     }
 }

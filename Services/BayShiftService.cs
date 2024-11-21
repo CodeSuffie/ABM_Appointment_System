@@ -41,7 +41,7 @@ public sealed class BayShiftService(
         Hub hub,
         CancellationToken cancellationToken)
     {
-        var bay = await bayService.SelectBayByHubAsync(hub, cancellationToken);
+        var bay = await bayService.SelectBayAsync(hub, cancellationToken);
         var startTime = await GetStartTimeAsync(bayStaff, operatingHour, cancellationToken);
         
         var bayShift = new BayShift {

@@ -1,11 +1,17 @@
 using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Repositories;
+using Services.TripServices;
 using Settings;
 
 namespace Services;
 
-public sealed class LocationService(ModelDbContext context)
+public sealed class LocationService(
+    TripRepository tripRepository,
+    HubRepository hubRepository,
+    BayRepository bayRepository,
+    ParkingSpotRepository parkingSpotRepository)
 {
     public async Task InitializeObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
@@ -21,8 +27,11 @@ public sealed class LocationService(ModelDbContext context)
     
     public async Task InitializeObjectAsync(Bay bay, CancellationToken cancellationToken)
     {
-        var bayCount = await context.Bays
-            .CountAsync(x => x.HubId == bay.HubId, cancellationToken);
+        var hub = await hubRepository.GetAsync(bay, cancellationToken);
+        if (hub == null)
+            throw new Exception("There was no Hub assigned to this Bay.");
+        
+        var bayCount = await bayRepository.GetCountAsync(hub, cancellationToken);
         
         ArgumentOutOfRangeException.ThrowIfGreaterThan(
             bayCount, 
@@ -35,15 +44,43 @@ public sealed class LocationService(ModelDbContext context)
     
     public async Task InitializeObjectAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
-        var parkingSpotCount = await context.ParkingSpots
-            .CountAsync(x => x.HubId == parkingSpot.HubId, cancellationToken);
+        var hub = await hubRepository.GetAsync(parkingSpot, cancellationToken);
+        if (hub == null)
+            throw new Exception("There was no Hub assigned to this ParkingSpot.");
+        
+        var parkingSpotCount = await parkingSpotRepository.GetCountAsync(hub, cancellationToken);
         
         ArgumentOutOfRangeException.ThrowIfGreaterThan(
             parkingSpotCount, 
             AgentConfig.ParkingSpotLocations.Length, 
-            "PerkingSpot to set location for is not defined in the ParkingSpotLocations Array");
+            "ParkingSpot to set location for is not defined in the ParkingSpotLocations Array");
         
         parkingSpot.XLocation = AgentConfig.ParkingSpotLocations[parkingSpotCount, 0];
         parkingSpot.YLocation = AgentConfig.ParkingSpotLocations[parkingSpotCount, 1];
+    }
+
+    public async Task SetAsync(Trip trip, TruckCompany truckCompany, CancellationToken cancellationToken)
+    {
+        await tripRepository.SetAsync(trip, truckCompany.XLocation, truckCompany.YLocation, cancellationToken);
+    }
+    
+    public async Task SetAsync(Trip trip, Hub hub, CancellationToken cancellationToken)
+    {
+        await tripRepository.SetAsync(trip, hub.XLocation, hub.YLocation, cancellationToken);
+    }
+    
+    public async Task SetAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
+    {
+        await tripRepository.SetAsync(trip, parkingSpot.XLocation, parkingSpot.YLocation, cancellationToken);
+    }
+    
+    public async Task SetAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
+    {
+        await tripRepository.SetAsync(trip, bay.XLocation, bay.YLocation, cancellationToken);
+    }
+    
+    public async Task SetAsync(Trip trip, long xLocation, long yLocation, CancellationToken cancellationToken)
+    {
+        await tripRepository.SetAsync(trip, xLocation, yLocation, cancellationToken);
     }
 }

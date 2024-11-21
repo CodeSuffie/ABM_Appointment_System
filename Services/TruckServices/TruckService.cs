@@ -1,10 +1,14 @@
 using Database.Models;
+using Repositories;
 using Services.TruckCompanyServices;
 using Settings;
 
 namespace Services.TruckServices;
 
-public sealed class TruckService(TruckCompanyService truckCompanyService)
+public sealed class TruckService(
+    TruckCompanyService truckCompanyService,
+    TruckCompanyRepository truckCompanyRepository,
+    TripRepository tripRepository)
 {
     public async Task<Truck> GetNewObjectAsync(CancellationToken cancellationToken)
     {
@@ -13,10 +17,27 @@ public sealed class TruckService(TruckCompanyService truckCompanyService)
         var truck = new Truck
         {
             TruckCompany = truckCompany,
-            Capacity = AgentConfig.TruckAverageCapacity,
+            Speed = AgentConfig.TruckAverageSpeed,
             Planned = false
         };
 
         return truck;
+    }
+    
+    public async Task AlertClaimedAsync(Truck truck, Trip trip, CancellationToken cancellationToken)
+    {
+        await tripRepository.SetAsync(trip, truck, cancellationToken);
+    }
+    
+    public async Task AlertUnclaimedAsync(Truck truck, CancellationToken cancellationToken)
+    {
+        var trip = await tripRepository.GetAsync(truck, cancellationToken);
+        if (trip == null)
+            throw new Exception("This Truck was just told to be unclaimed but no Trip was assigned");
+        
+        await tripRepository.UnsetAsync(trip, truck, cancellationToken);
+
+        var truckCompany = await truckCompanyRepository.GetAsync(truck, cancellationToken);
+        await truckCompanyService.AlertCompleteAsync(truckCompany, trip, cancellationToken);
     }
 }

@@ -56,18 +56,18 @@ public sealed class LoadRepository(
         return dropOffs;
     }
     
-    public async Task<IQueryable<Load>> GetUnclaimedPickUpAsync(CancellationToken cancellationToken)
+    public async Task<IQueryable<Load>> GetUnclaimedPickUpAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var pickUps = context.Loads
+        var pickUps = (await GetByEndAsync(truckCompany, cancellationToken))
             .Where(l => l.PickUpTrip == null);
 
         return pickUps;
     }
     
-    public async Task<IQueryable<Load>> GetUnclaimedPickUpAsync(Hub hub, CancellationToken cancellationToken)
+    public async Task<IQueryable<Load>> GetUnclaimedPickUpAsync(Hub hub, TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var pickUps = (await GetAsync(hub, cancellationToken))
-            .Where(l => l.PickUpTrip == null);
+        var pickUps = (await GetUnclaimedPickUpAsync(truckCompany, cancellationToken))
+            .Where(l => l.HubId == hub.Id);
 
         return pickUps;
     }
@@ -98,6 +98,14 @@ public sealed class LoadRepository(
     {
         load.Bay = null;
         bay.Loads.Remove(load);
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task UnsetPickUpAsync(Load load, Trip trip, CancellationToken cancellationToken)
+    {
+        load.PickUpTrip = null;
+        trip.PickUp = null;
         
         await context.SaveChangesAsync(cancellationToken);
     }

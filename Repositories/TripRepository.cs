@@ -8,13 +8,34 @@ public sealed class TripRepository(
     ModelDbContext context,
     BayRepository bayRepository,
     ParkingSpotRepository parkingSpotRepository,
-    AdminStaffRepository adminStaffRepository)
+    AdminStaffRepository adminStaffRepository,
+    TruckRepository truckRepository)
 {
+    public async Task<IQueryable<Trip>> GetAsync(CancellationToken cancellationToken)
+    {
+        var trips = context.Trips;
+
+        return trips;
+    }
+    
     public async Task<IQueryable<Trip>> GetAsync(Hub hub, CancellationToken cancellationToken)
     {
         var trips = context.Trips
             .Where(t => t.HubId == hub.Id);
 
+        return trips;
+    }
+    
+    public async Task<IQueryable<Trip>> GetAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    {
+        var trips = context.Trips
+            .Where(t => t.DropOff != null ||
+                        t.PickUp != null)
+            .Where(t => t.DropOff == null ||
+                        t.DropOff.TruckCompanyStartId == truckCompany.Id)
+            .Where(t => t.PickUp == null ||
+                        t.PickUp.TruckCompanyEndId == truckCompany.Id);
+        
         return trips;
     }
     
@@ -47,6 +68,14 @@ public sealed class TripRepository(
         var trip = await context.Trips
             .FirstOrDefaultAsync(t => t.WorkId == work.Id, cancellationToken);
 
+        return trip;
+    }
+    
+    public async Task<Trip?> GetAsync(Truck truck, CancellationToken cancellationToken)
+    {
+        var trip = await context.Trips
+            .FirstOrDefaultAsync(t=> t.TruckId == truck.Id, cancellationToken);
+        
         return trip;
     }
     
@@ -95,6 +124,26 @@ public sealed class TripRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
     
+    public async Task SetAsync(Trip trip, Truck truck, CancellationToken cancellationToken)
+    {
+        var oldTruck = await truckRepository.GetAsync(trip, cancellationToken);
+        if (oldTruck != null)
+            throw new Exception("Trip already has an assigned Truck, it cannot move to another.");
+        
+        trip.Truck = truck;
+        truck.Trip = trip;
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task SetAsync(Trip trip, long xLocation, long yLocation, CancellationToken cancellationToken)
+    {
+        trip.XLocation = xLocation;
+        trip.YLocation = yLocation;
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
     public async Task UnsetAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
         trip.ParkingSpot = null;
@@ -115,6 +164,14 @@ public sealed class TripRepository(
     {
         trip.Bay = null;
         bay.Trip = null;
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task UnsetAsync(Trip trip, Truck truck, CancellationToken cancellationToken)
+    {
+        trip.Truck = null;
+        truck.Trip = null;
         
         await context.SaveChangesAsync(cancellationToken);
     }

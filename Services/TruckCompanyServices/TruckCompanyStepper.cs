@@ -1,10 +1,11 @@
-using Database;
 using Database.Models;
+using Microsoft.EntityFrameworkCore;
+using Repositories;
 using Services.Abstractions;
 
 namespace Services.TruckCompanyServices;
 
-public sealed class TruckCompanyStepper(ModelDbContext context) : IStepperService<TruckCompany>
+public sealed class TruckCompanyStepper(TruckCompanyRepository truckCompanyRepository) : IStepperService<TruckCompany>
 {
     public async Task StepAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
@@ -14,7 +15,7 @@ public sealed class TruckCompanyStepper(ModelDbContext context) : IStepperServic
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        var truckCompanies = context.TruckCompanies
+        var truckCompanies = (await truckCompanyRepository.GetAsync(cancellationToken))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         

@@ -4,6 +4,9 @@ public class Trip
 {
     public long Id { get; set; }
     
+    public long XLocation { get; set; }
+    public long YLocation { get; set; }
+    
     public Load? DropOff { get; set; }
     public long? DropOffId { get; set; }
 

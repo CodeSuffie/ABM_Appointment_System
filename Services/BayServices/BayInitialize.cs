@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.Abstractions;
 using Settings;

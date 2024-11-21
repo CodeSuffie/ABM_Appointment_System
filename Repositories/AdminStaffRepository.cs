@@ -6,6 +6,13 @@ namespace Repositories;
 
 public sealed class AdminStaffRepository(ModelDbContext context)
 {
+    public async Task<IQueryable<AdminStaff>> GetAsync(CancellationToken cancellationToken)
+    {
+        var adminStaffs = context.AdminStaffs;
+
+        return adminStaffs;
+    }
+    
     public async Task<AdminStaff?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
         var adminStaff = await context.AdminStaffs

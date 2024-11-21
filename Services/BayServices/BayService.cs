@@ -27,7 +27,7 @@ public sealed class BayService(
         return bay;
     }
 
-    public async Task<Bay> SelectBayByHubAsync(Hub hub, CancellationToken cancellationToken)
+    public async Task<Bay> SelectBayAsync(Hub hub, CancellationToken cancellationToken)
     {
         var bays = await (await bayRepository.GetAsync(hub, cancellationToken))
             .ToListAsync(cancellationToken);
@@ -143,15 +143,20 @@ public sealed class BayService(
             var trip = await tripRepository.GetAsync(bay, cancellationToken);
             if (trip == null) return;
             
-            if (bay.BayStatus is BayStatus.PickUpStarted)
+            var pickUpLoad = await loadRepository.GetPickUpAsync(trip, cancellationToken);
+            if (pickUpLoad != null)
             {
-                var pickUpLoad = await loadRepository.GetPickUpAsync(trip, cancellationToken);
-                if (pickUpLoad != null)
+                if (bay.BayStatus is BayStatus.PickUpStarted)
                 {
                     await loadRepository.UnsetAsync(pickUpLoad, bay, cancellationToken);
                 }
+                else
+                {
+                    // TODO: Log Load miss
+                    await loadRepository.UnsetPickUpAsync(pickUpLoad, trip, cancellationToken);
+                }
             }
-
+            
             await AlertWorkCompleteAsync(bay, cancellationToken);
         }
     }

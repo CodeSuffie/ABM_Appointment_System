@@ -6,11 +6,21 @@ namespace Repositories;
 
 public sealed class TruckCompanyRepository(ModelDbContext context)
 {
-    public async Task<DbSet<TruckCompany>> GetAsync(CancellationToken cancellationToken)
+    public async Task<IQueryable<TruckCompany>> GetAsync(CancellationToken cancellationToken)
     {
         var truckCompanies = context.TruckCompanies;
 
         return truckCompanies;
+    }
+    
+    public async Task<TruckCompany> GetAsync(Truck truck, CancellationToken cancellationToken)
+    {
+        var truckCompany = await context.TruckCompanies
+            .FirstOrDefaultAsync(tc => tc.Id == truck.TruckCompanyId, cancellationToken);
+        if (truckCompany == null)
+            throw new Exception("This Truck did not have a TruckCompany assigned.");
+
+        return truckCompany;
     }
     
     public async Task AddAsync(TruckCompany truckCompany, CancellationToken cancellationToken)

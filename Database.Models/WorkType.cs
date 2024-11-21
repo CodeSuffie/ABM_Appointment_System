@@ -3,13 +3,13 @@ namespace Database.Models;
 public enum WorkType
 {
     TravelHub,
-    CheckIn,
-    Bay,
-    DropOff,
-    PickUp,
-    Fetch,
     WaitParking,
     WaitCheckIn,
+    CheckIn,
     WaitBay,
+    Bay,
+    DropOff,
+    Fetch,
+    PickUp,
     TravelHome,
 }

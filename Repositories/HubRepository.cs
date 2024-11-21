@@ -6,7 +6,7 @@ namespace Repositories;
 
 public sealed class HubRepository(ModelDbContext context)
 {
-    public async Task<DbSet<Hub>> GetAsync(CancellationToken cancellationToken)
+    public async Task<IQueryable<Hub>> GetAsync(CancellationToken cancellationToken)
     {
         var hubs = context.Hubs;
 
@@ -17,14 +17,6 @@ public sealed class HubRepository(ModelDbContext context)
     {
         var hub = await context.Hubs
             .FirstOrDefaultAsync(h => h.Id == parkingSpot.HubId, cancellationToken);
-
-        return hub;
-    }
-    
-    public async Task<Hub?> GetAsync(Load load, CancellationToken cancellationToken)
-    {
-        var hub = await context.Hubs
-            .FirstOrDefaultAsync(h => h.Id == load.HubId, cancellationToken);
 
         return hub;
     }
@@ -54,6 +46,22 @@ public sealed class HubRepository(ModelDbContext context)
         var hub = await context.Hubs
             .FirstOrDefaultAsync(h => h.Id == bayStaff.HubId, cancellationToken);
         if (hub == null) throw new Exception("This BayStaff did not have a Hub assigned.");
+
+        return hub;
+    }
+    
+    public async Task<Hub?> GetAsync(Load load, CancellationToken cancellationToken)
+    {
+        var hub = await context.Hubs
+            .FirstOrDefaultAsync(h => h.Id == load.HubId, cancellationToken);
+
+        return hub;
+    }
+    
+    public async Task<Hub?> GetAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        var hub = await context.Hubs
+            .FirstOrDefaultAsync(h => h.Id == trip.HubId, cancellationToken);
 
         return hub;
     }
