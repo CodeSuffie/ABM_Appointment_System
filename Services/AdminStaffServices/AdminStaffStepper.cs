@@ -11,7 +11,8 @@ public sealed class AdminStaffStepper(
     WorkRepository workRepository,
     WorkService workService,
     AdminShiftService adminShiftService,
-    AdminStaffRepository adminStaffRepository) : IStepperService<AdminStaff>
+    AdminStaffRepository adminStaffRepository,
+    AdminStaffLogger adminStaffLogger) : IStepperService<AdminStaff>
 {
     public async Task StepAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
@@ -20,7 +21,8 @@ public sealed class AdminStaffStepper(
         if (work == null)
         {
             var shift = await adminShiftService.GetCurrentAsync(adminStaff, cancellationToken);
-            if (shift == null) return;     // TODO: Log staff not working
+            if (shift == null) return;
+            await adminStaffLogger.LogAsync(adminStaff, LogType.Info, "Not working.", cancellationToken);
             
             await adminStaffService.AlertFreeAsync(adminStaff, cancellationToken);
             return;

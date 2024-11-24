@@ -3,9 +3,7 @@ using Database.Models;
 
 namespace Repositories;
 
-public sealed class BayShiftRepository(
-    ModelDbContext context,
-    ModelRepository modelRepository)
+public sealed class BayShiftRepository(ModelDbContext context)
 {
     public async Task<IQueryable<BayShift>> GetAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {

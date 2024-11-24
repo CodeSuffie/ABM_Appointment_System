@@ -1,5 +1,6 @@
 using Repositories;
 using Services.Abstractions;
+using Services.ModelServices;
 using Settings;
 
 namespace Services.TruckCompanyServices;
@@ -7,7 +8,8 @@ namespace Services.TruckCompanyServices;
 public sealed class TruckCompanyInitialize(
     TruckCompanyService truckCompanyService,
     LocationService locationService,
-    TruckCompanyRepository truckCompanyRepository) : IInitializationService
+    TruckCompanyRepository truckCompanyRepository,
+    ModelState modelState) : IPriorityInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
@@ -21,7 +23,7 @@ public sealed class TruckCompanyInitialize(
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
-        for (var i = 0; i < AgentConfig.TruckCompanyCount; i++)
+        for (var i = 0; i < modelState.AgentConfig.TruckCompanyCount; i++)
         {
             await InitializeObjectAsync(cancellationToken);
         }

@@ -2,6 +2,7 @@ using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.HubServices;
+using Services.ModelServices;
 using Services.TruckCompanyServices;
 using Settings;
 
@@ -10,7 +11,8 @@ namespace Services;
 public class LoadService(
     TruckCompanyService truckCompanyService,
     HubService hubService,
-    LoadRepository loadRepository)
+    LoadRepository loadRepository,
+    ModelState modelState)
 {
     public async Task<Load> GetNewObjectAsync(CancellationToken cancellationToken)
     {
@@ -30,7 +32,7 @@ public class LoadService(
         return load;
     }
     
-    public async Task AddNewLoads(int count, CancellationToken cancellationToken)
+    public async Task AddNewLoadsAsync(int count, CancellationToken cancellationToken)
     {
         for (var i = 0; i < count; i++)
         {
@@ -46,7 +48,7 @@ public class LoadService(
 
         if (dropOffs.Count <= 0) return null;
         
-        var dropOff = dropOffs[ModelConfig.Random.Next(dropOffs.Count)];
+        var dropOff = dropOffs[modelState.Random(dropOffs.Count)];
         return dropOff;
     }
     
@@ -57,7 +59,7 @@ public class LoadService(
 
         if (pickUps.Count <= 0) return null;
         
-        var pickUp = pickUps[ModelConfig.Random.Next(pickUps.Count)];
+        var pickUp = pickUps[modelState.Random(pickUps.Count)];
         return pickUp;
     }
 
@@ -68,7 +70,7 @@ public class LoadService(
 
         if (pickUps.Count <= 0) return null;
         
-        var pickUp = pickUps[ModelConfig.Random.Next(pickUps.Count)];
+        var pickUp = pickUps[modelState.Random(pickUps.Count)];
         return pickUp;
     }
 }

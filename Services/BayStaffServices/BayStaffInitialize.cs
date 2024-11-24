@@ -1,5 +1,6 @@
 using Repositories;
 using Services.Abstractions;
+using Services.ModelServices;
 using Settings;
 
 namespace Services.BayStaffServices;
@@ -7,7 +8,8 @@ namespace Services.BayStaffServices;
 public sealed class BayStaffInitialize(
     BayStaffService bayStaffService,
     BayShiftService bayShiftService,
-    BayStaffRepository bayStaffRepository) : IInitializationService
+    BayStaffRepository bayStaffRepository,
+    ModelState modelState) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
@@ -20,7 +22,7 @@ public sealed class BayStaffInitialize(
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
-        for (var i = 0; i < AgentConfig.BayStaffCount; i++)
+        for (var i = 0; i < modelState.AgentConfig.BayStaffCount; i++)
         {
             await InitializeObjectAsync(cancellationToken);
         }

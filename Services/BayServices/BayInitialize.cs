@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.Abstractions;
+using Services.ModelServices;
 using Settings;
 
 namespace Services.BayServices;
@@ -9,7 +10,8 @@ public sealed class BayInitialize(
     BayService bayService,
     LocationService locationService,
     HubRepository hubRepository,
-    BayRepository bayRepository) : IInitializationService
+    BayRepository bayRepository,
+    ModelState modelState) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
@@ -29,7 +31,7 @@ public sealed class BayInitialize(
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
-        for (var i = 0; i < AgentConfig.BayLocations.Length; i++)
+        for (var i = 0; i < modelState.AgentConfig.BayLocations.Length; i++)
         {
             await InitializeObjectAsync(cancellationToken);
         }

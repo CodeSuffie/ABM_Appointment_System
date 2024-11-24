@@ -1,16 +1,39 @@
+using Repositories;
 using Services.Abstractions;
+using Settings;
 
 namespace Services.ModelServices;
 
-public sealed class ModelInitialize(IEnumerable<IInitializationService> initializationServices)
+public sealed class ModelInitialize(
+    ModelState modelState,
+    LoadService loadService,
+    IEnumerable<IPriorityInitializationService> priorityInitializationServices,
+    IEnumerable<IInitializationService> initializationServices) : IInitializationService
 {
+    public async Task InitializeObjectAsync(CancellationToken cancellationToken)
+    {
+        modelState.ModelTime = new TimeSpan(0, 0, 0);
+        modelState.ModelConfig = new ModelConfig();
+        modelState.AgentConfig = new AgentConfig();
+    }
+
+    public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
+    {
+        await InitializeObjectAsync(cancellationToken);
+    }
+    
     public async Task InitializeModelAsync(CancellationToken cancellationToken)
     {
-        // TODO: HubService & TruckCompanyService must have priority over the other Services
+        foreach (var priorityInitializationService in priorityInitializationServices)
+        {
+            await priorityInitializationService.InitializeObjectsAsync(cancellationToken);
+        }
         
         foreach (var initializationService in initializationServices)
         {
             await initializationService.InitializeObjectsAsync(cancellationToken);
         }
+        
+        await loadService.AddNewLoadsAsync(modelState.ModelConfig.InitialLoads, cancellationToken);
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.AdminStaffServices;
 using Services.BayServices;
+using Services.ModelServices;
 using Services.ParkingSpotServices;
 using Services.TruckServices;
 using Settings;
@@ -23,7 +24,9 @@ public sealed class TripService(
     TruckRepository truckRepository,
     TruckService truckService,
     LocationService locationService,
-    TruckCompanyRepository truckCompanyRepository)
+    TruckCompanyRepository truckCompanyRepository,
+    WorkService workService,
+    ModelState modelState)
 {
     public async Task<Trip?> GetNewObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
@@ -35,7 +38,7 @@ public sealed class TripService(
         {
             pickUp = await loadService.SelectUnclaimedPickUpAsync(truckCompany, cancellationToken);
             if (pickUp == null) return null;
-            // TODO: Log no Trip could be created
+            
             hub = await hubRepository.GetAsync(pickUp, cancellationToken);
         }
         else
@@ -58,6 +61,30 @@ public sealed class TripService(
         return trip;
     }
     
+    public async Task<List<Trip>> GetNewObjectsAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    {
+        var trips = new List<Trip>();
+        
+        var trip = await GetNewObjectAsync(truckCompany, cancellationToken);
+        while (trip != null)
+        {
+            trips.Add(trip);
+            trip = await GetNewObjectAsync(truckCompany, cancellationToken);
+        }
+
+        return trips;
+    }
+    
+    public async Task AddNewObjectsAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    {
+        var trip = await GetNewObjectAsync(truckCompany, cancellationToken);
+        while (trip != null)
+        {
+            await tripRepository.AddAsync(trip, cancellationToken);
+            trip = await GetNewObjectAsync(truckCompany, cancellationToken);
+        }
+    }
+    
     public async Task<Trip> SelectTripAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
         var trips = await (await tripRepository.GetAsync(truckCompany, cancellationToken))
@@ -66,7 +93,7 @@ public sealed class TripService(
         if (trips.Count <= 0) 
             throw new Exception("There was no Trip assigned to this TruckCompany.");
 
-        var trip = trips[ModelConfig.Random.Next(trips.Count)];
+        var trip = trips[modelState.Random(trips.Count)];
         return trip;
     }
 
@@ -96,7 +123,7 @@ public sealed class TripService(
         if (oldWork == null)
         {
                 await truckService.AlertClaimedAsync(truck, trip, cancellationToken);
-            await workRepository.AddAsync(trip, WorkType.WaitCheckIn, cancellationToken);
+            await workService.AddAsync(trip, WorkType.WaitCheckIn, cancellationToken);
         }
     }
     
@@ -108,7 +135,7 @@ public sealed class TripService(
             await workRepository.RemoveAsync(oldWork, cancellationToken);
                 await parkingSpotService.AlertClaimedAsync(parkingSpot, trip, cancellationToken);
                 await locationService.SetAsync(trip, parkingSpot, cancellationToken);
-            await workRepository.AddAsync(trip, WorkType.WaitCheckIn, cancellationToken);
+            await workService.AddAsync(trip, WorkType.WaitCheckIn, cancellationToken);
 
         }
     }
@@ -120,7 +147,7 @@ public sealed class TripService(
         {
             await workRepository.RemoveAsync(oldWork, cancellationToken);
                 await adminStaffService.AlertClaimedAsync(adminStaff, trip, cancellationToken);
-            await workRepository.AddAsync(trip, adminStaff, cancellationToken);
+            await workService.AddAsync(trip, adminStaff, cancellationToken);
         }
     }
 
@@ -138,7 +165,7 @@ public sealed class TripService(
             await workRepository.RemoveAsync(oldWork, cancellationToken);
                 await bayService.AlertClaimedAsync(bay, trip, cancellationToken);
                 await locationService.SetAsync(trip, bay, cancellationToken);
-            await workRepository.AddAsync(trip, bay, cancellationToken);
+            await workService.AddAsync(trip, bay, cancellationToken);
         }
     }
     
@@ -148,7 +175,7 @@ public sealed class TripService(
         if (oldWork is { WorkType: WorkType.TravelHub })
         {
             await workRepository.RemoveAsync(oldWork, cancellationToken);
-            await workRepository.AddAsync(trip, WorkType.WaitParking, cancellationToken);
+            await workService.AddAsync(trip, WorkType.WaitParking, cancellationToken);
         }
     }
     
@@ -163,7 +190,7 @@ public sealed class TripService(
             
             await workRepository.RemoveAsync(oldWork, cancellationToken);
                 await adminStaffService.AlertUnclaimedAsync(adminStaff, cancellationToken);
-            await workRepository.AddAsync(trip, WorkType.WaitBay, cancellationToken);
+            await workService.AddAsync(trip, WorkType.WaitBay, cancellationToken);
         }
     }
     
@@ -178,7 +205,7 @@ public sealed class TripService(
             
             await workRepository.RemoveAsync(oldWork, cancellationToken);
                 await bayService.AlertUnclaimedAsync(bay, cancellationToken);
-            await workRepository.AddAsync(trip, WorkType.TravelHome, cancellationToken);
+            await workService.AddAsync(trip, WorkType.TravelHome, cancellationToken);
         }
     }
     

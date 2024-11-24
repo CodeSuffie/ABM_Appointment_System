@@ -14,16 +14,16 @@ public class BayConfiguration : IEntityTypeConfiguration<Bay>
         builder.HasOne(x => x.Trip)
             .WithOne(x => x.Bay)
             .HasForeignKey<Bay>(x => x.TripId);
-
-        builder.HasMany(x => x.Shifts)
-            .WithOne(x => x.Bay)
-            .HasForeignKey(x => x.BayId);
         
         builder.HasMany(x => x.Loads)
             .WithOne(x => x.Bay)
             .HasForeignKey(x => x.BayId);
         
         builder.HasMany(x => x.Works)
+            .WithOne(x => x.Bay)
+            .HasForeignKey(x => x.BayId);
+        
+        builder.HasMany(x => x.BayLogs)
             .WithOne(x => x.Bay)
             .HasForeignKey(x => x.BayId);
     }

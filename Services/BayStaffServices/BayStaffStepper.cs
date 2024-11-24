@@ -11,7 +11,8 @@ public sealed class BayStaffStepper(
     BayShiftService bayShiftService,
     WorkService workService,
     BayStaffService bayStaffService,
-    BayStaffRepository bayStaffRepository) : IStepperService<BayStaff>
+    BayStaffRepository bayStaffRepository,
+    BayStaffLogger bayStaffLogger) : IStepperService<BayStaff>
 {
     public async Task StepAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
@@ -20,7 +21,11 @@ public sealed class BayStaffStepper(
         if (work == null)
         {
             var shift = await bayShiftService.GetCurrentAsync(bayStaff, cancellationToken);
-            if (shift == null) return;     // TODO: Log staff not working
+            if (shift == null)
+            {
+                await bayStaffLogger.LogAsync(bayStaff, LogType.Info, "Not working.", cancellationToken);
+                return;
+            }
             
             var bay = await bayRepository.GetAsync(shift, cancellationToken);
             if (bay == null)

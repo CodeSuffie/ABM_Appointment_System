@@ -1,5 +1,6 @@
 using Repositories;
 using Services.Abstractions;
+using Services.ModelServices;
 using Settings;
 
 namespace Services.HubServices;
@@ -8,7 +9,8 @@ public sealed class HubInitialize(
     HubService hubService,
     OperatingHourService operatingHourService, 
     LocationService locationService,
-    HubRepository hubRepository) : IInitializationService
+    HubRepository hubRepository,
+    ModelState modelState) : IPriorityInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
@@ -22,7 +24,7 @@ public sealed class HubInitialize(
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
-        for (var i = 0; i < AgentConfig.HubCount; i++)
+        for (var i = 0; i < modelState.AgentConfig.HubCount; i++)
         {
             await InitializeObjectAsync(cancellationToken);
         }

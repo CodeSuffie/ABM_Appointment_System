@@ -2,6 +2,7 @@ using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
+using Services.ModelServices;
 using Services.TripServices;
 using Settings;
 
@@ -11,7 +12,8 @@ public sealed class LocationService(
     TripRepository tripRepository,
     HubRepository hubRepository,
     BayRepository bayRepository,
-    ParkingSpotRepository parkingSpotRepository)
+    ParkingSpotRepository parkingSpotRepository,
+    ModelState modelState)
 {
     public async Task InitializeObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
@@ -35,11 +37,11 @@ public sealed class LocationService(
         
         ArgumentOutOfRangeException.ThrowIfGreaterThan(
             bayCount, 
-            AgentConfig.BayLocations.Length, 
+            modelState.AgentConfig.BayLocations.Length, 
             "Bay to set location for is not defined in the BayLocations Array");
 
-        bay.XLocation = AgentConfig.BayLocations[bayCount, 0];
-        bay.YLocation = AgentConfig.BayLocations[bayCount, 1];
+        bay.XLocation = modelState.AgentConfig.BayLocations[bayCount, 0];
+        bay.YLocation = modelState.AgentConfig.BayLocations[bayCount, 1];
     }
     
     public async Task InitializeObjectAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
@@ -52,11 +54,11 @@ public sealed class LocationService(
         
         ArgumentOutOfRangeException.ThrowIfGreaterThan(
             parkingSpotCount, 
-            AgentConfig.ParkingSpotLocations.Length, 
+            modelState.AgentConfig.ParkingSpotLocations.Length, 
             "ParkingSpot to set location for is not defined in the ParkingSpotLocations Array");
         
-        parkingSpot.XLocation = AgentConfig.ParkingSpotLocations[parkingSpotCount, 0];
-        parkingSpot.YLocation = AgentConfig.ParkingSpotLocations[parkingSpotCount, 1];
+        parkingSpot.XLocation = modelState.AgentConfig.ParkingSpotLocations[parkingSpotCount, 0];
+        parkingSpot.YLocation = modelState.AgentConfig.ParkingSpotLocations[parkingSpotCount, 1];
     }
 
     public async Task SetAsync(Trip trip, TruckCompany truckCompany, CancellationToken cancellationToken)

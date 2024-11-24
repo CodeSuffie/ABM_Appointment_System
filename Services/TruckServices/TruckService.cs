@@ -1,5 +1,6 @@
 using Database.Models;
 using Repositories;
+using Services.ModelServices;
 using Services.TruckCompanyServices;
 using Settings;
 
@@ -8,7 +9,8 @@ namespace Services.TruckServices;
 public sealed class TruckService(
     TruckCompanyService truckCompanyService,
     TruckCompanyRepository truckCompanyRepository,
-    TripRepository tripRepository)
+    TripRepository tripRepository,
+    ModelState modelState)
 {
     public async Task<Truck> GetNewObjectAsync(CancellationToken cancellationToken)
     {
@@ -17,7 +19,7 @@ public sealed class TruckService(
         var truck = new Truck
         {
             TruckCompany = truckCompany,
-            Speed = AgentConfig.TruckAverageSpeed,
+            Speed = modelState.AgentConfig.TruckAverageSpeed,
             Planned = false
         };
 

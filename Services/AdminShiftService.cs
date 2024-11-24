@@ -2,6 +2,7 @@ using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.AdminStaffServices;
+using Services.ModelServices;
 using Settings;
 
 namespace Services;
@@ -11,7 +12,7 @@ public sealed class AdminShiftService(
     HubRepository hubRepository,
     OperatingHourRepository operatingHourRepository,
     AdminShiftRepository adminShiftRepository,
-    ModelRepository modelRepository) 
+    ModelState modelState) 
 {
     private async Task<TimeSpan> GetStartTimeAsync(
         AdminStaff adminStaff,
@@ -24,10 +25,10 @@ public sealed class AdminShiftService(
         if (maxShiftStart < TimeSpan.Zero) 
             throw new Exception("This AdminStaff its AdminShiftLength is longer than the Hub its OperatingHourLength.");
             
-        var shiftHour = ModelConfig.Random.Next(maxShiftStart.Hours);
+        var shiftHour = modelState.Random(maxShiftStart.Hours);
         var shiftMinutes = shiftHour == maxShiftStart.Hours ?
-            ModelConfig.Random.Next(maxShiftStart.Minutes) :
-            ModelConfig.Random.Next(ModelConfig.MinutesPerHour);
+            modelState.Random(maxShiftStart.Minutes) :
+            modelState.Random(modelState.ModelConfig.MinutesPerHour);
 
         return operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0);
     }
@@ -59,7 +60,7 @@ public sealed class AdminShiftService(
         {
             if (operatingHour.Duration == null) continue;
             
-            if (ModelConfig.Random.NextDouble() >
+            if (modelState.Random() >
                 await adminStaffService.GetWorkChanceAsync(adminStaff, cancellationToken)) continue;
             
             var adminShift = await GetNewObjectAsync(adminStaff, operatingHour, cancellationToken);
@@ -70,14 +71,12 @@ public sealed class AdminShiftService(
     
     private async Task<bool> IsCurrentAsync(AdminShift adminShift, CancellationToken cancellationToken)
     {
-        var modelTime = await modelRepository.GetTimeAsync(cancellationToken);
-        
         if (adminShift.Duration == null)
             throw new Exception("The shift for this AdminStaff does not have a Duration.");
             
         var endTime = (TimeSpan)(adminShift.StartTime + adminShift.Duration);
         
-        return modelTime >= adminShift.StartTime && modelTime <= endTime;
+        return modelState.ModelTime >= adminShift.StartTime && modelState.ModelTime <= endTime;
     }
     
     public async Task<AdminShift?> GetCurrentAsync(AdminStaff adminStaff, CancellationToken cancellationToken)

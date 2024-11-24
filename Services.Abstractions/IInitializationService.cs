@@ -1,6 +1,5 @@
 namespace Services.Abstractions;
 
-public interface IInitializationService
+public interface IInitializationService : IInitService
 {
-    Task InitializeObjectsAsync(CancellationToken cancellationToken);
 }

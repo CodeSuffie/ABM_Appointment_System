@@ -1,5 +1,6 @@
 using Database;
 using Database.Models;
+using Database.Models.Logging;
 using Microsoft.EntityFrameworkCore;
 
 namespace Repositories;
@@ -69,6 +70,14 @@ public sealed class BayRepository(ModelDbContext context)
     public async Task SetAsync(Bay bay, BayStatus status, CancellationToken cancellationToken)
     {
         bay.BayStatus = status;
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(Bay bay, BayLog log, CancellationToken cancellationToken)
+    {
+        bay.BayLogs.Add(log);
+        log.Bay = bay;
         
         await context.SaveChangesAsync(cancellationToken);
     }

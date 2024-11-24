@@ -8,7 +8,7 @@ public class BayShiftConfiguration : IEntityTypeConfiguration<BayShift>
     public void Configure(EntityTypeBuilder<BayShift> builder)
     {
         builder.HasOne(x => x.Bay)
-            .WithMany(x => x.Shifts)
+            .WithMany()
             .HasForeignKey(x => x.BayId);
 
         builder.HasOne(x => x.BayStaff)

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.BayStaffServices;
 using Services.BayServices;
+using Services.ModelServices;
 using Settings;
 
 namespace Services;
@@ -13,7 +14,7 @@ public sealed class BayShiftService(
     BayStaffService bayStaffService,
     BayService bayService,
     BayShiftRepository bayShiftRepository,
-    ModelRepository modelRepository)
+    ModelState modelState)
 {
 
     private async Task<TimeSpan> GetStartTimeAsync(
@@ -27,10 +28,10 @@ public sealed class BayShiftService(
         if (maxShiftStart < TimeSpan.Zero) 
             throw new Exception("This BayStaff its BayShiftLength is longer than the Hub its OperatingHourLength.");
             
-        var shiftHour = ModelConfig.Random.Next(maxShiftStart.Hours);
+        var shiftHour = modelState.Random(maxShiftStart.Hours);
         var shiftMinutes = shiftHour == maxShiftStart.Hours ?
-            ModelConfig.Random.Next(maxShiftStart.Minutes) :
-            ModelConfig.Random.Next(ModelConfig.MinutesPerHour);
+            modelState.Random(maxShiftStart.Minutes) :
+            modelState.Random(modelState.ModelConfig.MinutesPerHour);
 
         return operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0);
     }
@@ -65,7 +66,7 @@ public sealed class BayShiftService(
         {
             if (operatingHour.Duration == null) continue;
             
-            if (ModelConfig.Random.NextDouble() >
+            if (modelState.Random() >
                 await bayStaffService.GetWorkChanceAsync(bayStaff, cancellationToken)) continue;
 
             var bayShift = await GetNewObjectAsync(bayStaff, operatingHour, hub, cancellationToken);
@@ -75,14 +76,12 @@ public sealed class BayShiftService(
     
     private async Task<bool> IsCurrentAsync(BayShift bayShift, CancellationToken cancellationToken)
     {
-        var modelTime = await modelRepository.GetTimeAsync(cancellationToken);
-        
         if (bayShift.Duration == null)
             throw new Exception("The shift for this BayStaff does not have a Duration.");
             
         var endTime = (TimeSpan)(bayShift.StartTime + bayShift.Duration);
         
-        return modelTime >= bayShift.StartTime && modelTime <= endTime;
+        return modelState.ModelTime >= bayShift.StartTime && modelState.ModelTime <= endTime;
     }
     
     public async Task<BayShift?> GetCurrentAsync(BayStaff bayStaff, CancellationToken cancellationToken)

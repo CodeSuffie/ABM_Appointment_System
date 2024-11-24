@@ -30,5 +30,9 @@ public class HubConfiguration : IEntityTypeConfiguration<Hub>
         builder.HasMany(x => x.Trips)
             .WithOne(x => x.Hub)
             .HasForeignKey(x => x.HubId);
+        
+        builder.HasMany(x => x.HubLogs)
+            .WithOne(x => x.Hub)
+            .HasForeignKey(x => x.HubId);
     }
 }

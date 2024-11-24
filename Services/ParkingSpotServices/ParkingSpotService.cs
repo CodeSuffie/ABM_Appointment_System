@@ -1,5 +1,6 @@
 using Database.Models;
 using Repositories;
+using Services.HubServices;
 using Services.TripServices;
 
 namespace Services.ParkingSpotServices;
@@ -7,6 +8,7 @@ namespace Services.ParkingSpotServices;
 public sealed class ParkingSpotService(
     TripRepository tripRepository,
     TripService tripService,
+    HubLogger hubLogger,
     HubRepository hubRepository)
 {
     public async Task<ParkingSpot> GetNewObjectAsync(Hub hub, CancellationToken cancellationToken)
@@ -42,7 +44,11 @@ public sealed class ParkingSpotService(
             throw new Exception("This ParkingSpot was just told to be free but no Hub is assigned");
         
         var trip = await tripService.GetNextAsync(hub, WorkType.WaitParking, cancellationToken);
-        if (trip == null) return;    // TODO: Log no waiting Trips
+        if (trip == null)
+        {
+            await hubLogger.LogAsync(hub, parkingSpot, LogType.Info, "No Trips waiting for a Parking Spot.", cancellationToken);
+            return;
+        }
         
         await tripService.AlertFreeAsync(trip, parkingSpot, cancellationToken);
     }

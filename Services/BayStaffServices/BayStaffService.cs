@@ -2,6 +2,8 @@ using Database.Models;
 using Repositories;
 using Services.BayServices;
 using Services.HubServices;
+using Services.ModelServices;
+using Services.TripServices;
 using Settings;
 
 namespace Services.BayStaffServices;
@@ -11,10 +13,12 @@ public sealed class BayStaffService(
     HubRepository hubRepository,
     BayRepository bayRepository,
     BayService bayService,
-    WorkRepository workRepository,
     WorkService workService,
     TripRepository tripRepository,
-    LoadRepository loadRepository) 
+    LoadRepository loadRepository,
+    TripLogger tripLogger,
+    BayLogger bayLogger,
+    ModelState modelState) 
 {
     public async Task<BayStaff> GetNewObjectAsync(CancellationToken cancellationToken)
     {
@@ -23,8 +27,8 @@ public sealed class BayStaffService(
         var bayStaff = new BayStaff
         {
             Hub = hub,
-            WorkChance = AgentConfig.BayStaffAverageWorkDays,
-            AverageShiftLength = AgentConfig.BayShiftAverageLength
+            WorkChance = modelState.AgentConfig.BayStaffAverageWorkDays,
+            AverageShiftLength = modelState.AgentConfig.BayShiftAverageLength
         };
 
         return bayStaff;
@@ -105,7 +109,7 @@ public sealed class BayStaffService(
     
     public async Task StartDropOffAsync(Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        await workRepository.AddAsync(bay, bayStaff, WorkType.DropOff, cancellationToken);
+        await workService.AddAsync(bay, bayStaff, WorkType.DropOff, cancellationToken);
         await workService.AdaptWorkLoadAsync(bay, cancellationToken);
     }
     
@@ -129,14 +133,15 @@ public sealed class BayStaffService(
                 }
                 else
                 {
-                    // TODO: Log that Load has not arrived yet
+                    await tripLogger.LogAsync(trip, pickUpLoad, LogType.Warning, "Not arrived yet.", cancellationToken);
+                    await bayLogger.LogAsync(bay, pickUpLoad, LogType.Warning, "Not arrived yet.", cancellationToken);
                 }
                 
             }
             
             else if (pickUpLoadBay.Id != bay.Id)
             {
-                await workRepository.AddAsync(bay, bayStaff, WorkType.Fetch, cancellationToken);
+                await workService.AddAsync(bay, bayStaff, WorkType.Fetch, cancellationToken);
                 return;
             }
         }
@@ -147,7 +152,7 @@ public sealed class BayStaffService(
 
     public async Task StartPickUpAsync(Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        await workRepository.AddAsync(bay, bayStaff, WorkType.PickUp, cancellationToken);
+        await workService.AddAsync(bay, bayStaff, WorkType.PickUp, cancellationToken);
         await workService.AdaptWorkLoadAsync(bay, cancellationToken);
     }
 }

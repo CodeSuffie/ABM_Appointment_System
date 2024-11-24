@@ -1,6 +1,7 @@
 using Database.Models;
 using Repositories;
 using Services.HubServices;
+using Services.ModelServices;
 using Services.TripServices;
 using Settings;
 
@@ -11,7 +12,9 @@ public sealed class AdminStaffService(
     HubRepository hubRepository,
     TripRepository tripRepository,
     TripService tripService,
-    WorkRepository workRepository)
+    WorkRepository workRepository,
+    HubLogger hubLogger,
+    ModelState modelState)
 {
     public async Task<AdminStaff> GetNewObjectAsync(CancellationToken cancellationToken)
     {
@@ -20,8 +23,8 @@ public sealed class AdminStaffService(
         var adminStaff = new AdminStaff
         {
             Hub = hub,
-            WorkChance = AgentConfig.AdminStaffAverageWorkDays,
-            AverageShiftLength = AgentConfig.AdminShiftAverageLength
+            WorkChance = modelState.AgentConfig.AdminStaffAverageWorkDays,
+            AverageShiftLength = modelState.AgentConfig.AdminShiftAverageLength
         };
 
         return adminStaff;
@@ -68,7 +71,11 @@ public sealed class AdminStaffService(
         
          
         var trip = await tripService.GetNextAsync(hub, WorkType.WaitCheckIn, cancellationToken);
-        if (trip == null) return;      // TODO: Log no waiting Trips
+        if (trip == null)
+        {
+            await hubLogger.LogAsync(hub, adminStaff, LogType.Info, "No Trips waiting for Check In.", cancellationToken);
+            return;
+        }
 
         await tripService.AlertFreeAsync(trip, adminStaff, cancellationToken);
     }

@@ -1,5 +1,6 @@
 using Database;
 using Database.Models;
+using Database.Models.Logging;
 using Microsoft.EntityFrameworkCore;
 
 namespace Repositories;
@@ -25,6 +26,14 @@ public sealed class AdminStaffRepository(ModelDbContext context)
     {
         await context.AdminStaffs
             .AddAsync(adminStaff, cancellationToken);
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(AdminStaff adminStaff, AdminStaffLog log, CancellationToken cancellationToken)
+    {
+        adminStaff.AdminStaffLogs.Add(log);
+        log.AdminStaff = adminStaff;
         
         await context.SaveChangesAsync(cancellationToken);
     }

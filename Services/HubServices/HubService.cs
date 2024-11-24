@@ -1,20 +1,23 @@
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
+using Services.ModelServices;
 using Settings;
 
 namespace Services.HubServices;
 
-public sealed class HubService(HubRepository hubRepository)
+public sealed class HubService(
+    HubRepository hubRepository,
+    ModelState modelState)
 {
     public async Task<Hub> GetNewObjectAsync(CancellationToken cancellationToken)
     {
         var hub = new Hub
         {
-            XSize = AgentConfig.HubXSize,
-            YSize = AgentConfig.HubYSize,
-            OperatingChance = AgentConfig.HubAverageOperatingDays,
-            AverageOperatingHourLength = AgentConfig.OperatingHourAverageLength
+            XSize = modelState.AgentConfig.HubXSize,
+            YSize = modelState.AgentConfig.HubYSize,
+            OperatingChance = modelState.AgentConfig.HubAverageOperatingDays,
+            AverageOperatingHourLength = modelState.AgentConfig.OperatingHourAverageLength
         };
 
         return hub;
@@ -27,7 +30,7 @@ public sealed class HubService(HubRepository hubRepository)
             
         if (hubs.Count <= 0) throw new Exception("There was no Hub to select.");
             
-        var hub = hubs[ModelConfig.Random.Next(hubs.Count)];
+        var hub = hubs[modelState.Random(hubs.Count)];
         return hub;
     }
 }

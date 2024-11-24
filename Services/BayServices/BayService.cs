@@ -1,6 +1,11 @@
+using System.Diagnostics.Eventing.Reader;
 using Database.Models;
+using Database.Models.Logging;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
+using Services.BayStaffServices;
+using Services.HubServices;
+using Services.ModelServices;
 using Services.TripServices;
 using Settings;
 
@@ -12,7 +17,11 @@ public sealed class BayService(
     BayRepository bayRepository,
     TripRepository tripRepository,
     LoadRepository loadRepository,
-    WorkRepository workRepository)
+    WorkRepository workRepository,
+    TripLogger tripLogger,
+    BayLogger bayLogger,
+    HubLogger hubLogger,
+    ModelState modelState)
 {
     public async Task<Bay> GetNewObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
@@ -35,7 +44,7 @@ public sealed class BayService(
         if (bays.Count <= 0) 
             throw new Exception("There was no Bay assigned to this Hub.");
 
-        var bay = bays[ModelConfig.Random.Next(bays.Count)];
+        var bay = bays[modelState.Random(bays.Count)];
         return bay;
     }
     
@@ -74,7 +83,11 @@ public sealed class BayService(
             throw new Exception("This Bay was just told to be free but no Hub is assigned");
 
         var newTrip = await tripService.GetNextAsync(hub, WorkType.WaitBay, cancellationToken);
-        if (newTrip == null) return;   // TODO: Log no waiting Trips
+        if (newTrip == null)
+        {
+            await hubLogger.LogAsync(hub, bay, LogType.Info, "No Trips waiting for a Bay.", cancellationToken);
+            return;
+        }
 
         await tripService.AlertFreeAsync(newTrip, bay, cancellationToken);
     }
@@ -93,7 +106,12 @@ public sealed class BayService(
                 await bayRepository.SetAsync(bay, BayStatus.PickUpStarted, cancellationToken);
                 break;
             default:
-                // TODO: Log the miss
+                await bayLogger.LogAsync(
+                    bay,
+                    bay.BayStatus,
+                    LogType.Warning,
+                    "Not a Status to Alert Dropped Off for.",
+                    cancellationToken);
                 return;
         }
 
@@ -120,7 +138,12 @@ public sealed class BayService(
                 break;
             
             default:
-                // TODO: Log the miss
+                await bayLogger.LogAsync(
+                    bay,
+                    bay.BayStatus,
+                    LogType.Warning,
+                    "Not a Status to Alert Fetched for.",
+                    cancellationToken);
                 return;
         }
         
@@ -152,7 +175,9 @@ public sealed class BayService(
                 }
                 else
                 {
-                    // TODO: Log Load miss
+                    await tripLogger.LogAsync(trip, pickUpLoad, LogType.Error, "Not arrived, failed to Pick Up", cancellationToken);
+                    await bayLogger.LogAsync(bay, pickUpLoad, LogType.Error, "Not arrived, failed to Pick Up.", cancellationToken);
+                    
                     await loadRepository.UnsetPickUpAsync(pickUpLoad, trip, cancellationToken);
                 }
             }

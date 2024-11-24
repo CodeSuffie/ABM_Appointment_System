@@ -16,6 +16,9 @@ public class ModelConfigBase
     public int MaxX;
     public int MaxY;
     public int MinDistanceBetween;
+
+    public int InitialLoads;
+    public int LoadsPerStep;
 }
 
 public class ModelConfig : ModelConfigBase
@@ -34,4 +37,7 @@ public class ModelConfig : ModelConfigBase
     public new int MaxX = 200;
     public new int MaxY = 200;
     public new int MinDistanceBetween = 9;
+
+    public new int InitialLoads = 9;
+    public new int LoadsPerStep = 9;
 }

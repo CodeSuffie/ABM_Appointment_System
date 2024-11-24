@@ -1,5 +1,6 @@
 using Database;
 using Database.Models;
+using Database.Models.Logging;
 using Microsoft.EntityFrameworkCore;
 
 namespace Repositories;
@@ -70,6 +71,14 @@ public sealed class HubRepository(ModelDbContext context)
     {
         await context.Hubs
             .AddAsync(hub, cancellationToken);
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddAsync(Hub hub, HubLog log, CancellationToken cancellationToken)
+    {
+        hub.HubLogs.Add(log);
+        log.Hub = hub;
         
         await context.SaveChangesAsync(cancellationToken);
     }

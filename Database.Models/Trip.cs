@@ -1,3 +1,5 @@
+using Database.Models.Logging;
+
 namespace Database.Models;
 
 public class Trip
@@ -30,4 +32,6 @@ public class Trip
     
     public Work? Work { get; set; }
     public long? WorkId { get; set; }
+
+    public List<TripLog> TripLogs { get; set; } = [];
 }

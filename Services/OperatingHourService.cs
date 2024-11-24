@@ -1,9 +1,11 @@
 using Database.Models;
+using Services.ModelServices;
 using Settings;
 
 namespace Services;
 
-public sealed class OperatingHourService()
+public sealed class OperatingHourService(
+    ModelState modelState)
 {
     private async Task<TimeSpan> GetStartTimeAsync(
         Hub hub, 
@@ -17,10 +19,10 @@ public sealed class OperatingHourService()
             throw new Exception("This Hub its OperatingHourLength is longer than a full day.");      
         // Hub Operating Hours can be longer than 1 day?
             
-        var operatingHourHour = ModelConfig.Random.Next(maxShiftStart.Hours);
+        var operatingHourHour = modelState.Random(maxShiftStart.Hours);
         var operatingHourMinutes = operatingHourHour == maxShiftStart.Hours ?
-            ModelConfig.Random.Next(maxShiftStart.Minutes) :
-            ModelConfig.Random.Next(ModelConfig.MinutesPerHour);
+            modelState.Random(maxShiftStart.Minutes) :
+            modelState.Random(modelState.ModelConfig.MinutesPerHour);
 
         return day + new TimeSpan(operatingHourHour, operatingHourMinutes, 0);
     }
@@ -40,9 +42,9 @@ public sealed class OperatingHourService()
 
     public async Task GetNewObjectsAsync(Hub hub, CancellationToken cancellationToken)
     {
-        for (var i = 0; i < ModelConfig.ModelTime.Days; i++)
+        for (var i = 0; i < modelState.ModelTime.Days; i++)
         {
-            if (ModelConfig.Random.NextDouble() > hub.OperatingChance) continue;
+            if (modelState.Random() > hub.OperatingChance) continue;
             
             var operatingHour = await GetNewObjectsAsync(hub, TimeSpan.FromDays(i), cancellationToken);
             

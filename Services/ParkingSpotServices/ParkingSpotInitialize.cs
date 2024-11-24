@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.Abstractions;
+using Services.ModelServices;
 using Settings;
 
 namespace Services.ParkingSpotServices;
@@ -9,7 +10,8 @@ public sealed class ParkingSpotInitialize(
     ParkingSpotService parkingSpotService,
     LocationService locationService,
     HubRepository hubRepository,
-    ParkingSpotRepository parkingSpotRepository) : IInitializationService
+    ParkingSpotRepository parkingSpotRepository,
+    ModelState modelState) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
@@ -29,7 +31,7 @@ public sealed class ParkingSpotInitialize(
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
-        for (var i = 0; i < AgentConfig.ParkingSpotLocations.Length; i++)
+        for (var i = 0; i < modelState.AgentConfig.ParkingSpotLocations.Length; i++)
         {
             await InitializeObjectAsync(cancellationToken);
         }
