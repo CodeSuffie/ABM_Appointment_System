@@ -15,14 +15,16 @@ public sealed class LocationService(
     ParkingSpotRepository parkingSpotRepository,
     ModelState modelState)
 {
-    public async Task InitializeObjectAsync(Hub hub, CancellationToken cancellationToken)
+    public Task InitializeObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
+        return Task.CompletedTask;
         // TODO: Find a location to assign to a new Hub which is not within the
         // TODO: ModelConfig.MinDistanceBetween range
     }
     
-    public async Task InitializeObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public Task InitializeObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
+        return Task.CompletedTask;
         // TODO: Find a location to assign to a new TruckCompany which is not within the
         // TODO: ModelConfig.MinDistanceBetween range
     }

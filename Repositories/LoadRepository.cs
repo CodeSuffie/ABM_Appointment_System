@@ -8,28 +8,28 @@ public sealed class LoadRepository(
     ModelDbContext context,
     BayRepository bayRepository)
 {
-    public async Task<IQueryable<Load>> GetByStartAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public Task<IQueryable<Load>> GetByStartAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
         var loads = context.Loads
             .Where(l => l.TruckCompanyStartId == truckCompany.Id);
 
-        return loads;
+        return Task.FromResult(loads);
     }
     
-    public async Task<IQueryable<Load>> GetByEndAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public Task<IQueryable<Load>> GetByEndAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
         var loads = context.Loads
             .Where(l => l.TruckCompanyEndId == truckCompany.Id);
 
-        return loads;
+        return Task.FromResult(loads);
     }
     
-    public async Task<IQueryable<Load>> GetAsync(Hub hub, CancellationToken cancellationToken)
+    public Task<IQueryable<Load>> GetAsync(Hub hub, CancellationToken cancellationToken)
     {
         var loads = context.Loads
             .Where(l => l.HubId == hub.Id);
 
-        return loads;
+        return Task.FromResult(loads);
     }
     
     public async Task<Load?> GetPickUpAsync(Trip trip, CancellationToken cancellationToken)

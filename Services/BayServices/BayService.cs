@@ -23,7 +23,7 @@ public sealed class BayService(
     HubLogger hubLogger,
     ModelState modelState)
 {
-    public async Task<Bay> GetNewObjectAsync(Hub hub, CancellationToken cancellationToken)
+    public Task<Bay> GetNewObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
         var bay = new Bay
         {
@@ -33,7 +33,7 @@ public sealed class BayService(
             Hub = hub,
         };
 
-        return bay;
+        return Task.FromResult(bay);
     }
 
     public async Task<Bay> SelectBayAsync(Hub hub, CancellationToken cancellationToken)
@@ -46,21 +46,6 @@ public sealed class BayService(
 
         var bay = bays[modelState.Random(bays.Count)];
         return bay;
-    }
-    
-    public async Task AlertClaimedAsync(Bay bay, Trip trip, CancellationToken cancellationToken)
-    {
-        await tripRepository.SetAsync(trip, bay, cancellationToken);
-        await bayRepository.SetAsync(bay, BayStatus.Claimed, cancellationToken);
-    }
-    
-    public async Task AlertUnclaimedAsync(Bay bay, CancellationToken cancellationToken)
-    {
-        var trip = await tripRepository.GetAsync(bay, cancellationToken);
-        if (trip == null)
-            throw new Exception("This Bay was just told to be unclaimed but no Trip was assigned");
-        
-        await tripRepository.UnsetAsync(trip, bay, cancellationToken);
     }
     
     public async Task AlertWorkCompleteAsync(Bay bay, CancellationToken cancellationToken)

@@ -16,13 +16,13 @@ public sealed class WorkRepository(
         return work;
     }
     
-    public async Task<IQueryable<Work>> GetAsync(Bay bay, WorkType workType, CancellationToken cancellationToken)
+    public Task<IQueryable<Work>> GetAsync(Bay bay, WorkType workType, CancellationToken cancellationToken)
     {
         var work = context.Works
             .Where(x => x.BayId == bay.Id && 
                                       x.WorkType == workType);
         
-        return work;
+        return Task.FromResult(work);
     }
     
     public async Task<Work?> GetAsync(Bay bay, CancellationToken cancellationToken)

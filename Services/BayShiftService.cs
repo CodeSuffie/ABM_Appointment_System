@@ -17,7 +17,7 @@ public sealed class BayShiftService(
     ModelState modelState)
 {
 
-    private async Task<TimeSpan> GetStartTimeAsync(
+    private Task<TimeSpan> GetStartTimeAsync(
         BayStaff bayStaff,
         OperatingHour operatingHour,
         CancellationToken cancellationToken)
@@ -33,7 +33,7 @@ public sealed class BayShiftService(
             modelState.Random(maxShiftStart.Minutes) :
             modelState.Random(modelState.ModelConfig.MinutesPerHour);
 
-        return operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0);
+        return Task.FromResult(operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0));
     }
     
     public async Task<BayShift> GetNewObjectAsync(
@@ -74,14 +74,14 @@ public sealed class BayShiftService(
         }
     }
     
-    private async Task<bool> IsCurrentAsync(BayShift bayShift, CancellationToken cancellationToken)
+    private Task<bool> IsCurrentAsync(BayShift bayShift, CancellationToken cancellationToken)
     {
         if (bayShift.Duration == null)
             throw new Exception("The shift for this BayStaff does not have a Duration.");
             
         var endTime = (TimeSpan)(bayShift.StartTime + bayShift.Duration);
         
-        return modelState.ModelTime >= bayShift.StartTime && modelState.ModelTime <= endTime;
+        return Task.FromResult(modelState.ModelTime >= bayShift.StartTime && modelState.ModelTime <= endTime);
     }
     
     public async Task<BayShift?> GetCurrentAsync(BayStaff bayStaff, CancellationToken cancellationToken)

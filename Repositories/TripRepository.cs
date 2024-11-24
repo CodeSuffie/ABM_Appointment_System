@@ -12,22 +12,22 @@ public sealed class TripRepository(
     AdminStaffRepository adminStaffRepository,
     TruckRepository truckRepository)
 {
-    public async Task<IQueryable<Trip>> GetAsync(CancellationToken cancellationToken)
+    public Task<IQueryable<Trip>> GetAsync(CancellationToken cancellationToken)
     {
         var trips = context.Trips;
 
-        return trips;
+        return Task.FromResult<IQueryable<Trip>>(trips);
     }
     
-    public async Task<IQueryable<Trip>> GetAsync(Hub hub, CancellationToken cancellationToken)
+    public Task<IQueryable<Trip>> GetAsync(Hub hub, CancellationToken cancellationToken)
     {
         var trips = context.Trips
             .Where(t => t.HubId == hub.Id);
 
-        return trips;
+        return Task.FromResult(trips);
     }
     
-    public async Task<IQueryable<Trip>> GetAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public Task<IQueryable<Trip>> GetAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
         var trips = context.Trips
             .Where(t => t.DropOff != null ||
@@ -37,7 +37,7 @@ public sealed class TripRepository(
             .Where(t => t.PickUp == null ||
                         t.PickUp.TruckCompanyEndId == truckCompany.Id);
         
-        return trips;
+        return Task.FromResult(trips);
     }
     
     public async Task<Trip?> GetAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)

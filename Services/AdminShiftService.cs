@@ -14,7 +14,7 @@ public sealed class AdminShiftService(
     AdminShiftRepository adminShiftRepository,
     ModelState modelState) 
 {
-    private async Task<TimeSpan> GetStartTimeAsync(
+    private Task<TimeSpan> GetStartTimeAsync(
         AdminStaff adminStaff,
         OperatingHour operatingHour,
         CancellationToken cancellationToken)
@@ -30,7 +30,7 @@ public sealed class AdminShiftService(
             modelState.Random(maxShiftStart.Minutes) :
             modelState.Random(modelState.ModelConfig.MinutesPerHour);
 
-        return operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0);
+        return Task.FromResult(operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0));
     }
     
     public async Task<AdminShift> GetNewObjectAsync(
@@ -69,14 +69,14 @@ public sealed class AdminShiftService(
         }
     }
     
-    private async Task<bool> IsCurrentAsync(AdminShift adminShift, CancellationToken cancellationToken)
+    private Task<bool> IsCurrentAsync(AdminShift adminShift, CancellationToken cancellationToken)
     {
         if (adminShift.Duration == null)
             throw new Exception("The shift for this AdminStaff does not have a Duration.");
             
         var endTime = (TimeSpan)(adminShift.StartTime + adminShift.Duration);
         
-        return modelState.ModelTime >= adminShift.StartTime && modelState.ModelTime <= endTime;
+        return Task.FromResult(modelState.ModelTime >= adminShift.StartTime && modelState.ModelTime <= endTime);
     }
     
     public async Task<AdminShift?> GetCurrentAsync(AdminStaff adminStaff, CancellationToken cancellationToken)

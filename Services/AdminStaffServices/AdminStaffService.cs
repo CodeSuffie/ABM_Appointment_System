@@ -36,20 +36,6 @@ public sealed class AdminStaffService(
         
         return adminStaff.WorkChance / hub.OperatingChance;
     }
-    
-    public async Task AlertClaimedAsync(AdminStaff adminStaff, Trip trip, CancellationToken cancellationToken)
-    {
-        await tripRepository.SetAsync(trip, adminStaff, cancellationToken);
-    }
-    
-    public async Task AlertUnclaimedAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
-    {
-        var trip = await tripRepository.GetAsync(adminStaff, cancellationToken);
-        if (trip == null)
-            throw new Exception("This AdminStaff was just told to be unclaimed but no Trip was assigned");
-
-        await tripRepository.UnsetAsync(trip, adminStaff, cancellationToken);
-    }
 
     public async Task AlertWorkCompleteAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {

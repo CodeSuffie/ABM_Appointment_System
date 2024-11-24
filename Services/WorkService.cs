@@ -9,13 +9,13 @@ public sealed class WorkService(
     WorkRepository workRepository,
     ModelState modelState)
 {
-    public async Task<bool> IsWorkCompletedAsync(Work work, CancellationToken cancellationToken)
+    public Task<bool> IsWorkCompletedAsync(Work work, CancellationToken cancellationToken)
     {
-        if (work.Duration == null) return false;
+        if (work.Duration == null) return Task.FromResult(false);
         
         var endTime = (TimeSpan)(work.StartTime + work.Duration);
         
-        return endTime <= modelState.ModelTime;
+        return Task.FromResult(endTime <= modelState.ModelTime);
     }
     
     public async Task AdaptWorkLoadAsync(Bay bay, CancellationToken cancellationToken)
@@ -50,16 +50,16 @@ public sealed class WorkService(
         }
     }
     
-    public async Task<TimeSpan?> GetTimeAsync(WorkType workType, CancellationToken cancellationToken)
+    public Task<TimeSpan?> GetTimeAsync(WorkType workType, CancellationToken cancellationToken)
     {
-        return workType switch
+        return Task.FromResult<TimeSpan?>(workType switch
         {
             WorkType.CheckIn => modelState.ModelConfig.CheckInWorkTime,
             WorkType.DropOff => modelState.ModelConfig.DropOffWorkTime,
             WorkType.PickUp => modelState.ModelConfig.PickUpWorkTime,
             WorkType.Fetch => modelState.ModelConfig.FetchWorkTime,
             _ => null
-        };
+        });
     }
     
     private async Task<Work> GetNewAsync(WorkType workType, CancellationToken cancellationToken)

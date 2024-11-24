@@ -10,11 +10,12 @@ public sealed class ModelInitialize(
     IEnumerable<IPriorityInitializationService> priorityInitializationServices,
     IEnumerable<IInitializationService> initializationServices) : IInitializationService
 {
-    public async Task InitializeObjectAsync(CancellationToken cancellationToken)
+    public Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         modelState.ModelTime = new TimeSpan(0, 0, 0);
         modelState.ModelConfig = new ModelConfig();
         modelState.AgentConfig = new AgentConfig();
+        return Task.CompletedTask;
     }
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)

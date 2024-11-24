@@ -7,7 +7,7 @@ namespace Services;
 public sealed class OperatingHourService(
     ModelState modelState)
 {
-    private async Task<TimeSpan> GetStartTimeAsync(
+    private Task<TimeSpan> GetStartTimeAsync(
         Hub hub, 
         TimeSpan day, 
         CancellationToken cancellationToken)
@@ -24,7 +24,7 @@ public sealed class OperatingHourService(
             modelState.Random(maxShiftStart.Minutes) :
             modelState.Random(modelState.ModelConfig.MinutesPerHour);
 
-        return day + new TimeSpan(operatingHourHour, operatingHourMinutes, 0);
+        return Task.FromResult(day + new TimeSpan(operatingHourHour, operatingHourMinutes, 0));
     }
     
     private async Task<OperatingHour> GetNewObjectsAsync(Hub hub, TimeSpan day, CancellationToken cancellationToken)

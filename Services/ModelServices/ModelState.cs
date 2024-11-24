@@ -19,8 +19,9 @@ public sealed class ModelState
         return ModelConfig.Random.Next(maximum);
     }
     
-    public async Task StepAsync(CancellationToken cancellationToken)
+    public Task StepAsync(CancellationToken cancellationToken)
     {
         ModelTime += ModelConfig.ModelStep;
+        return Task.CompletedTask;
     }
 }

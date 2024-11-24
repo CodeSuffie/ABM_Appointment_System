@@ -7,12 +7,12 @@ namespace Repositories;
 
 public sealed class BayRepository(ModelDbContext context)
 {
-    public async Task<IQueryable<Bay>> GetAsync(Hub hub, CancellationToken cancellationToken)
+    public Task<IQueryable<Bay>> GetAsync(Hub hub, CancellationToken cancellationToken)
     {
         var bays = context.Bays
             .Where(b => b.HubId == hub.Id);
         
-        return bays;
+        return Task.FromResult(bays);
     }
     
     public async Task<Bay?> GetAsync(BayShift bayShift, CancellationToken cancellationToken)

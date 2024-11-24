@@ -13,13 +13,10 @@ namespace Services.TripServices;
 public sealed class TripService(
     LoadService loadService,
     WorkRepository workRepository,
-    ParkingSpotService parkingSpotService,
     ParkingSpotRepository parkingSpotRepository,
     AdminStaffRepository adminStaffRepository,
-    AdminStaffService adminStaffService,
     TripRepository tripRepository,
     HubRepository hubRepository,
-    BayService bayService,
     BayRepository bayRepository,
     TruckRepository truckRepository,
     TruckService truckService,
@@ -133,7 +130,7 @@ public sealed class TripService(
         if (oldWork is { WorkType: WorkType.WaitParking })
         {
             await workRepository.RemoveAsync(oldWork, cancellationToken);
-                await parkingSpotService.AlertClaimedAsync(parkingSpot, trip, cancellationToken);
+                await tripRepository.SetAsync(trip, parkingSpot, cancellationToken);
                 await locationService.SetAsync(trip, parkingSpot, cancellationToken);
             await workService.AddAsync(trip, WorkType.WaitCheckIn, cancellationToken);
 
@@ -146,7 +143,7 @@ public sealed class TripService(
         if (oldWork is { WorkType: WorkType.WaitCheckIn })
         {
             await workRepository.RemoveAsync(oldWork, cancellationToken);
-                await adminStaffService.AlertClaimedAsync(adminStaff, trip, cancellationToken);
+                await tripRepository.SetAsync(trip, adminStaff, cancellationToken);
             await workService.AddAsync(trip, adminStaff, cancellationToken);
         }
     }
@@ -159,12 +156,13 @@ public sealed class TripService(
             var parkingSpot = await parkingSpotRepository.GetAsync(trip, cancellationToken);
             if (parkingSpot != null)
             {
-                await parkingSpotService.AlertUnclaimedAsync(parkingSpot, cancellationToken);
+                await tripRepository.UnsetAsync(trip, parkingSpot, cancellationToken);
             }
 
             await workRepository.RemoveAsync(oldWork, cancellationToken);
-                await bayService.AlertClaimedAsync(bay, trip, cancellationToken);
+                await tripRepository.SetAsync(trip, bay, cancellationToken);
                 await locationService.SetAsync(trip, bay, cancellationToken);
+                await bayRepository.SetAsync(bay, BayStatus.Claimed, cancellationToken);
             await workService.AddAsync(trip, bay, cancellationToken);
         }
     }
@@ -189,7 +187,7 @@ public sealed class TripService(
                 throw new Exception ("The CheckIn for this Trip has just completed but there was no AdminStaff assigned.");
             
             await workRepository.RemoveAsync(oldWork, cancellationToken);
-                await adminStaffService.AlertUnclaimedAsync(adminStaff, cancellationToken);
+                await tripRepository.UnsetAsync(trip, adminStaff, cancellationToken);
             await workService.AddAsync(trip, WorkType.WaitBay, cancellationToken);
         }
     }
@@ -204,7 +202,7 @@ public sealed class TripService(
                 throw new Exception ("The Bay Work for this Trip has just completed but there was no Bay assigned.");
             
             await workRepository.RemoveAsync(oldWork, cancellationToken);
-                await bayService.AlertUnclaimedAsync(bay, cancellationToken);
+                await tripRepository.UnsetAsync(trip, bay, cancellationToken);
             await workService.AddAsync(trip, WorkType.TravelHome, cancellationToken);
         }
     }

@@ -10,7 +10,7 @@ public sealed class HubService(
     HubRepository hubRepository,
     ModelState modelState)
 {
-    public async Task<Hub> GetNewObjectAsync(CancellationToken cancellationToken)
+    public Task<Hub> GetNewObjectAsync(CancellationToken cancellationToken)
     {
         var hub = new Hub
         {
@@ -20,7 +20,7 @@ public sealed class HubService(
             AverageOperatingHourLength = modelState.AgentConfig.OperatingHourAverageLength
         };
 
-        return hub;
+        return Task.FromResult(hub);
     }
 
     public async Task<Hub> SelectHubAsync(CancellationToken cancellationToken)

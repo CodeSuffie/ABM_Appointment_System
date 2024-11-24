@@ -6,12 +6,11 @@ using Services.TripServices;
 namespace Services.ParkingSpotServices;
 
 public sealed class ParkingSpotService(
-    TripRepository tripRepository,
     TripService tripService,
     HubLogger hubLogger,
     HubRepository hubRepository)
 {
-    public async Task<ParkingSpot> GetNewObjectAsync(Hub hub, CancellationToken cancellationToken)
+    public Task<ParkingSpot> GetNewObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
         var parkingSpot = new ParkingSpot
         {
@@ -20,25 +19,12 @@ public sealed class ParkingSpotService(
             Hub = hub,
         };
 
-        return parkingSpot;
-    }
-
-    public async Task AlertClaimedAsync(ParkingSpot parkingSpot, Trip trip, CancellationToken cancellationToken)
-    {
-        await tripRepository.SetAsync(trip, parkingSpot, cancellationToken);
-    }
-
-    public async Task AlertUnclaimedAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
-    {
-        var trip = await tripRepository.GetAsync(parkingSpot, cancellationToken);
-        if (trip == null)
-            throw new Exception("This ParkingSpot was just told to be unclaimed but no Trip is assigned");
-
-        await tripRepository.UnsetAsync(trip, parkingSpot, cancellationToken);
+        return Task.FromResult(parkingSpot);
     }
     
     public async Task AlertFreeAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
+        // TODO: PerkingSpot Stepper, if no Truck at parking spot, get another
         var hub = await hubRepository.GetAsync(parkingSpot, cancellationToken);
         if (hub == null) 
             throw new Exception("This ParkingSpot was just told to be free but no Hub is assigned");

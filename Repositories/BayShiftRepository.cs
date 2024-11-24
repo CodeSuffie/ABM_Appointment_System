@@ -5,19 +5,19 @@ namespace Repositories;
 
 public sealed class BayShiftRepository(ModelDbContext context)
 {
-    public async Task<IQueryable<BayShift>> GetAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    public Task<IQueryable<BayShift>> GetAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var shifts = context.BayShifts
             .Where(bs => bs.BayStaffId == bayStaff.Id);
 
-        return shifts;
+        return Task.FromResult(shifts);
     }
     
-    public async Task<IQueryable<BayShift>> GetAsync(Bay bay, CancellationToken cancellationToken)
+    public Task<IQueryable<BayShift>> GetAsync(Bay bay, CancellationToken cancellationToken)
     {
         var shifts = context.BayShifts
             .Where(bs => bs.BayId == bay.Id);
 
-        return shifts;
+        return Task.FromResult(shifts);
     }
 }

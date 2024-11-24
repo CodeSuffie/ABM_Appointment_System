@@ -12,7 +12,7 @@ public sealed class TruckCompanyService(
     TripLogger tripLogger,
     TruckCompanyRepository truckCompanyRepository) 
 {
-    public async Task<TruckCompany> GetNewObjectAsync(CancellationToken cancellationToken)
+    public Task<TruckCompany> GetNewObjectAsync(CancellationToken cancellationToken)
     {
         var truckCompany = new TruckCompany
         {
@@ -20,7 +20,7 @@ public sealed class TruckCompanyService(
             YSize = 1
         };
 
-        return truckCompany;
+        return Task.FromResult(truckCompany);
     }
     
     public async Task<TruckCompany> SelectTruckCompanyAsync(CancellationToken cancellationToken)
