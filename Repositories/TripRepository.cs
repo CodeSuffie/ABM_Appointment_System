@@ -12,22 +12,22 @@ public sealed class TripRepository(
     AdminStaffRepository adminStaffRepository,
     TruckRepository truckRepository)
 {
-    public Task<IQueryable<Trip>> GetAsync(CancellationToken cancellationToken)
+    public IQueryable<Trip> Get()
     {
         var trips = context.Trips;
 
-        return Task.FromResult<IQueryable<Trip>>(trips);
+        return trips;
     }
     
-    public Task<IQueryable<Trip>> GetAsync(Hub hub, CancellationToken cancellationToken)
+    public IQueryable<Trip> Get(Hub hub)
     {
         var trips = context.Trips
             .Where(t => t.HubId == hub.Id);
 
-        return Task.FromResult(trips);
+        return trips;
     }
     
-    public Task<IQueryable<Trip>> GetAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public IQueryable<Trip> Get(TruckCompany truckCompany)
     {
         var trips = context.Trips
             .Where(t => t.DropOff != null ||
@@ -37,7 +37,7 @@ public sealed class TripRepository(
             .Where(t => t.PickUp == null ||
                         t.PickUp.TruckCompanyEndId == truckCompany.Id);
         
-        return Task.FromResult(trips);
+        return trips;
     }
     
     public async Task<Trip?> GetAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
@@ -80,9 +80,9 @@ public sealed class TripRepository(
         return trip;
     }
     
-    public async Task<IQueryable<Trip>> GetCurrentAsync(Hub hub, WorkType workType, CancellationToken cancellationToken)
+    public IQueryable<Trip> GetCurrent(Hub hub, WorkType workType, CancellationToken cancellationToken)
     {
-        var trips = (await GetAsync(hub, cancellationToken))
+        var trips = Get(hub)
             .Where(t => t.Work != null &&
                         t.Work.WorkType == workType);
         

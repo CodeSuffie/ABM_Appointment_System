@@ -38,7 +38,7 @@ public sealed class BayService(
 
     public async Task<Bay> SelectBayAsync(Hub hub, CancellationToken cancellationToken)
     {
-        var bays = await (await bayRepository.GetAsync(hub, cancellationToken))
+        var bays = await (bayRepository.Get(hub))
             .ToListAsync(cancellationToken);
 
         if (bays.Count <= 0) 

@@ -7,11 +7,11 @@ namespace Repositories;
 
 public sealed class HubRepository(ModelDbContext context)
 {
-    public Task<IQueryable<Hub>> GetAsync(CancellationToken cancellationToken)
+    public IQueryable<Hub> Get()
     {
         var hubs = context.Hubs;
 
-        return Task.FromResult<IQueryable<Hub>>(hubs);
+        return hubs;
     }
     
     public async Task<Hub?> GetAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)

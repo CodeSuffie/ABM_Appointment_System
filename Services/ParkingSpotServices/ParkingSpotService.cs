@@ -24,7 +24,6 @@ public sealed class ParkingSpotService(
     
     public async Task AlertFreeAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
-        // TODO: PerkingSpot Stepper, if no Truck at parking spot, get another
         var hub = await hubRepository.GetAsync(parkingSpot, cancellationToken);
         if (hub == null) 
             throw new Exception("This ParkingSpot was just told to be free but no Hub is assigned");

@@ -6,11 +6,11 @@ namespace Repositories;
 
 public sealed class TruckCompanyRepository(ModelDbContext context)
 {
-    public Task<IQueryable<TruckCompany>> GetAsync(CancellationToken cancellationToken)
+    public IQueryable<TruckCompany> Get()
     {
         var truckCompanies = context.TruckCompanies;
 
-        return Task.FromResult<IQueryable<TruckCompany>>(truckCompanies);
+        return truckCompanies;
     }
     
     public async Task<TruckCompany> GetAsync(Truck truck, CancellationToken cancellationToken)

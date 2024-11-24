@@ -25,7 +25,7 @@ public sealed class TruckCompanyService(
     
     public async Task<TruckCompany> SelectTruckCompanyAsync(CancellationToken cancellationToken)
     {
-        var truckCompanies = await (await truckCompanyRepository.GetAsync(cancellationToken))
+        var truckCompanies = await (truckCompanyRepository.Get())
             .ToListAsync(cancellationToken);
         
         if (truckCompanies.Count <= 0) 

@@ -52,7 +52,7 @@ public sealed class AdminShiftService(
     public async Task GetNewObjectsAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var hub = await hubRepository.GetAsync(adminStaff, cancellationToken);
-        var operatingHours = (await operatingHourRepository.GetAsync(hub, cancellationToken))
+        var operatingHours = operatingHourRepository.Get(hub)
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         
@@ -81,7 +81,7 @@ public sealed class AdminShiftService(
     
     public async Task<AdminShift?> GetCurrentAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var shifts = (await adminShiftRepository.GetAsync(adminStaff, cancellationToken))
+        var shifts = adminShiftRepository.Get(adminStaff)
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
 

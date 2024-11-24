@@ -46,6 +46,7 @@ hostBuilder.Services.AddScoped<BayStaffLogger>();
 
 hostBuilder.Services.AddScoped<ParkingSpotService>();
 hostBuilder.Services.AddScoped<IInitializationService,          ParkingSpotInitialize>();
+hostBuilder.Services.AddScoped<IStepperService,                 ParkingSpotStepper>();
 hostBuilder.Services.AddScoped<ParkingSpotRepository>();
 
 hostBuilder.Services.AddScoped<TripService>();

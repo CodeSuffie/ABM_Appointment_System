@@ -46,7 +46,7 @@ public sealed class BayStaffStepper(
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        var bayStaffs = (await bayStaffRepository.GetAsync(cancellationToken))
+        var bayStaffs = bayStaffRepository.Get()
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         

@@ -43,7 +43,7 @@ public class LoadService(
     
     public async Task<Load?> SelectUnclaimedDropOffAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var dropOffs = await (await loadRepository.GetUnclaimedDropOffAsync(truckCompany, cancellationToken))
+        var dropOffs = await (loadRepository.GetUnclaimedDropOff(truckCompany))
             .ToListAsync(cancellationToken);
 
         if (dropOffs.Count <= 0) return null;
@@ -54,7 +54,7 @@ public class LoadService(
     
     public async Task<Load?> SelectUnclaimedPickUpAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var pickUps = await (await loadRepository.GetUnclaimedPickUpAsync(truckCompany, cancellationToken))
+        var pickUps = await (loadRepository.GetUnclaimedPickUp(truckCompany))
             .ToListAsync(cancellationToken);
 
         if (pickUps.Count <= 0) return null;
@@ -65,7 +65,7 @@ public class LoadService(
 
     public async Task<Load?> SelectUnclaimedPickUpAsync(Hub hub, TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var pickUps = await (await loadRepository.GetUnclaimedPickUpAsync(hub, truckCompany, cancellationToken))
+        var pickUps = await (loadRepository.GetUnclaimedPickUp(hub, truckCompany))
             .ToListAsync(cancellationToken);
 
         if (pickUps.Count <= 0) return null;

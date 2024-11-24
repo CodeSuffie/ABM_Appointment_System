@@ -84,7 +84,7 @@ public sealed class TripService(
     
     public async Task<Trip> SelectTripAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var trips = await (await tripRepository.GetAsync(truckCompany, cancellationToken))
+        var trips = await (tripRepository.Get(truckCompany))
             .ToListAsync(cancellationToken);
 
         if (trips.Count <= 0) 
@@ -96,7 +96,7 @@ public sealed class TripService(
 
     public async Task<Trip?> GetNextAsync(Hub hub, WorkType workType, CancellationToken cancellationToken)
     {
-        var trips = (await tripRepository.GetCurrentAsync(hub, workType, cancellationToken))
+        var trips = (tripRepository.GetCurrent(hub, workType, cancellationToken))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
 

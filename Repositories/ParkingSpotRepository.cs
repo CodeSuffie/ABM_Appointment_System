@@ -6,6 +6,13 @@ namespace Repositories;
 
 public sealed class ParkingSpotRepository(ModelDbContext context)
 {
+    public IQueryable<ParkingSpot> Get()
+    {
+        var parkingSpots = context.ParkingSpots;
+
+        return parkingSpots;
+    }
+    
     public async Task<ParkingSpot?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
         var parkingSpot = await context.ParkingSpots

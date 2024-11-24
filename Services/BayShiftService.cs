@@ -58,7 +58,7 @@ public sealed class BayShiftService(
     public async Task GetNewObjectsAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var hub = await hubRepository.GetAsync(bayStaff, cancellationToken);
-        var operatingHours = (await operatingHourRepository.GetAsync(hub, cancellationToken))
+        var operatingHours = operatingHourRepository.Get(hub)
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         
@@ -86,7 +86,7 @@ public sealed class BayShiftService(
     
     public async Task<BayShift?> GetCurrentAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        var shifts = (await bayShiftRepository.GetAsync(bayStaff, cancellationToken))
+        var shifts = bayShiftRepository.Get(bayStaff)
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
 
@@ -103,7 +103,7 @@ public sealed class BayShiftService(
     
     public async Task<BayShift?> GetCurrentAsync(Bay bay, CancellationToken cancellationToken)
     {
-        var shifts = (await bayShiftRepository.GetAsync(bay, cancellationToken))
+        var shifts = bayShiftRepository.Get(bay)
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
 

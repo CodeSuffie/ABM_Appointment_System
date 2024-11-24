@@ -8,28 +8,28 @@ public sealed class LoadRepository(
     ModelDbContext context,
     BayRepository bayRepository)
 {
-    public Task<IQueryable<Load>> GetByStartAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public IQueryable<Load> GetByStart(TruckCompany truckCompany)
     {
         var loads = context.Loads
             .Where(l => l.TruckCompanyStartId == truckCompany.Id);
 
-        return Task.FromResult(loads);
+        return loads;
     }
     
-    public Task<IQueryable<Load>> GetByEndAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public IQueryable<Load> GetByEnd(TruckCompany truckCompany)
     {
         var loads = context.Loads
             .Where(l => l.TruckCompanyEndId == truckCompany.Id);
 
-        return Task.FromResult(loads);
+        return loads;
     }
     
-    public Task<IQueryable<Load>> GetAsync(Hub hub, CancellationToken cancellationToken)
+    public IQueryable<Load> Get(Hub hub)
     {
         var loads = context.Loads
             .Where(l => l.HubId == hub.Id);
 
-        return Task.FromResult(loads);
+        return loads;
     }
     
     public async Task<Load?> GetPickUpAsync(Trip trip, CancellationToken cancellationToken)
@@ -48,25 +48,25 @@ public sealed class LoadRepository(
         return load;
     }
     
-    public async Task<IQueryable<Load>> GetUnclaimedDropOffAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public IQueryable<Load> GetUnclaimedDropOff(TruckCompany truckCompany)
     {
-        var dropOffs = (await GetByStartAsync(truckCompany, cancellationToken))
+        var dropOffs = GetByStart(truckCompany)
             .Where(l => l.DropOffTrip == null);
 
         return dropOffs;
     }
     
-    public async Task<IQueryable<Load>> GetUnclaimedPickUpAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public IQueryable<Load> GetUnclaimedPickUp(TruckCompany truckCompany)
     {
-        var pickUps = (await GetByEndAsync(truckCompany, cancellationToken))
+        var pickUps = GetByEnd(truckCompany)
             .Where(l => l.PickUpTrip == null);
 
         return pickUps;
     }
     
-    public async Task<IQueryable<Load>> GetUnclaimedPickUpAsync(Hub hub, TruckCompany truckCompany, CancellationToken cancellationToken)
+    public IQueryable<Load> GetUnclaimedPickUp(Hub hub, TruckCompany truckCompany)
     {
-        var pickUps = (await GetUnclaimedPickUpAsync(truckCompany, cancellationToken))
+        var pickUps = GetUnclaimedPickUp(truckCompany)
             .Where(l => l.HubId == hub.Id);
 
         return pickUps;

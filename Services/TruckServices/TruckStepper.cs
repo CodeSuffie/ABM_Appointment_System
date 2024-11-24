@@ -26,7 +26,7 @@ public sealed class TruckStepper(
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        var trucks = (await truckRepository.GetAsync(cancellationToken))
+        var trucks = truckRepository.Get()
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         

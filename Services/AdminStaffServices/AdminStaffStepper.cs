@@ -21,8 +21,11 @@ public sealed class AdminStaffStepper(
         if (work == null)
         {
             var shift = await adminShiftService.GetCurrentAsync(adminStaff, cancellationToken);
-            if (shift == null) return;
-            await adminStaffLogger.LogAsync(adminStaff, LogType.Info, "Not working.", cancellationToken);
+            if (shift == null)
+            {
+                await adminStaffLogger.LogAsync(adminStaff, LogType.Info, "Not working.", cancellationToken);
+                return;
+            }
             
             await adminStaffService.AlertFreeAsync(adminStaff, cancellationToken);
             return;
@@ -36,7 +39,7 @@ public sealed class AdminStaffStepper(
     
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        var adminStaffs = (await adminStaffRepository.GetAsync(cancellationToken))
+        var adminStaffs = adminStaffRepository.Get()
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         

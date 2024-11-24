@@ -15,7 +15,7 @@ public sealed class BayInitialize(
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
-        var hubs = (await hubRepository.GetAsync(cancellationToken))
+        var hubs = hubRepository.Get()
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         

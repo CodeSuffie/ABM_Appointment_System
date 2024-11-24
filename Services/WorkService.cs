@@ -29,7 +29,7 @@ public sealed class WorkService(
 
         if (workType == null) return;
 
-        var works = (await workRepository.GetAsync(bay, (WorkType) workType, cancellationToken))
+        var works = workRepository.Get(bay, (WorkType) workType)
                 .AsAsyncEnumerable()
                 .WithCancellation(cancellationToken);
 

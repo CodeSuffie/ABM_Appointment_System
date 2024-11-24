@@ -5,11 +5,11 @@ namespace Repositories;
 
 public sealed class OperatingHourRepository(ModelDbContext context)
 {
-    public Task<IQueryable<OperatingHour>> GetAsync(Hub hub, CancellationToken cancellationToken)
+    public IQueryable<OperatingHour> Get(Hub hub)
     {
         var operatingHours = context.OperatingHours
             .Where(oh => oh.HubId == hub.Id);
 
-        return Task.FromResult(operatingHours);
+        return operatingHours;
     }
 }

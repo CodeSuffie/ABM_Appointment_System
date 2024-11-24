@@ -5,11 +5,11 @@ namespace Repositories;
 
 public sealed class AdminShiftRepository(ModelDbContext context)
 {
-    public Task<IQueryable<AdminShift>> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    public IQueryable<AdminShift> Get(AdminStaff adminStaff)
     {
         var shifts = context.AdminShifts
             .Where(a => a.AdminStaffId == adminStaff.Id);
 
-        return Task.FromResult(shifts);
+        return shifts;
     }
 }

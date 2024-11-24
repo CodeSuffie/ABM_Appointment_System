@@ -25,7 +25,7 @@ public sealed class HubService(
 
     public async Task<Hub> SelectHubAsync(CancellationToken cancellationToken)
     {
-        var hubs = await (await hubRepository.GetAsync(cancellationToken))
+        var hubs = await (hubRepository.Get())
             .ToListAsync(cancellationToken);
             
         if (hubs.Count <= 0) throw new Exception("There was no Hub to select.");
