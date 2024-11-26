@@ -9,9 +9,11 @@ namespace Services.HubServices;
 public sealed class HubService(
     ILogger<HubService> logger,
     HubRepository hubRepository,
+    OperatingHourService operatingHourService, 
+    LocationService locationService,
     ModelState modelState)
 {
-    public Hub GetNewObject()
+    public async Task<Hub> GetNewObjectAsync(CancellationToken cancellationToken)
     {
         var hub = new Hub
         {
@@ -20,6 +22,16 @@ public sealed class HubService(
             OperatingChance = modelState.AgentConfig.HubAverageOperatingDays,
             AverageOperatingHourLength = modelState.AgentConfig.OperatingHourAverageLength
         };
+
+        await hubRepository.AddAsync(hub, cancellationToken);
+        
+        logger.LogDebug("Setting location for this Hub ({@Hub})...",
+            hub);
+        await locationService.InitializeObjectAsync(hub, cancellationToken);
+        
+        logger.LogDebug("Setting OperatingHours for this Hub ({@Hub})...",
+            hub);
+        operatingHourService.GetNewObjects(hub);
 
         return hub;
     }

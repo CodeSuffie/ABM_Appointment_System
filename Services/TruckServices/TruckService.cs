@@ -11,6 +11,7 @@ public sealed class TruckService(
     ILogger<TruckService> logger,
     TruckCompanyService truckCompanyService,
     TruckCompanyRepository truckCompanyRepository,
+    TruckRepository truckRepository,
     TripService tripService,
     ModelState modelState)
 {
@@ -33,6 +34,8 @@ public sealed class TruckService(
             Speed = modelState.AgentConfig.TruckAverageSpeed,
             Planned = false
         };
+
+        await truckRepository.AddAsync(truck, cancellationToken);
 
         return truck;
     }

@@ -18,7 +18,7 @@ public sealed class LocationService(
     {
         var hubCount = await hubRepository.GetCountAsync(cancellationToken);
 
-        if (hubCount >= modelState.AgentConfig.HubLocations.Length)
+        if (hubCount > modelState.AgentConfig.HubLocations.GetLength(0))
         {
             logger.LogError("Hub ({@Hub}) could not have its location initialized because " +
                             "its location is not defined in the agent configuration.",
@@ -27,8 +27,8 @@ public sealed class LocationService(
             return;
         }
 
-        hub.XLocation = modelState.AgentConfig.HubLocations[hubCount, 0];
-        hub.YLocation = modelState.AgentConfig.HubLocations[hubCount, 1];
+        hub.XLocation = modelState.AgentConfig.HubLocations[hubCount - 1, 0];
+        hub.YLocation = modelState.AgentConfig.HubLocations[hubCount - 1, 1];
         
         logger.LogInformation("Location successfully initialized for this Hub ({@Hub}).",
             hub);
@@ -38,7 +38,7 @@ public sealed class LocationService(
     {
         var truckCompanyCount = await truckCompanyRepository.GetCountAsync(cancellationToken);
         
-        if (truckCompanyCount >= modelState.AgentConfig.TruckCompanyLocations.Length)
+        if (truckCompanyCount > modelState.AgentConfig.TruckCompanyLocations.GetLength(0))
         {
             logger.LogError("TruckCompany ({@TruckCompany}) could not have its location initialized because " +
                             "its location is not defined in the agent configuration.",
@@ -47,8 +47,8 @@ public sealed class LocationService(
             return;
         }
 
-        truckCompany.XLocation = modelState.AgentConfig.TruckCompanyLocations[truckCompanyCount, 0];
-        truckCompany.YLocation = modelState.AgentConfig.TruckCompanyLocations[truckCompanyCount, 1];
+        truckCompany.XLocation = modelState.AgentConfig.TruckCompanyLocations[truckCompanyCount - 1, 0];
+        truckCompany.YLocation = modelState.AgentConfig.TruckCompanyLocations[truckCompanyCount - 1, 1];
         
         logger.LogInformation("Location successfully initialized for this TruckCompany ({@TruckCompany}).",
             truckCompany);
@@ -67,7 +67,7 @@ public sealed class LocationService(
         
         var bayCount = await bayRepository.GetCountAsync(hub, cancellationToken);
         
-        if (bayCount >= modelState.AgentConfig.TruckCompanyLocations.Length)
+        if (bayCount > modelState.AgentConfig.BayLocations.GetLength(0))
         {
             logger.LogError("Bay ({@Bay}) could not have its location initialized because " +
                             "its location is not defined in the agent configuration.",
@@ -76,8 +76,8 @@ public sealed class LocationService(
             return;
         }
 
-        bay.XLocation = hub.XLocation + modelState.AgentConfig.BayLocations[bayCount, 0];
-        bay.YLocation = hub.YLocation + modelState.AgentConfig.BayLocations[bayCount, 1];
+        bay.XLocation = hub.XLocation + modelState.AgentConfig.BayLocations[bayCount - 1, 0];
+        bay.YLocation = hub.YLocation + modelState.AgentConfig.BayLocations[bayCount - 1, 1];
     }
     
     public async Task InitializeObjectAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
@@ -93,7 +93,7 @@ public sealed class LocationService(
         
         var parkingSpotCount = await parkingSpotRepository.GetCountAsync(hub, cancellationToken);
         
-        if (parkingSpotCount >= modelState.AgentConfig.TruckCompanyLocations.Length)
+        if (parkingSpotCount > modelState.AgentConfig.ParkingSpotLocations.GetLength(0))
         {
             logger.LogError("ParkingSpot ({@ParkingSpot}) could not have its location initialized because " +
                             "its location is not defined in the agent configuration.",
@@ -102,8 +102,8 @@ public sealed class LocationService(
             return;
         }
         
-        parkingSpot.XLocation = hub.XLocation + modelState.AgentConfig.ParkingSpotLocations[parkingSpotCount, 0];
-        parkingSpot.YLocation = hub.YLocation + modelState.AgentConfig.ParkingSpotLocations[parkingSpotCount, 1];
+        parkingSpot.XLocation = hub.XLocation + modelState.AgentConfig.ParkingSpotLocations[parkingSpotCount - 1, 0];
+        parkingSpot.YLocation = hub.YLocation + modelState.AgentConfig.ParkingSpotLocations[parkingSpotCount - 1, 1];
     }
 
     public async Task SetAsync(Trip trip, TruckCompany truckCompany, CancellationToken cancellationToken)

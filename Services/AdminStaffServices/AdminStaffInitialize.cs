@@ -8,8 +8,6 @@ namespace Services.AdminStaffServices;
 public sealed class AdminStaffInitialize(
     ILogger<AdminStaffInitialize> logger,
     AdminStaffService adminStaffService,
-    AdminShiftService adminShiftService,
-    AdminStaffRepository adminStaffRepository,
     ModelState modelState) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
@@ -22,11 +20,6 @@ public sealed class AdminStaffInitialize(
             return;
         }
         
-        logger.LogDebug("Setting AdminShifts for this AdminStaff ({@AdminStaff})...",
-            adminStaff);
-        await adminShiftService.GetNewObjectsAsync(adminStaff, cancellationToken);
-
-        await adminStaffRepository.AddAsync(adminStaff, cancellationToken);
         logger.LogInformation("New AdminStaff created: AdminStaff={@AdminStaff}", adminStaff);
     }
 

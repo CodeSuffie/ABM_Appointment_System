@@ -9,7 +9,6 @@ namespace Services;
 
 public sealed class AdminShiftService(
     ILogger<AdminShiftService> logger,
-    AdminStaffService adminStaffService,
     HubRepository hubRepository,
     OperatingHourRepository operatingHourRepository,
     AdminShiftRepository adminShiftRepository,
@@ -37,6 +36,18 @@ public sealed class AdminShiftService(
             modelState.Random(modelState.ModelConfig.MinutesPerHour);
 
         return operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0);
+    }
+    
+    public async Task<double?> GetWorkChanceAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    {
+        var hub = await hubRepository.GetAsync(adminStaff, cancellationToken);
+        
+        if (hub != null) return adminStaff.WorkChance / hub.OperatingChance;
+        
+        logger.LogError("AdminStaff ({@AdminStaff}) did not have a Hub assigned to get the OperatingHourChance for.",
+            adminStaff);
+
+        return null;
     }
     
     public AdminShift? GetNewObject(AdminStaff adminStaff, OperatingHour operatingHour)
@@ -86,8 +97,18 @@ public sealed class AdminShiftService(
                 continue;
             }
 
-            if (modelState.Random() >
-                await adminStaffService.GetWorkChanceAsync(adminStaff, cancellationToken))
+            var workChance = await GetWorkChanceAsync(adminStaff, cancellationToken);
+            if (workChance == null)
+            {
+                logger.LogError("WorkChance could not be calculated for this AdminStaff " +
+                                "({@AdminStaff}) during this OperatingHour ({@OperatingHour}).",
+                    adminStaff,
+                    operatingHour);
+
+                continue;
+            }
+            
+            if (modelState.Random() > workChance)
             {
                 logger.LogInformation("AdminStaff ({@AdminStaff}) will not have an AdminShift during " +
                                       "this OperatingHour ({@OperatingHour}).",

@@ -8,7 +8,6 @@ namespace Services.TruckServices;
 public sealed class TruckInitialize(
     ILogger<TruckInitialize> logger,
     TruckService truckService,
-    TruckRepository truckRepository,
     ModelState modelState) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
@@ -20,8 +19,7 @@ public sealed class TruckInitialize(
             
             return;
         }
-
-        await truckRepository.AddAsync(truck, cancellationToken);
+        
         logger.LogInformation("New Truck created: Truck={@Truck}", truck);
     }
 

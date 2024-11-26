@@ -1,10 +1,12 @@
 using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Repositories;
 
 public sealed class TripRepository(
+    ILogger<TripRepository> logger,
     ModelDbContext context,
     BayRepository bayRepository,
     ParkingSpotRepository parkingSpotRepository,
@@ -100,7 +102,14 @@ public sealed class TripRepository(
     {
         var oldParkingSpot = await parkingSpotRepository.GetAsync(trip, cancellationToken);
         if (oldParkingSpot != null)
-            throw new Exception("Trip already has an assigned ParkingSpot, it cannot move to another.");
+        {
+            logger.LogError("Trip ({@Trip}) already has an assigned ParkingSpot ({@ParkingSpot}), it cannot move to the new ParkingSpot ({@ParkingSpot}).",
+                trip,
+                oldParkingSpot,
+                parkingSpot);
+
+            return;
+        }
         
         trip.ParkingSpot = parkingSpot;
         parkingSpot.Trip = trip;
@@ -112,7 +121,14 @@ public sealed class TripRepository(
     {
         var oldAdminStaff = await adminStaffRepository.GetAsync(trip, cancellationToken);
         if (oldAdminStaff != null)
-            throw new Exception("Trip already has an assigned AdminStaff, it cannot move to another.");
+        {
+            logger.LogError("Trip ({@Trip}) already has an assigned AdminStaff ({@AdminStaff}), it cannot move to the new AdminStaff ({@AdminStaff}).",
+                trip,
+                oldAdminStaff,
+                adminStaff);
+
+            return;
+        }
         
         trip.AdminStaff = adminStaff;
         adminStaff.Trip = trip;
@@ -124,7 +140,14 @@ public sealed class TripRepository(
     {
         var oldBay = await bayRepository.GetAsync(trip, cancellationToken);
         if (oldBay != null)
-            throw new Exception("Trip already has an assigned Bay, it cannot move to another.");
+        {
+            logger.LogError("Trip ({@Trip}) already has an assigned Bay ({@Bay}), it cannot move to the new Bay ({@Bay}).",
+                trip,
+                oldBay,
+                bay);
+
+            return;
+        }
         
         trip.Bay = bay;
         bay.Trip = trip;
@@ -136,7 +159,14 @@ public sealed class TripRepository(
     {
         var oldTruck = await truckRepository.GetAsync(trip, cancellationToken);
         if (oldTruck != null)
-            throw new Exception("Trip already has an assigned Truck, it cannot move to another.");
+        {
+            logger.LogError("Trip ({@Trip}) already has an assigned Truck ({@Truck}), it cannot move to the new Truck ({@Truck}).",
+                trip,
+                oldTruck,
+                truck);
+
+            return;
+        }
         
         trip.Truck = truck;
         truck.Trip = trip;

@@ -14,6 +14,8 @@ public sealed class AdminStaffService(
     TripRepository tripRepository,
     TripService tripService,
     WorkRepository workRepository,
+    AdminShiftService adminShiftService,
+    AdminStaffRepository adminStaffRepository,
     ModelState modelState)
 {
     public async Task<AdminStaff?> GetNewObjectAsync(CancellationToken cancellationToken)
@@ -36,19 +38,13 @@ public sealed class AdminStaffService(
             AverageShiftLength = modelState.AgentConfig.AdminShiftAverageLength
         };
 
-        return adminStaff;
-    }
-    
-    public async Task<double?> GetWorkChanceAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
-    {
-        var hub = await hubRepository.GetAsync(adminStaff, cancellationToken);
+        await adminStaffRepository.AddAsync(adminStaff, cancellationToken);
         
-        if (hub != null) return adminStaff.WorkChance / hub.OperatingChance;
-        
-        logger.LogError("AdminStaff ({@AdminStaff}) did not have a Hub assigned to get the OperatingHourChance for.",
+        logger.LogDebug("Setting AdminShifts for this AdminStaff ({@AdminStaff})...",
             adminStaff);
+        await adminShiftService.GetNewObjectsAsync(adminStaff, cancellationToken);
 
-        return null;
+        return adminStaff;
     }
 
     public async Task AlertWorkCompleteAsync(AdminStaff adminStaff, CancellationToken cancellationToken)

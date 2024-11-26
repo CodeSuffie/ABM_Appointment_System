@@ -9,15 +9,24 @@ namespace Services.TruckCompanyServices;
 public sealed class TruckCompanyService(
     ILogger<TruckCompanyService> logger,
     TruckCompanyRepository truckCompanyRepository,
+    LocationService locationService,
     ModelState modelState) 
 {
-    public TruckCompany GetNewObject()
+    public async Task<TruckCompany> GetNewObjectAsync(CancellationToken cancellationToken)
     {
         var truckCompany = new TruckCompany
         {
             XSize = 1,
             YSize = 1
         };
+
+        await truckCompanyRepository.AddAsync(truckCompany, cancellationToken);
+        
+        logger.LogDebug("Setting location for this TruckCompany ({@TruckCompany})...",
+            truckCompany);
+        await locationService.InitializeObjectAsync(truckCompany, cancellationToken);
+        
+        // Initially no Trips are created
 
         return truckCompany;
     }

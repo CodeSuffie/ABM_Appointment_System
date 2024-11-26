@@ -15,9 +15,10 @@ public sealed class BayService(
     TripRepository tripRepository,
     LoadRepository loadRepository,
     WorkRepository workRepository,
+    LocationService locationService,
     ModelState modelState)
 {
-    public Bay GetNewObject(Hub hub, CancellationToken cancellationToken)
+    public async Task<Bay> GetNewObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
         var bay = new Bay
         {
@@ -26,6 +27,15 @@ public sealed class BayService(
             BayStatus = BayStatus.Closed,
             Hub = hub,
         };
+
+        logger.LogDebug("Setting Bay ({@Bay}) to its Hub ({@Hub})...",
+            bay,
+            hub);
+        await bayRepository.SetAsync(bay, hub, cancellationToken);
+        
+        logger.LogDebug("Setting location for this Bay ({@Bay})...",
+            bay);
+        await locationService.InitializeObjectAsync(bay, cancellationToken);
 
         return bay;
     }

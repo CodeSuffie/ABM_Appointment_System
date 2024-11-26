@@ -12,7 +12,6 @@ public sealed class BayShiftService(
     ILogger<BayShiftService> logger,
     HubRepository hubRepository,
     OperatingHourRepository operatingHourRepository,
-    BayStaffService bayStaffService,
     BayService bayService,
     BayShiftRepository bayShiftRepository,
     ModelState modelState)
@@ -40,6 +39,18 @@ public sealed class BayShiftService(
             modelState.Random(modelState.ModelConfig.MinutesPerHour);
 
         return operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0);
+    }
+    
+    public async Task<double?> GetWorkChanceAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    {
+        var hub = await hubRepository.GetAsync(bayStaff, cancellationToken);
+        
+        if (hub != null) return bayStaff.WorkChance / hub.OperatingChance;
+        
+        logger.LogError("BayStaff ({@BayStaff}) did not have a Hub assigned to get the OperatingHourChance for.",
+            bayStaff);
+
+        return null;
     }
     
     public async Task<BayShift?> GetNewObjectAsync(
@@ -83,6 +94,14 @@ public sealed class BayShiftService(
     public async Task GetNewObjectsAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var hub = await hubRepository.GetAsync(bayStaff, cancellationToken);
+        if (hub == null)
+        {
+            logger.LogError("BayStaff ({@BayStaff}) did not have a Hub assigned to create BayShifts for.",
+                bayStaff);
+
+            return;
+        }
+        
         var operatingHours = operatingHourRepository.Get(hub)
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
@@ -96,8 +115,19 @@ public sealed class BayShiftService(
                 continue;
             }
             
-            if (modelState.Random() >
-                await bayStaffService.GetWorkChanceAsync(bayStaff, cancellationToken))
+            var workChance = await GetWorkChanceAsync(bayStaff, cancellationToken);
+            if (workChance == null)
+            {
+                logger.LogError("WorkChance could not be calculated for this BayStaff " +
+                                "({@BayStaff}) during this OperatingHour ({@OperatingHour}).",
+                    bayStaff,
+                    operatingHour);
+
+                continue;
+            }
+
+            
+            if (modelState.Random() > workChance)
             {
                 logger.LogInformation("BayStaff ({@BayStaff}) will not have a BayShift during " +
                                       "this OperatingHour ({@OperatingHour}).",

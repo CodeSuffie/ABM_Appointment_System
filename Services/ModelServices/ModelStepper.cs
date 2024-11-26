@@ -23,5 +23,7 @@ public sealed class ModelStepper(
         
         logger.LogDebug("Completed handling this Step ({Step}).",
             modelState.ModelTime);
+
+        await modelState.StepAsync(cancellationToken);
     }
 }

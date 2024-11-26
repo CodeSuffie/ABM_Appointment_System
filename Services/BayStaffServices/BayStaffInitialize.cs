@@ -8,8 +8,6 @@ namespace Services.BayStaffServices;
 public sealed class BayStaffInitialize(
     ILogger<BayStaffInitialize> logger,
     BayStaffService bayStaffService,
-    BayShiftService bayShiftService,
-    BayStaffRepository bayStaffRepository,
     ModelState modelState) : IInitializationService
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
@@ -22,11 +20,6 @@ public sealed class BayStaffInitialize(
             return;
         }
         
-        logger.LogDebug("Setting BayShifts for this BayStaff ({@BayStaff})...",
-            bayStaff);
-        await bayShiftService.GetNewObjectsAsync(bayStaff, cancellationToken);
-
-        await bayStaffRepository.AddAsync(bayStaff, cancellationToken);
         logger.LogInformation("New BayStaff created: BayStaff={@BayStaff}", bayStaff);
     }
 

@@ -1,47 +1,54 @@
 namespace Settings;
 
-public class AgentConfigBase
+public abstract class AgentConfigBase
 {
-    public int AdminStaffCount;
-    public double AdminStaffAverageWorkDays;
-    public TimeSpan AdminShiftAverageLength;
-    public int BayStaffCount;
-    public double BayStaffAverageWorkDays;
-    public TimeSpan BayShiftAverageLength;
-    public int TruckCount;
-    public int TruckAverageSpeed;
-    public double HubAverageOperatingDays;
-    public int HubXSize;
-    public int HubYSize;
+    public abstract int AdminStaffCount { get; }
+    public abstract double AdminStaffAverageWorkDays { get; }
+    public abstract TimeSpan AdminShiftAverageLength { get; }
+    
+    public abstract int BayStaffCount { get; }
+    public abstract double BayStaffAverageWorkDays { get; }
+    public abstract TimeSpan BayShiftAverageLength { get; }
+    
+    public abstract int TruckCount { get; }
+    public abstract int TruckAverageSpeed { get; }
+    
+    public abstract double HubAverageOperatingDays { get; }
+    public abstract TimeSpan OperatingHourAverageLength { get; }
+    
+    public abstract int HubXSize { get; }
+    public abstract int HubYSize { get; }
 
-    public int[,] HubLocations = { {} };
-    public int[,] TruckCompanyLocations = { {} };
-    public int[,] ParkingSpotLocations = { {} };
-    public int[,] BayLocations = { {} };
-
-    public TimeSpan OperatingHourAverageLength;
+    public abstract int[,] HubLocations { get; }
+    public abstract int[,] TruckCompanyLocations  { get; }
+    public abstract int[,] ParkingSpotLocations  { get; }
+    public abstract int[,] BayLocations  { get; }
 }
 
 public class AgentConfig : AgentConfigBase
 {
-    public new const int AdminStaffCount = 9;
-    public new const double AdminStaffAverageWorkDays = 0.7;
-    public new TimeSpan AdminShiftAverageLength = TimeSpan.FromHours(8);
-    public new const int BayStaffCount = 9;
-    public new const double BayStaffAverageWorkDays = 0.7;
-    public new TimeSpan BayShiftAverageLength = TimeSpan.FromHours(8);
-    public new const int TruckCount = 9;
-    public new const int TruckAverageSpeed = 1;
-    public new const double HubAverageOperatingDays = 1;
-    public new const int HubXSize = 9;
-    public new const int HubYSize = 4;
+    public override int AdminStaffCount { get; } = 9;
+    public override double AdminStaffAverageWorkDays { get; } = 0.7;
+    public override TimeSpan AdminShiftAverageLength { get; } = TimeSpan.FromHours(8);
     
-    public new readonly int[,] HubLocations =
+    public override int BayStaffCount { get; } = 9;
+    public override double BayStaffAverageWorkDays { get; } = 0.7;
+    public override TimeSpan BayShiftAverageLength { get; } = TimeSpan.FromHours(8);
+    
+    public override int TruckCount { get; } = 9;
+    public override int TruckAverageSpeed { get; } = 1;
+    
+    public override double HubAverageOperatingDays { get; } = 1;
+    public override TimeSpan OperatingHourAverageLength { get; } = TimeSpan.FromHours(12);
+    public override int HubXSize { get; } = 9;
+    public override int HubYSize { get; } = 4;
+    
+    public override int[,] HubLocations { get; } =
     {
-        {100, 100},
+        {100, 100}
     };
     
-    public new readonly int[,] TruckCompanyLocations =
+    public override int[,] TruckCompanyLocations { get; } =
     {
         {1, 1},
         {199, 1},
@@ -50,10 +57,10 @@ public class AgentConfig : AgentConfigBase
         {100, 80},
         {150, 100},
         {100, 199},
-        {20, 100},
+        {20, 100}
     };
-
-    public new readonly int[,] ParkingSpotLocations =
+    
+    public override int[,] ParkingSpotLocations { get; } =
     {
         {0, 2},
         {0, 3},
@@ -65,8 +72,8 @@ public class AgentConfig : AgentConfigBase
         {3, 3},
         {4, 2}
     };
-
-    public new readonly int[,] BayLocations =
+    
+    public override int[,] BayLocations { get; } =
     {
         {0, 0}, 
         {1, 0},
@@ -78,6 +85,4 @@ public class AgentConfig : AgentConfigBase
         {7, 0},
         {8, 0}
     };
-
-    public new TimeSpan OperatingHourAverageLength = TimeSpan.FromHours(12);
 }

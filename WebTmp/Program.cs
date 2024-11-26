@@ -1,6 +1,7 @@
 ﻿using Database;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
 using Services;
@@ -15,6 +16,9 @@ using Services.TruckCompanyServices;
 using Services.TruckServices;
 
 var hostBuilder = new HostApplicationBuilder(args);
+hostBuilder.Services.AddLogging(configure => { configure.SetMinimumLevel(LogLevel.Debug); });
+hostBuilder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
+
 hostBuilder.Services.AddDbContext<ModelDbContext>();
 
 hostBuilder.Services.AddScoped<HubService>();

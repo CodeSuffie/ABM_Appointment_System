@@ -8,9 +8,11 @@ namespace Services.ParkingSpotServices;
 public sealed class ParkingSpotService(
     ILogger<ParkingSpotService> logger,
     TripService tripService,
-    HubRepository hubRepository)
+    HubRepository hubRepository,
+    LocationService locationService,
+    ParkingSpotRepository parkingSpotRepository)
 {
-    public ParkingSpot GetNewObject(Hub hub)
+    public async Task<ParkingSpot> GetNewObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
         var parkingSpot = new ParkingSpot
         {
@@ -18,6 +20,15 @@ public sealed class ParkingSpotService(
             YSize = 1,
             Hub = hub,
         };
+
+        logger.LogDebug("Setting ParkingSpot ({@ParkingSpot}) to its Hub ({@Hub})...",
+            parkingSpot,
+            hub);
+        await parkingSpotRepository.SetAsync(parkingSpot, hub, cancellationToken);
+        
+        logger.LogDebug("Setting location for this ParkingSpot ({@ParkingSpot})...",
+            parkingSpot);
+        await locationService.InitializeObjectAsync(parkingSpot, cancellationToken);
 
         return parkingSpot;
     }

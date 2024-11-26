@@ -1,43 +1,43 @@
 ﻿namespace Settings;
 
-public class ModelConfigBase
+public abstract class ModelConfigBase
 {
-    public Random Random = new();
-    public int MinutesPerHour;
-    
-    public TimeSpan ModelTime;
-    public TimeSpan ModelStep;
-    
-    public TimeSpan CheckInWorkTime;
-    public TimeSpan DropOffWorkTime;
-    public TimeSpan PickUpWorkTime;
-    public TimeSpan FetchWorkTime;
-    
-    public int MaxX;
-    public int MaxY;
-    public int MinDistanceBetween;
+    public abstract Random Random { get; }
+    public abstract int MinutesPerHour { get; }
 
-    public int InitialLoads;
-    public int LoadsPerStep;
+    public abstract TimeSpan ModelTime { get; }
+    public abstract TimeSpan ModelStep { get; }
+    
+    public abstract TimeSpan CheckInWorkTime { get; }
+    public abstract TimeSpan DropOffWorkTime { get; }
+    public abstract TimeSpan PickUpWorkTime { get; }
+    public abstract TimeSpan FetchWorkTime { get; }
+    
+    public abstract int MaxX { get; }
+    public abstract int MaxY { get; }
+    public abstract int MinDistanceBetween { get; }
+
+    public abstract int InitialLoads { get; }
+    public abstract int LoadsPerStep { get; }
 }
 
 public class ModelConfig : ModelConfigBase
 {
-    public new Random Random = new Random(2);
-    public new int MinutesPerHour = 60;
+    public override Random Random { get; } = new Random(2);
+    public override int MinutesPerHour { get; } = 60;
     
-    public new TimeSpan ModelTime = TimeSpan.FromDays(7);
-    public new TimeSpan ModelStep = TimeSpan.FromMinutes(1);
+    public override TimeSpan ModelTime { get; } = TimeSpan.FromDays(7);
+    public override TimeSpan ModelStep { get; } = TimeSpan.FromMinutes(10);
     
-    public new TimeSpan CheckInWorkTime = TimeSpan.FromMinutes(9);
-    public new TimeSpan DropOffWorkTime = TimeSpan.FromMinutes(9);
-    public new TimeSpan PickUpWorkTime = TimeSpan.FromMinutes(9);
-    public new TimeSpan FetchWorkTime = TimeSpan.FromMinutes(9);
+    public override TimeSpan CheckInWorkTime { get; } = TimeSpan.FromMinutes(9);
+    public override TimeSpan DropOffWorkTime { get; } = TimeSpan.FromMinutes(9);
+    public override TimeSpan PickUpWorkTime { get; } = TimeSpan.FromMinutes(9);
+    public override TimeSpan FetchWorkTime { get; } = TimeSpan.FromMinutes(9);
     
-    public new int MaxX = 200;
-    public new int MaxY = 200;
-    public new int MinDistanceBetween = 9;
-
-    public new int InitialLoads = 9;
-    public new int LoadsPerStep = 9;
+    public override int MaxX { get; } = 200;
+    public override int MaxY { get; } = 200;
+    public override int MinDistanceBetween { get; } = 9;
+    
+    public override int InitialLoads { get; } = 9;
+    public override int LoadsPerStep { get; } = 9;
 }

@@ -10,12 +10,13 @@ namespace Services.BayStaffServices;
 public sealed class BayStaffService(
     ILogger<BayStaffService> logger,
     HubService hubService,
-    HubRepository hubRepository,
     BayRepository bayRepository,
     BayService bayService,
     WorkService workService,
     TripRepository tripRepository,
     LoadRepository loadRepository,
+    BayShiftService bayShiftService,
+    BayStaffRepository bayStaffRepository,
     ModelState modelState) 
 {
     public async Task<BayStaff?> GetNewObjectAsync(CancellationToken cancellationToken)
@@ -37,14 +38,13 @@ public sealed class BayStaffService(
             AverageShiftLength = modelState.AgentConfig.BayShiftAverageLength
         };
 
-        return bayStaff;
-    }
-    
-    public async Task<double> GetWorkChanceAsync(BayStaff bayStaff, CancellationToken cancellationToken)
-    {
-        var hub = await hubRepository.GetAsync(bayStaff, cancellationToken);
+        await bayStaffRepository.AddAsync(bayStaff, cancellationToken);
         
-        return bayStaff.WorkChance / hub.OperatingChance;
+        logger.LogDebug("Setting BayShifts for this BayStaff ({@BayStaff})...",
+            bayStaff);
+        await bayShiftService.GetNewObjectsAsync(bayStaff, cancellationToken);
+
+        return bayStaff;
     }
     
     public async Task AlertWorkCompleteAsync(WorkType workType, Bay bay, CancellationToken cancellationToken)

@@ -40,11 +40,10 @@ public sealed class HubRepository(ModelDbContext context)
         return hub;
     }
     
-    public async Task<Hub> GetAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    public async Task<Hub?> GetAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var hub = await context.Hubs
             .FirstOrDefaultAsync(h => h.Id == bayStaff.HubId, cancellationToken);
-        if (hub == null) throw new Exception("This BayStaff did not have a Hub assigned.");
 
         return hub;
     }
