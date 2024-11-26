@@ -22,6 +22,14 @@ public sealed class TruckCompanyRepository(ModelDbContext context)
 
         return truckCompany;
     }
+
+    public async Task<int> GetCountAsync(CancellationToken cancellationToken)
+    {
+        var count = await context.TruckCompanies
+            .CountAsync(cancellationToken);
+
+        return count;
+    }
     
     public async Task AddAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {

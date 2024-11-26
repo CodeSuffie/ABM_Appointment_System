@@ -8,20 +8,18 @@ public class AgentConfigBase
     public int BayStaffCount;
     public double BayStaffAverageWorkDays;
     public TimeSpan BayShiftAverageLength;
-    public int TruckCompanyCount;
     public int TruckCount;
     public int TruckAverageSpeed;
-    public int HubCount;
     public double HubAverageOperatingDays;
     public int HubXSize;
     public int HubYSize;
 
+    public int[,] HubLocations = { {} };
+    public int[,] TruckCompanyLocations = { {} };
     public int[,] ParkingSpotLocations = { {} };
     public int[,] BayLocations = { {} };
 
     public TimeSpan OperatingHourAverageLength;
-    public double DoubleTripChance;
-    public double PickupChance;
 }
 
 public class AgentConfig : AgentConfigBase
@@ -32,13 +30,28 @@ public class AgentConfig : AgentConfigBase
     public new const int BayStaffCount = 9;
     public new const double BayStaffAverageWorkDays = 0.7;
     public new TimeSpan BayShiftAverageLength = TimeSpan.FromHours(8);
-    public new const int TruckCompanyCount = 9;
     public new const int TruckCount = 9;
     public new const int TruckAverageSpeed = 1;
-    public new const int HubCount = 9;
     public new const double HubAverageOperatingDays = 1;
     public new const int HubXSize = 9;
     public new const int HubYSize = 4;
+    
+    public new readonly int[,] HubLocations =
+    {
+        {100, 100},
+    };
+    
+    public new readonly int[,] TruckCompanyLocations =
+    {
+        {1, 1},
+        {199, 1},
+        {1, 199},
+        {199, 199},
+        {100, 80},
+        {150, 100},
+        {100, 199},
+        {20, 100},
+    };
 
     public new readonly int[,] ParkingSpotLocations =
     {

@@ -11,22 +11,35 @@ namespace Services;
 public sealed class LocationService(
     TripRepository tripRepository,
     HubRepository hubRepository,
+    TruckCompanyRepository truckCompanyRepository,
     BayRepository bayRepository,
     ParkingSpotRepository parkingSpotRepository,
     ModelState modelState)
 {
-    public Task InitializeObjectAsync(Hub hub, CancellationToken cancellationToken)
+    public async Task InitializeObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
-        return Task.CompletedTask;
-        // TODO: Find a location to assign to a new Hub which is not within the
-        // TODO: ModelConfig.MinDistanceBetween range
+        var hubCount = await hubRepository.GetCountAsync(cancellationToken);
+        
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(
+            hubCount, 
+            modelState.AgentConfig.HubLocations.Length, 
+            "Hub to set location for is not defined in the HubLocations Array");
+
+        hub.XLocation = modelState.AgentConfig.HubLocations[hubCount, 0];
+        hub.YLocation = modelState.AgentConfig.HubLocations[hubCount, 1];
     }
     
-    public Task InitializeObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public async Task InitializeObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        return Task.CompletedTask;
-        // TODO: Find a location to assign to a new TruckCompany which is not within the
-        // TODO: ModelConfig.MinDistanceBetween range
+        var truckCompanyCount = await truckCompanyRepository.GetCountAsync(cancellationToken);
+        
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(
+            truckCompanyCount, 
+            modelState.AgentConfig.TruckCompanyLocations.Length, 
+            "TruckCompany to set location for is not defined in the TruckCompanyLocations Array");
+
+        truckCompany.XLocation = modelState.AgentConfig.HubLocations[truckCompanyCount, 0];
+        truckCompany.YLocation = modelState.AgentConfig.HubLocations[truckCompanyCount, 1];
     }
     
     public async Task InitializeObjectAsync(Bay bay, CancellationToken cancellationToken)

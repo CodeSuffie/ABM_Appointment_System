@@ -24,7 +24,7 @@ public sealed class HubInitialize(
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
-        for (var i = 0; i < modelState.AgentConfig.HubCount; i++)
+        for (var i = 0; i < modelState.AgentConfig.HubLocations.Length; i++)
         {
             await InitializeObjectAsync(cancellationToken);
         }

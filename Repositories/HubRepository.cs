@@ -66,6 +66,14 @@ public sealed class HubRepository(ModelDbContext context)
 
         return hub;
     }
+
+    public async Task<int> GetCountAsync(CancellationToken cancellationToken)
+    {
+        var count = await context.Hubs
+            .CountAsync(cancellationToken);
+
+        return count;
+    }
     
     public async Task AddAsync(Hub hub, CancellationToken cancellationToken)
     {
