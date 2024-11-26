@@ -1,54 +1,86 @@
 using Database.Models;
+using Microsoft.Extensions.Logging;
 using Services.ModelServices;
-using Settings;
 
 namespace Services;
 
 public sealed class OperatingHourService(
+    ILogger<OperatingHourService> logger,
     ModelState modelState)
 {
-    private Task<TimeSpan> GetStartTimeAsync(
-        Hub hub, 
-        TimeSpan day, 
-        CancellationToken cancellationToken)
+    private TimeSpan? GetStartTime(Hub hub, TimeSpan day)
     {
         var maxShiftStart = TimeSpan.FromDays(1) - 
                             hub.AverageOperatingHourLength;
-            
-        if (maxShiftStart < TimeSpan.Zero) 
-            throw new Exception("This Hub its OperatingHourLength is longer than a full day.");      
-        // Hub Operating Hours can be longer than 1 day?
-            
+
+        if (maxShiftStart < TimeSpan.Zero)
+        {
+            logger.LogError("Hub ({@Hub}) its OperatingHourLength ({TimeSpan}) is longer than a full day.",
+                hub,
+                hub.AverageOperatingHourLength);
+
+            return null;
+            // Hub Operating Hours can be longer than 1 day?
+        }
+        
         var operatingHourHour = modelState.Random(maxShiftStart.Hours);
         var operatingHourMinutes = operatingHourHour == maxShiftStart.Hours ?
             modelState.Random(maxShiftStart.Minutes) :
             modelState.Random(modelState.ModelConfig.MinutesPerHour);
 
-        return Task.FromResult(day + new TimeSpan(operatingHourHour, operatingHourMinutes, 0));
+        return day + new TimeSpan(operatingHourHour, operatingHourMinutes, 0);
     }
     
-    private async Task<OperatingHour> GetNewObjectsAsync(Hub hub, TimeSpan day, CancellationToken cancellationToken)
+    private OperatingHour? GetNewObject(Hub hub, TimeSpan day)
     {
-        var startTime = await GetStartTimeAsync(hub, day, cancellationToken);
+        var startTime = GetStartTime(hub, day);
+        if (startTime == null)
+        {
+            logger.LogError("No start time could be assigned to the new OperatingHour for this Hub ({@Hub}).",
+                hub);
+
+            return null;
+        }
         
         var operatingHour = new OperatingHour {
             Hub = hub,
-            StartTime = startTime,
+            StartTime = (TimeSpan) startTime,
             Duration = hub.AverageOperatingHourLength,
         };
 
         return operatingHour;
     }
 
-    public async Task GetNewObjectsAsync(Hub hub, CancellationToken cancellationToken)
+    public void GetNewObjects(Hub hub)
     {
         for (var i = 0; i < modelState.ModelTime.Days; i++)
         {
-            if (modelState.Random() > hub.OperatingChance) continue;
+            var day = TimeSpan.FromDays(i);
             
-            var operatingHour = await GetNewObjectsAsync(hub, TimeSpan.FromDays(i), cancellationToken);
+            if (modelState.Random() > hub.OperatingChance)
+            {
+                logger.LogInformation("Hub ({@Hub}) will not have an OperatingHour during this day ({TimeSpan}).",
+                    hub,
+                    day);
+                
+                continue;
+            }
+            
+            var operatingHour = GetNewObject(hub, day);
+            if (operatingHour == null)
+            {
+                logger.LogError("No new OperatingHour could be created for this Hub ({@Hub}) during this day ({TimeSpan})",
+                    hub,
+                    day);
+
+                continue;
+            }
             
             hub.OperatingHours.Add(operatingHour);
+            logger.LogInformation("New OperatingHour created for this Hub ({@Hub}) during this day ({TimeSpan}): OperatingHour={@OperatingHour}",
+                hub,
+                day,
+                operatingHour);
         }
     }
 }

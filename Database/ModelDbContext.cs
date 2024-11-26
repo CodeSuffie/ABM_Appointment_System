@@ -26,8 +26,6 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
     public DbSet<BayShift> BayShifts { get; set; }
     
     public DbSet<Work> Works { get; set; }
-    
-    public DbSet<Work> TripLogs { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -41,18 +39,13 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
         
         modelBuilder.ApplyConfiguration(new LoadConfiguration());
         modelBuilder.ApplyConfiguration(new TripConfiguration());
-        modelBuilder.ApplyConfiguration(new TripLogConfiguration());
         
         modelBuilder.ApplyConfiguration(new HubConfiguration());
-        modelBuilder.ApplyConfiguration(new HubLogConfiguration());
         modelBuilder.ApplyConfiguration(new ParkingSpotConfiguration());
-        modelBuilder.ApplyConfiguration(new BayConfiguration());;
-        modelBuilder.ApplyConfiguration(new BayLogConfiguration());
+        modelBuilder.ApplyConfiguration(new BayConfiguration());
         
         modelBuilder.ApplyConfiguration(new AdminStaffConfiguration());
-        modelBuilder.ApplyConfiguration(new AdminStaffLogConfiguration());
         modelBuilder.ApplyConfiguration(new BayStaffConfiguration());
-        modelBuilder.ApplyConfiguration(new BayStaffLogConfiguration());
         
         modelBuilder.ApplyConfiguration(new OperatingHourConfiguration());
         

@@ -1,14 +1,15 @@
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.BayStaffServices;
 using Services.BayServices;
 using Services.ModelServices;
-using Settings;
 
 namespace Services;
 
 public sealed class BayShiftService(
+    ILogger<BayShiftService> logger,
     HubRepository hubRepository,
     OperatingHourRepository operatingHourRepository,
     BayStaffService bayStaffService,
@@ -17,38 +18,62 @@ public sealed class BayShiftService(
     ModelState modelState)
 {
 
-    private Task<TimeSpan> GetStartTimeAsync(
-        BayStaff bayStaff,
-        OperatingHour operatingHour,
-        CancellationToken cancellationToken)
+    private TimeSpan? GetStartTime(BayStaff bayStaff, OperatingHour operatingHour)
     {
-        var maxShiftStart = operatingHour.Duration!.Value - 
-                            bayStaff.AverageShiftLength;
-            
-        if (maxShiftStart < TimeSpan.Zero) 
-            throw new Exception("This BayStaff its BayShiftLength is longer than the Hub its OperatingHourLength.");
+        var maxShiftStart = operatingHour.Duration!.Value - bayStaff.AverageShiftLength;
+
+        if (maxShiftStart < TimeSpan.Zero)
+        {
+            logger.LogError("BayStaff ({@BayStaff}) its ShiftLength ({TimeSpan}) " +
+                            "is longer than this OperatingHour ({@OperatingHour}) its Length ({TimeSpan}).",
+                bayStaff,
+                bayStaff.AverageShiftLength,
+                operatingHour,
+                operatingHour.Duration!.Value);
+
+            return null;
+        }
             
         var shiftHour = modelState.Random(maxShiftStart.Hours);
         var shiftMinutes = shiftHour == maxShiftStart.Hours ?
             modelState.Random(maxShiftStart.Minutes) :
             modelState.Random(modelState.ModelConfig.MinutesPerHour);
 
-        return Task.FromResult(operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0));
+        return operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0);
     }
     
-    public async Task<BayShift> GetNewObjectAsync(
+    public async Task<BayShift?> GetNewObjectAsync(
         BayStaff bayStaff, 
         OperatingHour operatingHour,
         Hub hub,
         CancellationToken cancellationToken)
     {
         var bay = await bayService.SelectBayAsync(hub, cancellationToken);
-        var startTime = await GetStartTimeAsync(bayStaff, operatingHour, cancellationToken);
+        if (bay == null)
+        {
+            logger.LogError("The Hub ({@Hub}) did not have a Bay to assign " +
+                            "to the new BayShift for this BayStaff ({@AdminStaff}).",
+                hub,
+                bayStaff);
+
+            return null;
+        }
+        
+        var startTime = GetStartTime(bayStaff, operatingHour);
+        if (startTime == null)
+        {
+            logger.LogError("No start time could be assigned to the new BayShift for this " +
+                            "BayStaff ({@BayStaff}) during this OperatingHour ({@OperatingHour}).",
+                bayStaff,
+                operatingHour);
+
+            return null;
+        }
         
         var bayShift = new BayShift {
             BayStaff = bayStaff,
             Bay = bay,
-            StartTime = startTime,
+            StartTime = (TimeSpan) startTime,
             Duration = bayStaff.AverageShiftLength,
         };
 
@@ -64,24 +89,57 @@ public sealed class BayShiftService(
         
         await foreach (var operatingHour in operatingHours)
         {
-            if (operatingHour.Duration == null) continue;
+            if (operatingHour.Duration == null)
+            {
+                logger.LogError("OperatingHour ({@OperatingHour}) does not have a Duration.",
+                    operatingHour);
+                continue;
+            }
             
             if (modelState.Random() >
-                await bayStaffService.GetWorkChanceAsync(bayStaff, cancellationToken)) continue;
+                await bayStaffService.GetWorkChanceAsync(bayStaff, cancellationToken))
+            {
+                logger.LogInformation("BayStaff ({@BayStaff}) will not have a BayShift during " +
+                                      "this OperatingHour ({@OperatingHour}).",
+                    bayStaff,
+                    operatingHour);
+                
+                continue;
+            }
 
             var bayShift = await GetNewObjectAsync(bayStaff, operatingHour, hub, cancellationToken);
+            if (bayShift == null)
+            {
+                logger.LogError("No new BayShift could be created for this BayStaff " +
+                                "({@BayStaff}) during this OperatingHour ({@OperatingHour})",
+                    bayStaff,
+                    operatingHour);
+
+                continue;
+            }
+            
             bayStaff.Shifts.Add(bayShift);
+            logger.LogInformation("New BayShift created for this BayStaff ({@BayStaff}) during this " +
+                                  "OperatingHour ({@OperatingHour}): BayShift={@BayShift}",
+                bayStaff,
+                operatingHour,
+                bayShift);
         }
     }
     
-    private Task<bool> IsCurrentAsync(BayShift bayShift, CancellationToken cancellationToken)
+    private bool IsCurrent(BayShift bayShift)
     {
         if (bayShift.Duration == null)
-            throw new Exception("The shift for this BayStaff does not have a Duration.");
+        {
+            logger.LogError("BayShift ({@BayShift}) does not have a Duration",
+                bayShift);
+
+            return false;
+        }
             
         var endTime = (TimeSpan)(bayShift.StartTime + bayShift.Duration);
         
-        return Task.FromResult(modelState.ModelTime >= bayShift.StartTime && modelState.ModelTime <= endTime);
+        return modelState.ModelTime >= bayShift.StartTime && modelState.ModelTime <= endTime;
     }
     
     public async Task<BayShift?> GetCurrentAsync(BayStaff bayStaff, CancellationToken cancellationToken)
@@ -92,29 +150,15 @@ public sealed class BayShiftService(
 
         await foreach (var shift in shifts)
         {
-            if (await IsCurrentAsync(shift, cancellationToken))
-            {
-                return shift;
-            }
+            if (!IsCurrent(shift)) continue;
+            
+            logger.LogInformation("BayShift ({@BayShift}) is currently active.",
+                shift);
+                
+            return shift;
         }
 
-        return null;
-    }
-    
-    public async Task<BayShift?> GetCurrentAsync(Bay bay, CancellationToken cancellationToken)
-    {
-        var shifts = bayShiftRepository.Get(bay)
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken);
-
-        await foreach (var shift in shifts)
-        {
-            if (await IsCurrentAsync(shift, cancellationToken))
-            {
-                return shift;
-            }
-        }
-
+        logger.LogInformation("No BayShift is currently active.");
         return null;
     }
 }

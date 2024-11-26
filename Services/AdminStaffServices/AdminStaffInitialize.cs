@@ -1,11 +1,12 @@
+using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
 using Services.ModelServices;
-using Settings;
 
 namespace Services.AdminStaffServices;
 
 public sealed class AdminStaffInitialize(
+    ILogger<AdminStaffInitialize> logger,
     AdminStaffService adminStaffService,
     AdminShiftService adminShiftService,
     AdminStaffRepository adminStaffRepository,
@@ -14,10 +15,19 @@ public sealed class AdminStaffInitialize(
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var adminStaff = await adminStaffService.GetNewObjectAsync(cancellationToken);
+        if (adminStaff == null)
+        {
+            logger.LogError("Could not construct a new AdminStaff...");
+            
+            return;
+        }
         
+        logger.LogDebug("Setting AdminShifts for this AdminStaff ({@AdminStaff})...",
+            adminStaff);
         await adminShiftService.GetNewObjectsAsync(adminStaff, cancellationToken);
 
         await adminStaffRepository.AddAsync(adminStaff, cancellationToken);
+        logger.LogInformation("New AdminStaff created: AdminStaff={@AdminStaff}", adminStaff);
     }
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)

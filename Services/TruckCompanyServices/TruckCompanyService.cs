@@ -1,18 +1,17 @@
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.ModelServices;
-using Services.TripServices;
-using Settings;
 
 namespace Services.TruckCompanyServices;
 
 public sealed class TruckCompanyService(
-    ModelState modelState,
-    TripLogger tripLogger,
-    TruckCompanyRepository truckCompanyRepository) 
+    ILogger<TruckCompanyService> logger,
+    TruckCompanyRepository truckCompanyRepository,
+    ModelState modelState) 
 {
-    public Task<TruckCompany> GetNewObjectAsync(CancellationToken cancellationToken)
+    public TruckCompany GetNewObject()
     {
         var truckCompany = new TruckCompany
         {
@@ -20,24 +19,22 @@ public sealed class TruckCompanyService(
             YSize = 1
         };
 
-        return Task.FromResult(truckCompany);
+        return truckCompany;
     }
     
-    public async Task<TruckCompany> SelectTruckCompanyAsync(CancellationToken cancellationToken)
+    public async Task<TruckCompany?> SelectTruckCompanyAsync(CancellationToken cancellationToken)
     {
         var truckCompanies = await (truckCompanyRepository.Get())
             .ToListAsync(cancellationToken);
         
         if (truckCompanies.Count <= 0) 
-            throw new Exception("There was no Truck Company to assign this new Truck to.");
+        {
+            logger.LogError("Model did not have a Truck Company assigned.");
+
+            return null;
+        }
             
         var truckCompany = truckCompanies[modelState.Random(truckCompanies.Count)];
         return truckCompany;
-    }
-
-    public async Task AlertCompleteAsync(TruckCompany truckCompany, Trip trip, CancellationToken cancellationToken)
-    {
-        await tripLogger.LogAsync(trip, LogType.Success, "Completed.", cancellationToken);
-        // TODO: Log Complete for Model [modelLogger.Log(trip, LogType.Success, "Completed.")]
     }
 }

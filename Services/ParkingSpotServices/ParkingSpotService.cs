@@ -1,16 +1,16 @@
 using Database.Models;
+using Microsoft.Extensions.Logging;
 using Repositories;
-using Services.HubServices;
 using Services.TripServices;
 
 namespace Services.ParkingSpotServices;
 
 public sealed class ParkingSpotService(
+    ILogger<ParkingSpotService> logger,
     TripService tripService,
-    HubLogger hubLogger,
     HubRepository hubRepository)
 {
-    public Task<ParkingSpot> GetNewObjectAsync(Hub hub, CancellationToken cancellationToken)
+    public ParkingSpot GetNewObject(Hub hub)
     {
         var parkingSpot = new ParkingSpot
         {
@@ -19,22 +19,36 @@ public sealed class ParkingSpotService(
             Hub = hub,
         };
 
-        return Task.FromResult(parkingSpot);
+        return parkingSpot;
     }
     
     public async Task AlertFreeAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
         var hub = await hubRepository.GetAsync(parkingSpot, cancellationToken);
-        if (hub == null) 
-            throw new Exception("This ParkingSpot was just told to be free but no Hub is assigned");
+        if (hub == null)
+        {
+            logger.LogError("ParkingSpot ({@ParkingSpot}) did not have a Hub assigned to alert free for.",
+                parkingSpot);
+
+            return;
+        }
         
         var trip = await tripService.GetNextAsync(hub, WorkType.WaitParking, cancellationToken);
         if (trip == null)
         {
-            await hubLogger.LogAsync(hub, parkingSpot, LogType.Info, "No Trips waiting for a Parking Spot.", cancellationToken);
+            logger.LogInformation("Hub ({@Hub}) did not have a Trip for this ParkingSpot ({@ParkingSpot}) to assign waiting for Check-In Work for.",
+                hub,
+                parkingSpot);
+            
+            logger.LogDebug("ParkingSpot ({@ParkingSpot}) will remain idle...",
+                parkingSpot);
+            
             return;
         }
         
+        logger.LogDebug("Alerting Free for this ParkingSpot ({@ParkingSpot}) to selected Trip ({@Trip})...",
+            parkingSpot,
+            trip);
         await tripService.AlertFreeAsync(trip, parkingSpot, cancellationToken);
     }
 }

@@ -1,14 +1,12 @@
-using Database;
 using Database.Models;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.ModelServices;
-using Services.TripServices;
-using Settings;
 
 namespace Services;
 
 public sealed class LocationService(
+    ILogger<LocationService> logger,
     TripRepository tripRepository,
     HubRepository hubRepository,
     TruckCompanyRepository truckCompanyRepository,
@@ -19,61 +17,93 @@ public sealed class LocationService(
     public async Task InitializeObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
         var hubCount = await hubRepository.GetCountAsync(cancellationToken);
-        
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(
-            hubCount, 
-            modelState.AgentConfig.HubLocations.Length, 
-            "Hub to set location for is not defined in the HubLocations Array");
+
+        if (hubCount >= modelState.AgentConfig.HubLocations.Length)
+        {
+            logger.LogError("Hub ({@Hub}) could not have its location initialized because " +
+                            "its location is not defined in the agent configuration.",
+                hub);
+            
+            return;
+        }
 
         hub.XLocation = modelState.AgentConfig.HubLocations[hubCount, 0];
         hub.YLocation = modelState.AgentConfig.HubLocations[hubCount, 1];
+        
+        logger.LogInformation("Location successfully initialized for this Hub ({@Hub}).",
+            hub);
     }
     
     public async Task InitializeObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
         var truckCompanyCount = await truckCompanyRepository.GetCountAsync(cancellationToken);
         
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(
-            truckCompanyCount, 
-            modelState.AgentConfig.TruckCompanyLocations.Length, 
-            "TruckCompany to set location for is not defined in the TruckCompanyLocations Array");
+        if (truckCompanyCount >= modelState.AgentConfig.TruckCompanyLocations.Length)
+        {
+            logger.LogError("TruckCompany ({@TruckCompany}) could not have its location initialized because " +
+                            "its location is not defined in the agent configuration.",
+                truckCompany);
+            
+            return;
+        }
 
-        truckCompany.XLocation = modelState.AgentConfig.HubLocations[truckCompanyCount, 0];
-        truckCompany.YLocation = modelState.AgentConfig.HubLocations[truckCompanyCount, 1];
+        truckCompany.XLocation = modelState.AgentConfig.TruckCompanyLocations[truckCompanyCount, 0];
+        truckCompany.YLocation = modelState.AgentConfig.TruckCompanyLocations[truckCompanyCount, 1];
+        
+        logger.LogInformation("Location successfully initialized for this TruckCompany ({@TruckCompany}).",
+            truckCompany);
     }
     
     public async Task InitializeObjectAsync(Bay bay, CancellationToken cancellationToken)
     {
         var hub = await hubRepository.GetAsync(bay, cancellationToken);
         if (hub == null)
-            throw new Exception("There was no Hub assigned to this Bay.");
+        {
+            logger.LogError("Bay ({@Bay}) did not have a Hub assigned to initialize its location with.",
+                bay);
+
+            return;
+        }
         
         var bayCount = await bayRepository.GetCountAsync(hub, cancellationToken);
         
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(
-            bayCount, 
-            modelState.AgentConfig.BayLocations.Length, 
-            "Bay to set location for is not defined in the BayLocations Array");
+        if (bayCount >= modelState.AgentConfig.TruckCompanyLocations.Length)
+        {
+            logger.LogError("Bay ({@Bay}) could not have its location initialized because " +
+                            "its location is not defined in the agent configuration.",
+                bay);
+            
+            return;
+        }
 
-        bay.XLocation = modelState.AgentConfig.BayLocations[bayCount, 0];
-        bay.YLocation = modelState.AgentConfig.BayLocations[bayCount, 1];
+        bay.XLocation = hub.XLocation + modelState.AgentConfig.BayLocations[bayCount, 0];
+        bay.YLocation = hub.YLocation + modelState.AgentConfig.BayLocations[bayCount, 1];
     }
     
     public async Task InitializeObjectAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
         var hub = await hubRepository.GetAsync(parkingSpot, cancellationToken);
         if (hub == null)
-            throw new Exception("There was no Hub assigned to this ParkingSpot.");
+        {
+            logger.LogError("ParkingSpot ({@ParkingSpot}) did not have a Hub assigned to initialize its location with.",
+                parkingSpot);
+
+            return;
+        }
         
         var parkingSpotCount = await parkingSpotRepository.GetCountAsync(hub, cancellationToken);
         
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(
-            parkingSpotCount, 
-            modelState.AgentConfig.ParkingSpotLocations.Length, 
-            "ParkingSpot to set location for is not defined in the ParkingSpotLocations Array");
+        if (parkingSpotCount >= modelState.AgentConfig.TruckCompanyLocations.Length)
+        {
+            logger.LogError("ParkingSpot ({@ParkingSpot}) could not have its location initialized because " +
+                            "its location is not defined in the agent configuration.",
+                parkingSpot);
+            
+            return;
+        }
         
-        parkingSpot.XLocation = modelState.AgentConfig.ParkingSpotLocations[parkingSpotCount, 0];
-        parkingSpot.YLocation = modelState.AgentConfig.ParkingSpotLocations[parkingSpotCount, 1];
+        parkingSpot.XLocation = hub.XLocation + modelState.AgentConfig.ParkingSpotLocations[parkingSpotCount, 0];
+        parkingSpot.YLocation = hub.YLocation + modelState.AgentConfig.ParkingSpotLocations[parkingSpotCount, 1];
     }
 
     public async Task SetAsync(Trip trip, TruckCompany truckCompany, CancellationToken cancellationToken)

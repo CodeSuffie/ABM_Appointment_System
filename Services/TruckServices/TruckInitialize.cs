@@ -1,11 +1,12 @@
+using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
 using Services.ModelServices;
-using Settings;
 
 namespace Services.TruckServices;
 
 public sealed class TruckInitialize(
+    ILogger<TruckInitialize> logger,
     TruckService truckService,
     TruckRepository truckRepository,
     ModelState modelState) : IInitializationService
@@ -13,8 +14,15 @@ public sealed class TruckInitialize(
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var truck = await truckService.GetNewObjectAsync(cancellationToken);
+        if (truck == null)
+        {
+            logger.LogError("Could not construct a new Truck...");
+            
+            return;
+        }
 
         await truckRepository.AddAsync(truck, cancellationToken);
+        logger.LogInformation("New Truck created: Truck={@Truck}", truck);
     }
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)

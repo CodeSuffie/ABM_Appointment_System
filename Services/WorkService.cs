@@ -1,21 +1,29 @@
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.ModelServices;
 
 namespace Services;
 
 public sealed class WorkService(
+    ILogger<WorkService> logger,
     WorkRepository workRepository,
     ModelState modelState)
 {
-    public Task<bool> IsWorkCompletedAsync(Work work, CancellationToken cancellationToken)
+    public bool IsWorkCompleted(Work work)
     {
-        if (work.Duration == null) return Task.FromResult(false);
+        if (work.Duration == null)
+        {
+            logger.LogError("Work ({@Work}) does not have a Duration",
+                work);
+
+            return false;
+        }
         
         var endTime = (TimeSpan)(work.StartTime + work.Duration);
         
-        return Task.FromResult(endTime <= modelState.ModelTime);
+        return endTime <= modelState.ModelTime;
     }
     
     public async Task AdaptWorkLoadAsync(Bay bay, CancellationToken cancellationToken)
@@ -27,7 +35,18 @@ public sealed class WorkService(
             _ => null
         };
 
-        if (workType == null) return;
+        if (workType == null)
+        {
+            logger.LogError("Bay ({@Bay}) with BayStatus {@BayStatus} does not have a valid BayStatus to adapt the workload for.",
+                bay,
+                bay.BayStatus);
+            
+            return;
+        }
+        
+        logger.LogDebug("Adapting workload for Work at this Bay ({@Bay}) with WorkType {@WorkType}...",
+            bay,
+            workType);
 
         var works = workRepository.Get(bay, (WorkType) workType)
                 .AsAsyncEnumerable()
@@ -43,28 +62,42 @@ public sealed class WorkService(
             }
             count += 1;
         }
+        
+        var newDuration = (totalDuration / count);
+        
+        logger.LogInformation("Total Duration for Work at this Bay ({@Bay}) with WorkType {@WorkType} is " +
+                              "{TimeSpan} spread over {Count} works. The new duration will be set to {TimeSpan}",
+            bay,
+            workType,
+            totalDuration,
+            count,
+            newDuration);
 
         await foreach (var work in works)
         {
+            logger.LogDebug("Setting Duration of this Work ({@Work}) for this Bay ({@Bay}) to {TimeSpan}...",
+                work,
+                bay,
+                newDuration);
             await workRepository.SetDurationAsync(work, (totalDuration / count), cancellationToken);
         }
     }
     
-    public Task<TimeSpan?> GetTimeAsync(WorkType workType, CancellationToken cancellationToken)
+    public TimeSpan? GetTime(WorkType workType)
     {
-        return Task.FromResult<TimeSpan?>(workType switch
+        return workType switch
         {
             WorkType.CheckIn => modelState.ModelConfig.CheckInWorkTime,
             WorkType.DropOff => modelState.ModelConfig.DropOffWorkTime,
             WorkType.PickUp => modelState.ModelConfig.PickUpWorkTime,
             WorkType.Fetch => modelState.ModelConfig.FetchWorkTime,
             _ => null
-        });
+        };
     }
     
-    private async Task<Work> GetNewAsync(WorkType workType, CancellationToken cancellationToken)
+    private Work GetNew(WorkType workType)
     {
-        var duration = await GetTimeAsync(workType, cancellationToken);
+        var duration = GetTime(workType);
         
         var work = new Work
         {
@@ -78,7 +111,7 @@ public sealed class WorkService(
     
     public async Task AddAsync(Trip trip, WorkType workType, CancellationToken cancellationToken)
     {
-        var work = await GetNewAsync(workType, cancellationToken);
+        var work = GetNew(workType);
         work.Trip = trip;
 
         await workRepository.AddAsync(work, cancellationToken);
@@ -86,7 +119,7 @@ public sealed class WorkService(
     
     public async Task AddAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var work = await GetNewAsync(WorkType.CheckIn, cancellationToken);
+        var work = GetNew(WorkType.CheckIn);
         work.Trip = trip;
         work.AdminStaff = adminStaff;
         
@@ -98,7 +131,7 @@ public sealed class WorkService(
 
     public async Task AddAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
     {
-        var work = await GetNewAsync(WorkType.Bay, cancellationToken);
+        var work = GetNew(WorkType.Bay);
         work.Trip = trip;
         work.Bay = bay;
         
@@ -110,7 +143,7 @@ public sealed class WorkService(
     
     public async Task AddAsync(Bay bay, BayStaff bayStaff, WorkType workType, CancellationToken cancellationToken)
     {
-        var work = await GetNewAsync(workType, cancellationToken);
+        var work = GetNew(workType);
         work.BayStaff = bayStaff;
         work.Bay = bay;
         

@@ -1,24 +1,33 @@
 using Database.Models;
+using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.HubServices;
 using Services.ModelServices;
 using Services.TripServices;
-using Settings;
 
 namespace Services.AdminStaffServices;
 
 public sealed class AdminStaffService(
+    ILogger<AdminStaffService> logger,
     HubService hubService,
     HubRepository hubRepository,
     TripRepository tripRepository,
     TripService tripService,
     WorkRepository workRepository,
-    HubLogger hubLogger,
     ModelState modelState)
 {
-    public async Task<AdminStaff> GetNewObjectAsync(CancellationToken cancellationToken)
+    public async Task<AdminStaff?> GetNewObjectAsync(CancellationToken cancellationToken)
     {
         var hub = await hubService.SelectHubAsync(cancellationToken);
+        if (hub == null)
+        {
+            logger.LogError("No Hub could be selected for the new AdminStaff.");
+
+            return null;
+        }
+        
+        logger.LogDebug("Hub ({@Hub}) was selected for the new AdminStaff.",
+            hub);
         
         var adminStaff = new AdminStaff
         {
@@ -30,39 +39,70 @@ public sealed class AdminStaffService(
         return adminStaff;
     }
     
-    public async Task<double> GetWorkChanceAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    public async Task<double?> GetWorkChanceAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var hub = await hubRepository.GetAsync(adminStaff, cancellationToken);
         
-        return adminStaff.WorkChance / hub.OperatingChance;
+        if (hub != null) return adminStaff.WorkChance / hub.OperatingChance;
+        
+        logger.LogError("AdminStaff ({@AdminStaff}) did not have a Hub assigned to get the OperatingHourChance for.",
+            adminStaff);
+
+        return null;
     }
 
     public async Task AlertWorkCompleteAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var trip = await tripRepository.GetAsync(adminStaff, cancellationToken);
-        if (trip == null) 
-            throw new Exception("This AdminStaff was just told to have completed a Check In but no Trip is assigned");
+        if (trip == null)
+        {
+            logger.LogError("AdminStaff ({@AdminStaff}) did not have a Trip assigned to alert completed Work for.",
+                adminStaff);
+
+            return;
+        }
         
+        logger.LogDebug("Alerting Check-In Completed for this AdminStaff ({@AdminStaff}) to assigned Trip ({@Trip})...",
+            adminStaff,
+            trip);
         await tripService.AlertCheckInCompleteAsync(trip, cancellationToken);
         
         var work = await workRepository.GetAsync(adminStaff, cancellationToken);
         if (work == null) return;
+        
+        logger.LogDebug("Removing completed Work ({@Work}) for this AdminStaff ({@AdminStaff})...",
+            work,
+            adminStaff);
         await workRepository.RemoveAsync(work, cancellationToken);
     }
     
     public async Task AlertFreeAsync(AdminStaff adminStaff, CancellationToken cancellationToken) 
     {
         var hub = await hubRepository.GetAsync(adminStaff, cancellationToken);
+        if (hub == null)
+        {
+            logger.LogError("AdminStaff ({@AdminStaff}) did not have a Hub assigned to alert free for.",
+                adminStaff);
+
+            return;
+        }
         
-        
-         
         var trip = await tripService.GetNextAsync(hub, WorkType.WaitCheckIn, cancellationToken);
         if (trip == null)
         {
-            await hubLogger.LogAsync(hub, adminStaff, LogType.Info, "No Trips waiting for Check In.", cancellationToken);
+            logger.LogInformation("Hub ({@Hub}) did not have a Trip for this AdminStaff ({@AdminStaff}) to assign Check-In Work for.",
+                hub,
+                adminStaff);
+            
+            logger.LogDebug("AdminStaff ({@AdminStaff}) will remain idle...",
+                adminStaff);
+            
             return;
         }
 
+        logger.LogDebug("Alerting Free for this AdminStaff ({@AdminStaff}) to selected Trip ({@Trip})...",
+            adminStaff,
+            trip);
         await tripService.AlertFreeAsync(trip, adminStaff, cancellationToken);
     }
 }

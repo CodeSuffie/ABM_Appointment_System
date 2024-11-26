@@ -1,5 +1,4 @@
 using Database.Abstractions;
-using Database.Models.Logging;
 
 namespace Database.Models;
 
@@ -24,6 +23,4 @@ public class Hub : ILocation
     public List<Bay> Bays { get; set; } = [];
 
     public List<Trip> Trips { get; set; } = [];
-    
-    public List<HubLog> HubLogs { get; set; } = [];
 }

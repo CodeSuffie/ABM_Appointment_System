@@ -1,16 +1,17 @@
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.ModelServices;
-using Settings;
 
 namespace Services.HubServices;
 
 public sealed class HubService(
+    ILogger<HubService> logger,
     HubRepository hubRepository,
     ModelState modelState)
 {
-    public Task<Hub> GetNewObjectAsync(CancellationToken cancellationToken)
+    public Hub GetNewObject()
     {
         var hub = new Hub
         {
@@ -20,15 +21,20 @@ public sealed class HubService(
             AverageOperatingHourLength = modelState.AgentConfig.OperatingHourAverageLength
         };
 
-        return Task.FromResult(hub);
+        return hub;
     }
 
-    public async Task<Hub> SelectHubAsync(CancellationToken cancellationToken)
+    public async Task<Hub?> SelectHubAsync(CancellationToken cancellationToken)
     {
         var hubs = await (hubRepository.Get())
             .ToListAsync(cancellationToken);
             
-        if (hubs.Count <= 0) throw new Exception("There was no Hub to select.");
+        if (hubs.Count <= 0)
+        {
+            logger.LogError("Model did not have a Hub assigned.");
+
+            return null;
+        }
             
         var hub = hubs[modelState.Random(hubs.Count)];
         return hub;

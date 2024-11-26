@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
 using Services.ModelServices;
-using Settings;
 
 namespace Services.BayServices;
 
 public sealed class BayInitialize(
+    ILogger<BayInitialize> logger,
     BayService bayService,
     LocationService locationService,
     HubRepository hubRepository,
@@ -21,11 +22,17 @@ public sealed class BayInitialize(
         
         await foreach (var hub in hubs)
         {
-            var bay = await bayService.GetNewObjectAsync(hub, cancellationToken);
-        
+            var bay = bayService.GetNewObject(hub, cancellationToken);
+            
+            logger.LogDebug("Setting location for this Bay ({@Bay})...",
+                bay);
             await locationService.InitializeObjectAsync(bay, cancellationToken);
 
+            logger.LogDebug("Setting Bay ({@Bay}) to its Hub ({@Hub})...",
+                bay,
+                hub);
             await bayRepository.SetAsync(bay, hub, cancellationToken);
+            logger.LogInformation("New Bay created: Bay={@Bay}", bay);
         }
     }
 

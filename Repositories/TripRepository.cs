@@ -1,6 +1,5 @@
 using Database;
 using Database.Models;
-using Database.Models.Logging;
 using Microsoft.EntityFrameworkCore;
 
 namespace Repositories;
@@ -93,14 +92,6 @@ public sealed class TripRepository(
     {
         await context.Trips
             .AddAsync(trip, cancellationToken);
-        
-        await context.SaveChangesAsync(cancellationToken);
-    }
-    
-    public async Task AddAsync(Trip trip, TripLog log, CancellationToken cancellationToken)
-    {
-        trip.TripLogs.Add(log);
-        log.Trip = trip;
         
         await context.SaveChangesAsync(cancellationToken);
     }

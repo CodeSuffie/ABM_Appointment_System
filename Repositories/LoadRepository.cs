@@ -79,6 +79,14 @@ public sealed class LoadRepository(
         
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task RemoveAsync(Load load, CancellationToken cancellationToken)
+    {
+        context.Loads
+            .Remove(load);
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
     
     public async Task SetAsync(Load load, Bay bay, CancellationToken cancellationToken)
     {
@@ -90,6 +98,13 @@ public sealed class LoadRepository(
 
         load.Bay = bay;
         bay.Loads.Add(load);
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SetAsync(Load load, LoadType loadType, CancellationToken cancellationToken)
+    {
+        load.LoadType = loadType;
         
         await context.SaveChangesAsync(cancellationToken);
     }

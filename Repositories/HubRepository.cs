@@ -1,6 +1,5 @@
 using Database;
 using Database.Models;
-using Database.Models.Logging;
 using Microsoft.EntityFrameworkCore;
 
 namespace Repositories;
@@ -33,11 +32,10 @@ public sealed class HubRepository(ModelDbContext context)
         return hub;
     }
     
-    public async Task<Hub> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    public async Task<Hub?> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var hub = await context.Hubs
             .FirstOrDefaultAsync(h => h.Id == adminStaff.HubId, cancellationToken);
-        if (hub == null) throw new Exception("This AdminStaff did not have a Hub assigned.");
 
         return hub;
     }
@@ -79,14 +77,6 @@ public sealed class HubRepository(ModelDbContext context)
     {
         await context.Hubs
             .AddAsync(hub, cancellationToken);
-        
-        await context.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task AddAsync(Hub hub, HubLog log, CancellationToken cancellationToken)
-    {
-        hub.HubLogs.Add(log);
-        log.Hub = hub;
         
         await context.SaveChangesAsync(cancellationToken);
     }

@@ -1,5 +1,3 @@
-using Database.Models.Logging;
-
 namespace Database.Models;
 
 public class AdminStaff : Staff
@@ -16,6 +14,4 @@ public class AdminStaff : Staff
     
     public Trip? Trip { get; set; }
     public long? TripId { get; set; }
-    
-    public List<AdminStaffLog> AdminStaffLogs { get; set; } = [];
 }

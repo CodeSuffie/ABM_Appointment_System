@@ -1,7 +1,6 @@
 using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
-using Settings;
 
 namespace Repositories;
 

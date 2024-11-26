@@ -1,16 +1,13 @@
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Repositories;
-using Services.AdminStaffServices;
-using Services.BayServices;
 using Services.ModelServices;
-using Services.ParkingSpotServices;
-using Services.TruckServices;
-using Settings;
 
 namespace Services.TripServices;
 
 public sealed class TripService(
+    ILogger<TripService> logger,
     LoadService loadService,
     WorkRepository workRepository,
     ParkingSpotRepository parkingSpotRepository,
@@ -19,76 +16,120 @@ public sealed class TripService(
     HubRepository hubRepository,
     BayRepository bayRepository,
     TruckRepository truckRepository,
-    TruckService truckService,
     LocationService locationService,
     TruckCompanyRepository truckCompanyRepository,
     WorkService workService,
+    LoadRepository loadRepository,
     ModelState modelState)
 {
     public async Task<Trip?> GetNewObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var dropOff = await loadService.SelectUnclaimedDropOffAsync(truckCompany, cancellationToken);
-        Load? pickUp = null;
-        Hub? hub = null;
+        while (true)
+        {
+            var dropOff = await loadService.SelectUnclaimedDropOffAsync(truckCompany, cancellationToken);
+            Load? pickUp;
+            Hub? dropOffHub = null;
+            Hub? pickUpHub = null;
 
-        if (dropOff == null)
-        {
-            pickUp = await loadService.SelectUnclaimedPickUpAsync(truckCompany, cancellationToken);
-            if (pickUp == null) return null;
-            
-            hub = await hubRepository.GetAsync(pickUp, cancellationToken);
-        }
-        else
-        {
-            hub = await hubRepository.GetAsync(dropOff, cancellationToken);
+            if (dropOff == null)
+            {
+                logger.LogInformation("TruckCompany ({@TruckCompany}) did not have an unclaimed Drop-Off Load to be assigned to this new Trip.",
+                    truckCompany);
+
+                pickUp = await loadService.SelectUnclaimedPickUpAsync(truckCompany, cancellationToken);
+                if (pickUp == null)
+                {
+                    logger.LogInformation("TruckCompany ({@TruckCompany}) did not have any Load to be assigned to this new Trip.",
+                        truckCompany);
+
+                    return null;
+                }
+
+                pickUpHub = await hubRepository.GetAsync(pickUp, cancellationToken);
+            }
+            else
+            {
+                dropOffHub = await hubRepository.GetAsync(dropOff, cancellationToken);
+                if (dropOffHub == null)
+                {
+                    logger.LogError("Drop-Off Load ({@Load}) for this TruckCompany ({@TruckCompany}) did not have a Hub assigned.",
+                        dropOff,
+                        truckCompany);
+
+                    logger.LogDebug("Removing invalid Drop-Off Load ({@Load}) for this TruckCompany ({@TruckCompany}).",
+                        dropOff,
+                        truckCompany);
+                    await loadRepository.RemoveAsync(dropOff, cancellationToken);
+
+                    continue;
+                }
+
+                pickUp = await loadService.SelectUnclaimedPickUpAsync(dropOffHub, truckCompany, cancellationToken);
+            }
+
+            var hub = dropOffHub ?? pickUpHub;
             if (hub == null)
-                throw new Exception("DropOff Load was not matched on a valid Hub.");
+            {
+                logger.LogError("Pick-Up Load ({@Load}) for this TruckCompany ({@TruckCompany}) did not have a Hub assigned.",
+                    pickUp,
+                    truckCompany);
 
-            pickUp = await loadService.SelectUnclaimedPickUpAsync(hub, truckCompany, cancellationToken);
+                if (pickUp != null)
+                {
+                    logger.LogDebug("Removing invalid Load Pick-Up ({@Load}) for this TruckCompany ({@TruckCompany}).",
+                        dropOff,
+                        truckCompany);
+                    await loadRepository.RemoveAsync(pickUp, cancellationToken);
+                }
+                
+                continue;
+            }
+
+            var trip = new Trip
+            {
+                DropOff = dropOff,
+                PickUp = pickUp,
+                Hub = hub
+            };
+
+            logger.LogDebug("Setting TruckCompany ({@TruckCompany}) location to this Trip ({@Trip})...",
+                truckCompany,
+                trip);
+            await locationService.SetAsync(trip, truckCompany, cancellationToken);
+
+            return trip;
         }
-
-        var trip = new Trip
-        {
-            DropOff = dropOff,
-            PickUp = pickUp,
-            Hub = hub
-        };
-        await locationService.SetAsync(trip, truckCompany, cancellationToken);
-        
-        return trip;
     }
-    
-    public async Task<List<Trip>> GetNewObjectsAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
-    {
-        var trips = new List<Trip>();
-        
-        var trip = await GetNewObjectAsync(truckCompany, cancellationToken);
-        while (trip != null)
-        {
-            trips.Add(trip);
-            trip = await GetNewObjectAsync(truckCompany, cancellationToken);
-        }
 
-        return trips;
-    }
-    
     public async Task AddNewObjectsAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
         var trip = await GetNewObjectAsync(truckCompany, cancellationToken);
         while (trip != null)
         {
             await tripRepository.AddAsync(trip, cancellationToken);
+            logger.LogInformation("New Trip created for this TruckCompany ({@TruckCOmpany}): Trip={@Trip}",
+                truckCompany,
+                trip);
+            
             trip = await GetNewObjectAsync(truckCompany, cancellationToken);
         }
+        
+        logger.LogInformation("TruckCompany ({@TruckCompany}) could not construct any more new Trips...",
+            truckCompany);
     }
     
-    public async Task<Trip> SelectTripAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public async Task<Trip?> GetNextAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
         var trips = await (tripRepository.Get(truckCompany))
             .ToListAsync(cancellationToken);
 
-        if (trips.Count <= 0) 
-            throw new Exception("There was no Trip assigned to this TruckCompany.");
+        if (trips.Count <= 0)
+        {
+            logger.LogInformation("TruckCompany ({@TruckCompany}) did not have a Trip assigned.",
+                truckCompany);
+
+            return null;
+        }
 
         var trip = trips[modelState.Random(trips.Count)];
         return trip;
@@ -102,123 +143,350 @@ public sealed class TripService(
 
         Trip? nextTrip = null;
         TimeSpan? earliestStart = null;
+        
         await foreach (var trip in trips)
         {
             var work = await workRepository.GetAsync(trip, cancellationToken);
             if (nextTrip != null && (work == null ||
                                      (work.StartTime > earliestStart))) continue;
-            nextTrip = trip;
-            earliestStart = work?.StartTime;
+            
+            logger.LogDebug("Trip ({@Trip}) is now has the earliest StartTime ({StartTime}) for its Work ({@Work}) with WorkType ({WorkType}).",
+                trip,
+                earliestStart,
+                work,
+                workType);
         }
-
+        
+        logger.LogInformation("Trip ({@Trip}) has the earliest StartTime ({StartTime}) for its Work with WorkType ({WorkType}).",
+            nextTrip,
+            earliestStart,
+            workType);
         return nextTrip;
     }
     
     public async Task AlertFreeAsync(Trip trip, Truck truck, CancellationToken cancellationToken)
     {
-        var oldWork = await workRepository.GetAsync(trip, cancellationToken);
-        if (oldWork == null)
+        var work = await workRepository.GetAsync(trip, cancellationToken);
+        if (work != null)
         {
-                await truckService.AlertClaimedAsync(truck, trip, cancellationToken);
-            await workService.AddAsync(trip, WorkType.WaitCheckIn, cancellationToken);
+            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned " +
+                            "and can therefore not claim this Truck ({@Truck}).",
+                trip,
+                work,
+                truck);
+            
+            return;
         }
+        
+        logger.LogDebug("Setting this Truck ({@Truck}) to this Trip ({@Trip})...",
+            truck,
+            trip);
+        await tripRepository.SetAsync(trip, truck, cancellationToken);
+        
+        logger.LogDebug("Adding Work of type {WorkType} to this Trip ({@Trip})...",
+            WorkType.TravelHub,
+            trip);
+        await workService.AddAsync(trip, WorkType.TravelHub, cancellationToken);
+        
+        logger.LogInformation("Truck ({@Truck}) successfully linked to this Trip ({@Trip}).",
+            truck,
+            trip);
     }
     
     public async Task AlertFreeAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
-        var oldWork = await workRepository.GetAsync(trip, cancellationToken);
-        if (oldWork is { WorkType: WorkType.WaitParking })
+        var work = await workRepository.GetAsync(trip, cancellationToken);
+        if (work is not { WorkType: WorkType.WaitParking })
         {
-            await workRepository.RemoveAsync(oldWork, cancellationToken);
-                await tripRepository.SetAsync(trip, parkingSpot, cancellationToken);
-                await locationService.SetAsync(trip, parkingSpot, cancellationToken);
-            await workService.AddAsync(trip, WorkType.WaitCheckIn, cancellationToken);
-
+            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType}" +
+                            "and can therefore not claim this ParkingSpot ({@ParkingSpot}).",
+                trip,
+                work,
+                WorkType.WaitParking,
+                parkingSpot);
+            
+            return;
         }
+        
+        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+            work,
+            trip);
+        await workRepository.RemoveAsync(work, cancellationToken);
+        
+        logger.LogDebug("Setting this ParkingSpot ({@ParkingSpot}) to this Trip ({@Trip})...",
+            parkingSpot,
+            trip);
+        await tripRepository.SetAsync(trip, parkingSpot, cancellationToken);
+        
+        logger.LogDebug("Setting ParkingSpot ({@ParkingSpot}) location to this Trip ({@Trip})...",
+            parkingSpot,
+            trip);
+        await locationService.SetAsync(trip, parkingSpot, cancellationToken);
+        
+        logger.LogDebug("Adding Work of type {WorkType} to this Trip ({@Trip})...",
+            WorkType.WaitCheckIn,
+            trip);
+        await workService.AddAsync(trip, WorkType.WaitCheckIn, cancellationToken);
+        
+        logger.LogInformation("ParkingSpot ({@ParkingSpot}) successfully linked to this Trip ({@Trip}).",
+            parkingSpot,
+            trip);
     }
 
     public async Task AlertFreeAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var oldWork = await workRepository.GetAsync(trip, cancellationToken);
-        if (oldWork is { WorkType: WorkType.WaitCheckIn })
+        var work = await workRepository.GetAsync(trip, cancellationToken);
+        if (work is not { WorkType: WorkType.WaitCheckIn })
         {
-            await workRepository.RemoveAsync(oldWork, cancellationToken);
-                await tripRepository.SetAsync(trip, adminStaff, cancellationToken);
-            await workService.AddAsync(trip, adminStaff, cancellationToken);
+            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType}" +
+                            "and can therefore not claim this AdminStaff ({@AdminStaff}).",
+                trip,
+                work,
+                WorkType.WaitCheckIn,
+                adminStaff);
+            
+            return;
         }
+
+        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+            work,
+            trip);
+        await workRepository.RemoveAsync(work, cancellationToken);
+        
+        logger.LogDebug("Setting this AdminStaff ({@AdminStaff}) to this Trip ({@Trip})...",
+            adminStaff,
+            trip);
+        await tripRepository.SetAsync(trip, adminStaff, cancellationToken);
+        
+        logger.LogDebug("Adding Work for this AdminStaff ({@AdminStaff}) to this Trip ({@Trip})...",
+            adminStaff,
+            trip);
+        await workService.AddAsync(trip, adminStaff, cancellationToken);
+        
+        logger.LogInformation("AdminStaff ({@AdminStaff}) successfully linked to this Trip ({@Trip}).",
+            adminStaff,
+            trip);
     }
 
     public async Task AlertFreeAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
     {
-        var oldWork = await workRepository.GetAsync(trip, cancellationToken);
-        if (oldWork is { WorkType: WorkType.WaitBay })
+        var work = await workRepository.GetAsync(trip, cancellationToken);
+        if (work is not { WorkType: WorkType.WaitBay })
         {
-            var parkingSpot = await parkingSpotRepository.GetAsync(trip, cancellationToken);
-            if (parkingSpot != null)
-            {
-                await tripRepository.UnsetAsync(trip, parkingSpot, cancellationToken);
-            }
-
-            await workRepository.RemoveAsync(oldWork, cancellationToken);
-                await tripRepository.SetAsync(trip, bay, cancellationToken);
-                await locationService.SetAsync(trip, bay, cancellationToken);
-                await bayRepository.SetAsync(bay, BayStatus.Claimed, cancellationToken);
-            await workService.AddAsync(trip, bay, cancellationToken);
+            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType} " +
+                            "and can therefore not claim this Bay ({@Bay}).",
+                trip,
+                work,
+                WorkType.WaitBay,
+                bay);
+            
+            return;
         }
+        
+        
+        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+            work,
+            trip);
+        await workRepository.RemoveAsync(work, cancellationToken);
+
+        var parkingSpot = await parkingSpotRepository.GetAsync(trip, cancellationToken);
+        if (parkingSpot == null)
+        {
+            logger.LogError("Trip ({@Trip}) has no ParkingSpot assigned to complete its Wait for a Bay at.",
+                trip);
+        }
+        else
+        {
+            logger.LogDebug("Removing ParkingSpot ({@ParkingSpot}) from this Trip ({@Trip})...",
+                parkingSpot,
+                trip);
+            await tripRepository.UnsetAsync(trip, parkingSpot, cancellationToken);
+            logger.LogInformation("ParkingSpot ({@ParkingSpot}) successfully removed from this Trip ({@Trip}).",
+                parkingSpot,
+                trip);
+        }
+        
+        logger.LogDebug("Setting this Bay ({@Bay}) to this Trip ({@Trip})...",
+            bay,
+            trip);
+        await tripRepository.SetAsync(trip, bay, cancellationToken);
+        
+        logger.LogDebug("Setting Bay ({@Bay}) location to this Trip ({@Trip})...",
+            bay,
+            trip);
+        await locationService.SetAsync(trip, bay, cancellationToken);
+        
+        logger.LogDebug("Setting the BayStatus of this Bay ({@Bay}) to {BayStatus}...",
+            bay,
+            BayStatus.Claimed);
+        await bayRepository.SetAsync(bay, BayStatus.Claimed, cancellationToken);
+        
+        logger.LogDebug("Adding Work for this Bay ({@Bay}) to this Trip ({@Trip})...",
+            bay,
+            trip);
+        await workService.AddAsync(trip, bay, cancellationToken);
+        
+        logger.LogInformation("Bay ({@Bay}) successfully linked to this Trip ({@Trip}).",
+            bay,
+            trip);
     }
     
     public async Task AlertTravelHubCompleteAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var oldWork = await workRepository.GetAsync(trip, cancellationToken);
-        if (oldWork is { WorkType: WorkType.TravelHub })
+        var work = await workRepository.GetAsync(trip, cancellationToken);
+        if (work is not { WorkType: WorkType.TravelHub })
         {
-            await workRepository.RemoveAsync(oldWork, cancellationToken);
-            await workService.AddAsync(trip, WorkType.WaitParking, cancellationToken);
+            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType} " +
+                            "and can therefore not be alerted to have its travel to the Hub completed.",
+                trip,
+                work,
+                WorkType.TravelHub);
+            
+            return;
         }
+
+        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+            work,
+            trip);
+        await workRepository.RemoveAsync(work, cancellationToken);
+        
+        logger.LogDebug("Adding Work of type {WorkType} to this Trip ({@Trip})...",
+            WorkType.WaitParking,
+            trip);
+        await workService.AddAsync(trip, WorkType.WaitParking, cancellationToken);
+        
+        logger.LogInformation("Trip ({@Trip}) successfully arrived at the Hub.",
+            trip);
     }
     
     public async Task AlertCheckInCompleteAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var oldWork = await workRepository.GetAsync(trip, cancellationToken);
-        if (oldWork is { WorkType: WorkType.CheckIn })
+        var work = await workRepository.GetAsync(trip, cancellationToken);
+        if (work is not { WorkType: WorkType.CheckIn })
         {
-            var adminStaff = await adminStaffRepository.GetAsync(trip, cancellationToken);
-            if (adminStaff == null)
-                throw new Exception ("The CheckIn for this Trip has just completed but there was no AdminStaff assigned.");
+            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType} " +
+                            "and can therefore not be alerted to have its Check-In completed.",
+                trip,
+                work,
+                WorkType.CheckIn);
             
-            await workRepository.RemoveAsync(oldWork, cancellationToken);
-                await tripRepository.UnsetAsync(trip, adminStaff, cancellationToken);
-            await workService.AddAsync(trip, WorkType.WaitBay, cancellationToken);
+            return;
         }
+        
+        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+            work,
+            trip);
+        await workRepository.RemoveAsync(work, cancellationToken);
+
+        var adminStaff = await adminStaffRepository.GetAsync(trip, cancellationToken);
+        if (adminStaff == null)
+        {
+            logger.LogError("Trip ({@Trip}) has no AdminStaff assigned to complete its Check-In at...",
+                trip);
+        }
+        else
+        {
+            logger.LogDebug("Removing AdminStaff ({@AdminStaff}) from this Trip ({@Trip})...",
+                adminStaff,
+                trip);
+            await tripRepository.UnsetAsync(trip, adminStaff, cancellationToken);
+            logger.LogInformation("AdminStaff ({@AdminStaff}) successfully removed from this Trip ({@Trip}).",
+                adminStaff,
+                trip);
+        }
+        
+        logger.LogDebug("Adding Work of type {WorkType} to this Trip ({@Trip})...",
+            WorkType.WaitBay,
+            trip);
+        await workService.AddAsync(trip, WorkType.WaitBay, cancellationToken);
+        
+        logger.LogInformation("Trip ({@Trip}) successfully completed Check-In.",
+            trip);
     }
     
     public async Task AlertBayWorkCompleteAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var oldWork = await workRepository.GetAsync(trip, cancellationToken);
-        if (oldWork is { WorkType: WorkType.Bay })
+        var work = await workRepository.GetAsync(trip, cancellationToken);
+        if (work is not { WorkType: WorkType.Bay })
         {
-            var bay = await bayRepository.GetAsync(trip, cancellationToken);
-            if (bay == null)
-                throw new Exception ("The Bay Work for this Trip has just completed but there was no Bay assigned.");
+            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType} " +
+                            "and can therefore not be alerted to have its Bay Work completed.",
+                trip,
+                work,
+                WorkType.Bay);
             
-            await workRepository.RemoveAsync(oldWork, cancellationToken);
-                await tripRepository.UnsetAsync(trip, bay, cancellationToken);
-            await workService.AddAsync(trip, WorkType.TravelHome, cancellationToken);
+            return;
         }
+
+        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+            work,
+            trip);
+        await workRepository.RemoveAsync(work, cancellationToken);
+        
+        var bay = await bayRepository.GetAsync(trip, cancellationToken);
+        if (bay == null)
+        {
+            logger.LogError("Trip ({@Trip}) has no Bay assigned to complete its Bay Work at...",
+                trip);
+        }
+        else
+        {
+            logger.LogDebug("Removing Bay ({@Bay}) from this Trip ({@Trip})...",
+                bay,
+                trip);
+            await tripRepository.UnsetAsync(trip, bay, cancellationToken);
+            logger.LogInformation("Bay ({@Bay}) successfully removed from this Trip ({@Trip}).",
+                bay,
+                trip);
+        }
+        
+        logger.LogDebug("Adding Work of type {WorkType} to this Trip ({@Trip})...",
+            WorkType.TravelHome,
+            trip);
+        await workService.AddAsync(trip, WorkType.TravelHome, cancellationToken);
+        
+        logger.LogInformation("Trip ({@Trip}) successfully completed Bay Work.",
+            trip);
     }
     
     public async Task AlertTravelHomeCompleteAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var oldWork = await workRepository.GetAsync(trip, cancellationToken);
-        if (oldWork is { WorkType: WorkType.TravelHome })
+        var work = await workRepository.GetAsync(trip, cancellationToken);
+        if (work is not { WorkType: WorkType.TravelHome })
         {
-            var truck = await truckRepository.GetAsync(trip, cancellationToken);
-            if (truck == null)
-                throw new Exception("The Trip has just completed but there was no Truck assigned.");
+            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType} " +
+                            "and can therefore not be alerted to have its Travel Home completed.",
+                trip,
+                work,
+                WorkType.TravelHome);
             
-            await workRepository.RemoveAsync(oldWork, cancellationToken);
-                await truckService.AlertUnclaimedAsync(truck, cancellationToken);
+            return;
         }
+        
+        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+            work,
+            trip);
+        await workRepository.RemoveAsync(work, cancellationToken);
+
+        var truck = await truckRepository.GetAsync(trip, cancellationToken);
+        if (truck == null)
+        {
+            logger.LogError("Trip ({@Trip}) has no Truck assigned to complete its Travel Home with...",
+                trip);
+        }
+        else
+        {
+            logger.LogDebug("Removing Truck ({@Truck}) from this Trip ({@Trip})...",
+                truck,
+                trip);
+            await tripRepository.UnsetAsync(trip, truck, cancellationToken);
+            logger.LogInformation("Truck ({@Truck}) successfully removed from this Trip ({@Trip}).",
+                truck,
+                trip);
+        }
+        
+        logger.LogInformation("Trip ({@Trip}) successfully COMPLETED!!!",
+            trip);
     }
     
     public async Task TravelAsync(Trip trip, Truck truck, long xDestination, long yDestination, CancellationToken cancellationToken)
@@ -231,6 +499,10 @@ public sealed class TripService(
         var yTravel = yDiff > truck.Speed ? truck.Speed : yDiff;
         var newYLocation = trip.YLocation + yTravel;
 
+        logger.LogDebug("Setting new location (XLocation={XLocation} YLocation={YLocation}) to this Trip ({@Trip})...",
+            newXLocation,
+            newYLocation,
+            trip);
         await locationService.SetAsync(trip, newXLocation, newYLocation, cancellationToken);
     }
     
@@ -248,11 +520,21 @@ public sealed class TripService(
     {
         var truck = await truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
-            throw new Exception("The Trip was travelling home but there was no Truck assigned.");
+        {
+            logger.LogError("Trip ({@Trip}) has no Truck assigned to travel to the Hub with.",
+                trip);
+            
+            return;
+        }
         
         var hub = await hubRepository.GetAsync(trip, cancellationToken);
         if (hub == null)
-            throw new Exception("The Trip was travelling to the hub but there was no Hub assigned.");
+        {
+            logger.LogError("Trip ({@Trip}) has no Hub assigned to travel to.",
+                trip);
+            
+            return;
+        }
         
         await TravelAsync(trip, truck, hub, cancellationToken);
     }
@@ -261,11 +543,21 @@ public sealed class TripService(
     {
         var truck = await truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
-            throw new Exception("The Trip was travelling home but there was no Truck assigned.");
+        {
+            logger.LogError("Trip ({@Trip}) has no Truck assigned to travel home with.",
+                trip);
+            
+            return;
+        }
         
         var truckCompany = await truckCompanyRepository.GetAsync(truck, cancellationToken);
         if (truckCompany == null)
-            throw new Exception("The Trip was travelling home but there was no TruckCompany assigned to its Truck.");
+        {
+            logger.LogError("Trip ({@Trip}) has no TruckCompany assigned to travel home to, poor thing...",
+                trip);
+            
+            return;
+        }
         
         await TravelAsync(trip, truck, truckCompany, cancellationToken);
     }
@@ -274,18 +566,37 @@ public sealed class TripService(
     public async Task<bool> IsAtHubAsync(Trip trip, CancellationToken cancellationToken)
     {
         var hub = await hubRepository.GetAsync(trip, cancellationToken);
-        return hub != null &&
-               hub.XLocation == trip.XLocation &&
-               hub.YLocation == trip.YLocation;
+        if (hub != null)
+            return hub.XLocation == trip.XLocation &&
+                   hub.YLocation == trip.YLocation;
+        
+        logger.LogError("Trip ({@Trip}) has no Hub assigned to travel to.",
+            trip);
+        
+        return false;
+
     }
 
     public async Task<bool> IsAtHomeAsync(Trip trip, CancellationToken cancellationToken)
     {
         var truck = await truckRepository.GetAsync(trip, cancellationToken);
-        if (truck == null) return false;
+        if (truck == null)
+        {
+            logger.LogError("Trip ({@Trip}) has no Truck assigned to travel home with.",
+                trip);
+            
+            return false;
+        }
         
         var truckCompany = await truckCompanyRepository.GetAsync(truck, cancellationToken);
-        return truckCompany.XLocation == trip.XLocation &&
-               truckCompany.YLocation == trip.YLocation;
+        if (truckCompany != null)
+            return truckCompany.XLocation == trip.XLocation &&
+                   truckCompany.YLocation == trip.YLocation;
+        
+        logger.LogError("Trip ({@Trip}) has no TruckCompany assigned to travel home to, poor thing...",
+            trip);
+            
+        return false;
+
     }
 }

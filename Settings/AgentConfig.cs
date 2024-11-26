@@ -80,6 +80,4 @@ public class AgentConfig : AgentConfigBase
     };
 
     public new TimeSpan OperatingHourAverageLength = TimeSpan.FromHours(12);
-    public new const double DoubleTripChance = 0.2;
-    public new const double PickupChance = 0.5;
 }

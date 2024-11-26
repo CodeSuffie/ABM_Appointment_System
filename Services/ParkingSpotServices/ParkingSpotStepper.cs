@@ -1,24 +1,44 @@
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
-using Services.TripServices;
+using Services.ModelServices;
 
 namespace Services.ParkingSpotServices;
 
 public sealed class ParkingSpotStepper(
+    ILogger<ParkingSpotStepper> logger,
     ParkingSpotService parkingSpotService,
     ParkingSpotRepository parkingSpotRepository,
-    TripRepository tripRepository) : IStepperService<ParkingSpot>
+    TripRepository tripRepository,
+    ModelState modelState) : IStepperService<ParkingSpot>
 {
     public async Task StepAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
         var trip = await tripRepository.GetAsync(parkingSpot, cancellationToken);
-        
-        if (trip == null)
+
+        if (trip != null)
         {
-            await parkingSpotService.AlertFreeAsync(parkingSpot, cancellationToken);
+            logger.LogDebug("ParkingSpot ({@ParkingSpot}) has an active Trip assigned in this Step ({Step})...",
+                parkingSpot,
+                modelState.ModelTime);
+
+            logger.LogDebug("ParkingSpot ({@ParkingSpot}) will remain idle in this Step ({Step})...",
+                parkingSpot,
+                modelState.ModelTime);
+
+            return;
         }
+
+        logger.LogInformation("ParkingSpot ({@ParkingSpot}) has no active Trip assigned in this Step ({Step}).",
+            parkingSpot,
+            modelState.ModelTime);
+        
+        logger.LogDebug("Alerting Free for this ParkingSpot ({@ParkingSpot}) in this Step ({Step}).",
+            parkingSpot,
+            modelState.ModelTime);
+        await parkingSpotService.AlertFreeAsync(parkingSpot, cancellationToken);
     }
 
     public async Task StepAsync(CancellationToken cancellationToken)
@@ -29,7 +49,15 @@ public sealed class ParkingSpotStepper(
         
         await foreach (var parkingSpot in parkingSpots)
         {
+            logger.LogDebug("Handling Step ({Step}) for this ParkingSpot ({@ParkingSpot})...",
+                modelState.ModelTime,
+                parkingSpot);
+            
             await StepAsync(parkingSpot, cancellationToken);
+            
+            logger.LogDebug("Completed handling Step ({Step}) for this ParkingSpot ({@ParkingSpot}).",
+                modelState.ModelTime,
+                parkingSpot);
         }
     }
 }

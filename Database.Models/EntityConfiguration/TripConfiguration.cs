@@ -38,9 +38,5 @@ public class TripConfiguration : IEntityTypeConfiguration<Trip>
         builder.HasOne(x => x.Work)
             .WithOne(x => x.Trip)
             .HasForeignKey<Work>(x => x.TripId);
-        
-        builder.HasMany(x => x.TripLogs)
-            .WithOne(x => x.Trip)
-            .HasForeignKey(x => x.TripId);
     }
 }

@@ -1,5 +1,4 @@
 using Database;
-using Database.Models;
 using Microsoft.Extensions.Hosting;
 
 namespace Services.ModelServices;

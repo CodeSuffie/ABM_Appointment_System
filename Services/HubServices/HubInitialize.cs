@@ -1,11 +1,12 @@
+using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
 using Services.ModelServices;
-using Settings;
 
 namespace Services.HubServices;
 
 public sealed class HubInitialize(
+    ILogger<HubInitialize> logger,
     HubService hubService,
     OperatingHourService operatingHourService, 
     LocationService locationService,
@@ -14,12 +15,18 @@ public sealed class HubInitialize(
 {
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
-        var hub = await hubService.GetNewObjectAsync(cancellationToken);
+        var hub = hubService.GetNewObject();
         
+        logger.LogDebug("Setting location for this Hub ({@Hub})...",
+            hub);
         await locationService.InitializeObjectAsync(hub, cancellationToken);
-        await operatingHourService.GetNewObjectsAsync(hub, cancellationToken);
+        
+        logger.LogDebug("Setting OperatingHours for this Hub ({@Hub})...",
+            hub);
+        operatingHourService.GetNewObjects(hub);
 
         await hubRepository.AddAsync(hub, cancellationToken);
+        logger.LogInformation("New Hub created: Hub={@Hub}", hub);
     }
 
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
