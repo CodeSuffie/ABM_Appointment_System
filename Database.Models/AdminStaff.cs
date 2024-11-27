@@ -1,9 +1,15 @@
+using Database.Abstractions;
+
 namespace Database.Models;
 
-public class AdminStaff : Staff
+public class AdminStaff
 {
     // Staff
-    public new List<AdminShift> Shifts { get; set; } = [];
+    public long Id { get; set; }
+    public double WorkChance { get; set; }
+    public TimeSpan AverageShiftLength { get; set; }
+
+    public List<AdminShift> Shifts { get; set; } = [];
     
     // AdminStaff
     public Hub Hub { get; set; } = new();

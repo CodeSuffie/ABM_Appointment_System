@@ -85,7 +85,7 @@ public sealed class TripStepper(
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        var trips = tripRepository.Get()
+        var trips = tripRepository.GetActive()
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         

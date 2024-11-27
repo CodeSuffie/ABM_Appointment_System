@@ -112,33 +112,22 @@ public sealed class WorkService(
     public async Task AddAsync(Trip trip, WorkType workType, CancellationToken cancellationToken)
     {
         var work = GetNew(workType);
-        work.Trip = trip;
 
-        await workRepository.AddAsync(work, cancellationToken);
+        await workRepository.AddAsync(work, trip, cancellationToken);
     }
     
     public async Task AddAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var work = GetNew(WorkType.CheckIn);
-        work.Trip = trip;
-        work.AdminStaff = adminStaff;
-        
-        trip.Work = work;
-        adminStaff.Work = work;
 
-        await workRepository.AddAsync(work, cancellationToken);
+        await workRepository.AddAsync(work, trip, adminStaff, cancellationToken);
     }
 
     public async Task AddAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
     {
         var work = GetNew(WorkType.Bay);
-        work.Trip = trip;
-        work.Bay = bay;
-        
-        trip.Work = work;
-        bay.Works.Add(work);
 
-        await workRepository.AddAsync(work, cancellationToken);
+        await workRepository.AddAsync(work, trip, bay, cancellationToken);
     }
     
     public async Task AddAsync(Bay bay, BayStaff bayStaff, WorkType workType, CancellationToken cancellationToken)
@@ -150,6 +139,6 @@ public sealed class WorkService(
         bayStaff.Work = work;
         bay.Works.Add(work);
 
-        await workRepository.AddAsync(work, cancellationToken);
+        await workRepository.AddAsync(work, bay, bayStaff, cancellationToken);
     }
 }

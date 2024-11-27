@@ -38,6 +38,6 @@ public class ModelConfig : ModelConfigBase
     public override int MaxY { get; } = 200;
     public override int MinDistanceBetween { get; } = 9;
     
-    public override int InitialLoads { get; } = 9;
-    public override int LoadsPerStep { get; } = 9;
+    public override int InitialLoads { get; } = 4;
+    public override int LoadsPerStep { get; } = 0;
 }

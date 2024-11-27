@@ -16,6 +16,6 @@ public class BayStaffConfiguration : IEntityTypeConfiguration<BayStaff>
         
         builder.HasOne(x => x.Work)
             .WithOne(x => x.BayStaff)
-            .HasForeignKey<BayStaff>(x => x.WorkId);
+            .HasForeignKey<Work>(x => x.BayStaffId);
     }
 }

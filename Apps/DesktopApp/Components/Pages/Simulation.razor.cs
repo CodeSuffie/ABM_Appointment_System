@@ -39,7 +39,7 @@ public sealed partial class Simulation
         await ModelService.InitializeAsync();
         
         // create new timer
-        _timer = new Timer(TimerCallback, null, 0, 1000);
+        _timer = new Timer(TimerCallback, null, 0, 100);
     }
     
     protected override async Task OnAfterRenderAsync(bool firstRender)

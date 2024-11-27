@@ -32,7 +32,10 @@ public sealed class TripService(
     
             if (dropOff != null)
             {
-                trip = new Trip();
+                trip = new Trip
+                {
+                    Completed = false
+                };
                 
                 await tripRepository.AddAsync(trip, cancellationToken);
                 await tripRepository.SetDropOffAsync(trip, dropOff, cancellationToken);
@@ -64,7 +67,10 @@ public sealed class TripService(
                 pickUp = await loadService.SelectUnclaimedPickUpAsync(truckCompany, cancellationToken);
                 if (pickUp != null)
                 {
-                    trip = new Trip();
+                    trip = new Trip
+                    {
+                        Completed = false
+                    };
                     await tripRepository.AddAsync(trip, cancellationToken);
                     await tripRepository.SetPickUpAsync(trip, pickUp, cancellationToken);
                 }
@@ -101,7 +107,8 @@ public sealed class TripService(
     public async Task<Trip?> GetNextAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
         var trips = await (tripRepository.Get(truckCompany)
-                .Where(t => t.Truck == null))
+                .Where(t => t.Truck == null)
+                .Where(t => !t.Completed))
             .ToListAsync(cancellationToken);
 
         if (trips.Count <= 0)
@@ -136,6 +143,9 @@ public sealed class TripService(
                 earliestStart,
                 work,
                 workType);
+
+            nextTrip = trip;
+            earliestStart = work?.StartTime;
         }
         
         logger.LogInformation("Trip \n({@Trip})\n has the earliest StartTime \n({StartTime})\n for its Work with WorkType \n({WorkType})",
@@ -465,7 +475,8 @@ public sealed class TripService(
                 truck,
                 trip);
         }
-        
+
+        await tripRepository.SetAsync(trip, true, cancellationToken);
         logger.LogInformation("Trip ({@Trip})\n successfully COMPLETED!!!",
             trip);
     }
@@ -473,11 +484,11 @@ public sealed class TripService(
     public async Task TravelAsync(Trip trip, Truck truck, long xDestination, long yDestination, CancellationToken cancellationToken)
     {
         var xDiff = xDestination - trip.XLocation;
-        var xTravel = xDiff > truck.Speed ? truck.Speed : xDiff;
+        var xTravel = Math.Clamp(xDiff, -truck.Speed, truck.Speed);
         var newXLocation = trip.XLocation + xTravel;
         
         var yDiff = yDestination - trip.YLocation;
-        var yTravel = yDiff > truck.Speed ? truck.Speed : yDiff;
+        var yTravel = Math.Clamp(yDiff, -truck.Speed, truck.Speed);
         var newYLocation = trip.YLocation + yTravel;
 
         logger.LogDebug("Setting new location (XLocation={XLocation} YLocation={YLocation})\n to this Trip ({@Trip})",

@@ -32,13 +32,12 @@ public sealed class BayShiftService(
 
             return null;
         }
-            
-        var shiftHour = modelState.Random(maxShiftStart.Hours);
-        var shiftMinutes = shiftHour == maxShiftStart.Hours ?
-            modelState.Random(maxShiftStart.Minutes) :
-            modelState.Random(modelState.ModelConfig.MinutesPerHour);
 
-        return operatingHour.StartTime + new TimeSpan(shiftHour, shiftMinutes, 0);
+        var shiftBlock = (maxShiftStart / 3).Hours;
+            
+        var shiftHour = shiftBlock * modelState.Random(3);
+
+        return operatingHour.StartTime + new TimeSpan(shiftHour, 0, 0);
     }
     
     public async Task<double?> GetWorkChanceAsync(BayStaff bayStaff, CancellationToken cancellationToken)

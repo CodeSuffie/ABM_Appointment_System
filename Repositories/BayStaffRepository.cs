@@ -1,5 +1,6 @@
 using Database;
 using Database.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Repositories;
 
@@ -10,6 +11,14 @@ public sealed class BayStaffRepository(ModelDbContext context)
         var bayStaffs = context.BayStaffs;
 
         return bayStaffs;
+    }
+
+    public async Task<BayStaff?> GetAsync(Work work, CancellationToken cancellationToken)
+    {
+        var bayStaff = await context.BayStaffs
+            .FirstOrDefaultAsync(bs => bs.Id == work.BayStaffId, cancellationToken);
+
+        return bayStaff;
     }
     
     public async Task AddAsync(BayStaff bayStaff, CancellationToken cancellationToken)

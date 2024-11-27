@@ -307,15 +307,16 @@ public sealed class BayService(
             logger.LogInformation("Trip \n({@Trip})\n at Bay \n({@Bay})\n did not have a Load assigned to Pick Up.",
                 trip,
                 bay);
-
-            return;
+        }
+        else
+        {
+            logger.LogDebug("Removing the Picked Up Load \n({@Load})\n for this Trip \n({@Trip})\n from this Bay \n({@Bay})",
+                        pickUpLoad,
+                        trip,
+                        bay);
+                    await loadRepository.UnsetAsync(pickUpLoad, bay, cancellationToken);
         }
         
-        logger.LogDebug("Removing the Picked Up Load \n({@Load})\n for this Trip \n({@Trip})\n from this Bay \n({@Bay})",
-            pickUpLoad,
-            trip,
-            bay);
-        await loadRepository.UnsetAsync(pickUpLoad, bay, cancellationToken);
         
         logger.LogDebug("Alerting Work completed for this Bay \n({@Bay})",
             bay);

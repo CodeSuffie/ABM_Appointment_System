@@ -17,7 +17,7 @@ public class AdminStaffConfiguration : IEntityTypeConfiguration<AdminStaff>
 
         builder.HasOne(x => x.Work)
             .WithOne(x => x.AdminStaff)
-            .HasForeignKey<AdminStaff>(x => x.WorkId);
+            .HasForeignKey<Work>(x => x.AdminStaffId);
 
         builder.HasOne(x => x.Trip)
             .WithOne(x => x.AdminStaff)

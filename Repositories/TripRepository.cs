@@ -21,6 +21,14 @@ public sealed class TripRepository(
 
         return trips;
     }
+
+    public IQueryable<Trip> GetActive()
+    {
+        var trips = context.Trips
+            .Where(t => t.Truck != null);
+
+        return trips;
+    }
     
     public IQueryable<Trip> Get(Hub hub)
     {
@@ -46,7 +54,7 @@ public sealed class TripRepository(
     public async Task<Trip?> GetAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
         var trip = await context.Trips
-            .FirstOrDefaultAsync(t => t.ParkingSpotId == parkingSpot.Id, cancellationToken);
+            .FirstOrDefaultAsync(t => t.Id == parkingSpot.TripId, cancellationToken);
 
         return trip;
     }
@@ -54,7 +62,7 @@ public sealed class TripRepository(
     public async Task<Trip?> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var trip = await context.Trips
-            .FirstOrDefaultAsync(t => t.AdminStaffId == adminStaff.Id, cancellationToken);
+            .FirstOrDefaultAsync(t => t.Id == adminStaff.TripId, cancellationToken);
 
         return trip;
     }
@@ -62,7 +70,7 @@ public sealed class TripRepository(
     public async Task<Trip?> GetAsync(Bay bay, CancellationToken cancellationToken)
     {
         var trip = await context.Trips
-            .FirstOrDefaultAsync(t=> t.BayId == bay.Id, cancellationToken);
+            .FirstOrDefaultAsync(t=> t.Id == bay.TripId, cancellationToken);
         
         return trip;
     }
@@ -70,7 +78,7 @@ public sealed class TripRepository(
     public async Task<Trip?> GetAsync(Work work, CancellationToken cancellationToken)
     {
         var trip = await context.Trips
-            .FirstOrDefaultAsync(t => t.WorkId == work.Id, cancellationToken);
+            .FirstOrDefaultAsync(t => t.Id == work.TripId, cancellationToken);
 
         return trip;
     }
@@ -180,6 +188,15 @@ public sealed class TripRepository(
     {
         trip.XLocation = xLocation;
         trip.YLocation = yLocation;
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    
+    
+    public async Task SetAsync(Trip trip, bool completed, CancellationToken cancellationToken)
+    {
+        trip.Completed = completed;
         
         await context.SaveChangesAsync(cancellationToken);
     }

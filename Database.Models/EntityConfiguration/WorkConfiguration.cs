@@ -9,15 +9,15 @@ public class WorkConfiguration : IEntityTypeConfiguration<Work>
     {
         builder.HasOne(x => x.Trip)
             .WithOne(x => x.Work)
-            .HasForeignKey<Trip>(x => x.WorkId);
+            .HasForeignKey<Work>(x => x.TripId);
 
         builder.HasOne(x => x.AdminStaff)
             .WithOne(x => x.Work)
-            .HasForeignKey<AdminStaff>(x => x.WorkId);
+            .HasForeignKey<Work>(x => x.AdminStaffId);
 
         builder.HasOne(x => x.BayStaff)
             .WithOne(x => x.Work)
-            .HasForeignKey<BayStaff>(x => x.WorkId);
+            .HasForeignKey<Work>(x => x.BayStaffId);
 
         builder.HasOne(x => x.Bay)
             .WithMany(x => x.Works)

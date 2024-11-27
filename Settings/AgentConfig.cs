@@ -27,19 +27,19 @@ public abstract class AgentConfigBase
 
 public class AgentConfig : AgentConfigBase
 {
-    public override int AdminStaffCount { get; } = 9;
-    public override double AdminStaffAverageWorkDays { get; } = 0.7;
-    public override TimeSpan AdminShiftAverageLength { get; } = TimeSpan.FromHours(8);
+    public override int AdminStaffCount { get; } = 1;
+    public override double AdminStaffAverageWorkDays { get; } = 1;
+    public override TimeSpan AdminShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
-    public override int BayStaffCount { get; } = 9;
-    public override double BayStaffAverageWorkDays { get; } = 0.7;
-    public override TimeSpan BayShiftAverageLength { get; } = TimeSpan.FromHours(8);
+    public override int BayStaffCount { get; } = 1;
+    public override double BayStaffAverageWorkDays { get; } = 1;
+    public override TimeSpan BayShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
-    public override int TruckCount { get; } = 9;
-    public override int TruckAverageSpeed { get; } = 1;
+    public override int TruckCount { get; } = 1;
+    public override int TruckAverageSpeed { get; } = 10;
     
     public override double HubAverageOperatingDays { get; } = 1;
-    public override TimeSpan OperatingHourAverageLength { get; } = TimeSpan.FromHours(12);
+    public override TimeSpan OperatingHourAverageLength { get; } = TimeSpan.FromHours(24);
     public override int HubXSize { get; } = 9;
     public override int HubYSize { get; } = 4;
     
@@ -51,38 +51,38 @@ public class AgentConfig : AgentConfigBase
     public override int[,] TruckCompanyLocations { get; } =
     {
         {1, 1},
-        {199, 1},
-        {1, 199},
-        {199, 199},
-        {100, 80},
-        {150, 100},
-        {100, 199},
-        {20, 100}
+        //{199, 1},
+        //{1, 199},
+        //{199, 199},
+        //{100, 80},
+        //{150, 100},
+        //{100, 199},
+        //{20, 100}
     };
     
     public override int[,] ParkingSpotLocations { get; } =
     {
         {0, 2},
-        {0, 3},
-        {1, 2},
-        {1, 3},
-        {2, 2},
-        {2, 3},
-        {3, 2},
-        {3, 3},
-        {4, 2}
+        //{0, 3},
+        //{1, 2},
+        //{1, 3},
+        //{2, 2},
+        //{2, 3},
+        //{3, 2},
+        //{3, 3},
+        //{4, 2}
     };
     
     public override int[,] BayLocations { get; } =
     {
         {0, 0}, 
-        {1, 0},
-        {2, 0},
-        {3, 0},
-        {4, 0},
-        {5, 0},
-        {6, 0},
-        {7, 0},
-        {8, 0}
+        //{1, 0},
+        //{2, 0},
+        //{3, 0},
+        //{4, 0},
+        //{5, 0},
+        //{6, 0},
+        //{7, 0},
+        //{8, 0}
     };
 }

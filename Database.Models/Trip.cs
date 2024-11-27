@@ -7,6 +7,8 @@ public class Trip
     public long XLocation { get; set; }
     public long YLocation { get; set; }
     
+    public bool Completed { get; set; }
+    
     public Load? DropOff { get; set; }
     public long? DropOffId { get; set; }
 

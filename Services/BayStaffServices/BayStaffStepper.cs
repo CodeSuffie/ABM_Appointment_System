@@ -93,6 +93,11 @@ public sealed class BayStaffStepper(
                 bayStaff,
                 modelState.ModelTime);
             await bayStaffService.AlertWorkCompleteAsync(work.WorkType, bay, cancellationToken);
+            
+            logger.LogDebug("Removing old Work \n({@Work})\n for this BayStaff \n({@BayStaff})",
+                work,
+                bayStaff);
+            await workRepository.RemoveAsync(work, cancellationToken);
         }
     }
 

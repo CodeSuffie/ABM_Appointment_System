@@ -5,12 +5,16 @@ using Microsoft.EntityFrameworkCore;
 namespace Repositories;
 
 public sealed class WorkRepository(
-    ModelDbContext context)
+    ModelDbContext context,
+    TripRepository tripRepository,
+    AdminStaffRepository adminStaffRepository,
+    BayStaffRepository bayStaffRepository,
+    BayRepository bayRepository)
 {
     public async Task<Work?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
         var work = await context.Works
-            .FirstOrDefaultAsync(x => x.Id == trip.WorkId, cancellationToken);
+            .FirstOrDefaultAsync(x => x.TripId == trip.Id, cancellationToken);
         
         return work;
     }
@@ -50,16 +54,85 @@ public sealed class WorkRepository(
         return work;
     }
     
-    public async Task AddAsync(Work work, CancellationToken cancellationToken)
+    public async Task AddAsync(Work work, Trip trip, CancellationToken cancellationToken)
     {
         await context.Works
             .AddAsync(work, cancellationToken);
+        
+        work.Trip = trip;
+        trip.Work = work;
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task AddAsync(Work work, Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
+    {
+        await context.Works
+            .AddAsync(work, cancellationToken);
+        
+        work.Trip = trip;
+        trip.Work = work;
+
+        work.AdminStaff = adminStaff;
+        adminStaff.Work = work;
+
+        context.Trips.Update(trip);
+        context.AdminStaffs.Update(adminStaff);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task AddAsync(Work work, Trip trip, Bay bay, CancellationToken cancellationToken)
+    {
+        await context.Works
+            .AddAsync(work, cancellationToken);
+        
+        work.Trip = trip;
+        trip.Work = work;
+
+        work.Bay = bay;
+        bay.Works.Add(work);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task AddAsync(Work work, Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
+    {
+        await context.Works
+            .AddAsync(work, cancellationToken);
+        
+        work.Bay = bay;
+        bay.Works.Add(work);
+
+        work.BayStaff = bayStaff;
+        bayStaff.Work = work;
 
         await context.SaveChangesAsync(cancellationToken);
     }
     
     public async Task RemoveAsync(Work work, CancellationToken cancellationToken)
     {
+        var trip = await tripRepository.GetAsync(work, cancellationToken);
+        if (trip != null)
+        {
+            trip.Work = null;
+        }
+        
+        var adminStaff = await adminStaffRepository.GetAsync(work, cancellationToken);
+        if (adminStaff != null)
+        {
+            adminStaff.Work = null;
+        }
+
+        var bayStaff = await bayStaffRepository.GetAsync(work, cancellationToken);
+        if (bayStaff != null)
+        {
+            bayStaff.Work = null;
+        }
+        
+        var bay = await bayRepository.GetAsync(work, cancellationToken);
+        bay?.Works.Remove(work);
+
         context.Works
             .Remove(work);
         

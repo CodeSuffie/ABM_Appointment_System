@@ -20,6 +20,14 @@ public sealed class AdminStaffRepository(ModelDbContext context)
 
         return adminStaff;
     }
+
+    public async Task<AdminStaff?> GetAsync(Work work, CancellationToken cancellationToken)
+    {
+        var adminStaff = await context.AdminStaffs
+            .FirstOrDefaultAsync(a => a.Id == work.AdminStaffId, cancellationToken);
+
+        return adminStaff;
+    }
     
     public async Task AddAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {

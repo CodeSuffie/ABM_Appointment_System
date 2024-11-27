@@ -247,73 +247,73 @@ public sealed class BayStaffService(
         {
             logger.LogInformation("Trip \n({@Trip})\n did not have a Load assigned to Pick-Up.",
                 trip);
-
-            return;
-        }
-        
-        var pickUpLoadBay = await bayRepository.GetAsync(pickUpLoad, cancellationToken);
-        if (pickUpLoadBay == null)
-        {
-            logger.LogInformation("Load \n({@Load})\n to Pick-Up for this Trip \n({@Trip})\n did not have a bay assigned to Fetch it from.",
-                pickUpLoad,
-                trip);
-
-            if (bay.BayStatus == BayStatus.WaitingFetchStart)
-            {
-                logger.LogInformation("Bay \n({@Bay})\n has assigned BayStatus {@BayStatus}" +
-                                      "and can therefore not wait longer to Fetch the Load \n({@Load})\n" +
-                                      "for this Trip \n({@Trip})",
-                    bay,
-                    BayStatus.WaitingFetchStart,
-                    pickUpLoad,
-                    trip);
-                
-                logger.LogDebug("Unsetting Pick-Up Load \n({@Load})\n for this Trip \n({@Trip})",
-                    pickUpLoad,
-                    trip);
-                await loadRepository.UnsetPickUpAsync(pickUpLoad, trip, cancellationToken);
-            }
-            else
-            {
-                logger.LogInformation("Bay \n({@Bay})\n has assigned BayStatus {@BayStatus}" +
-                                      "and can therefore wait longer to Fetch the Load \n({@Load})\n" +
-                                      "for this Trip \n({@Trip})",
-                    bay,
-                    bay.BayStatus,
-                    pickUpLoad,
-                    trip);
-                
-                logger.LogDebug("Starting Drop-Off Work for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
-                    bayStaff,
-                    bay);
-                await StartDropOffAsync(bay, bayStaff, cancellationToken);
-
-                return;
-            }
-        }
-        else if (pickUpLoadBay.Id != bay.Id)
-        {
-            logger.LogInformation("Load \n({@Load})\n to Pick-Up for this Trip \n({@Trip})\n is not assigned to the same Bay \n({@Bay})\n as this Bay \n({@Bay})",
-                pickUpLoad,
-                trip,
-                pickUpLoadBay,
-                bay);
-            
-            logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
-                WorkType.Fetch,
-                bayStaff,
-                bay);
-            await workService.AddAsync(bay, bayStaff, WorkType.Fetch, cancellationToken);
-            
-            return;
         }
         else
         {
-            logger.LogInformation("Load \n({@Load})\n to Pick-Up for this Trip \n({@Trip})\n is assigned to the same Bay \n({@Bay})\n as this Bay \n({@Bay})",
-                pickUpLoad,
-                trip,
-                pickUpLoadBay,
-                bay);
+            var pickUpLoadBay = await bayRepository.GetAsync(pickUpLoad, cancellationToken);
+            if (pickUpLoadBay == null)
+            {
+                logger.LogInformation("Load \n({@Load})\n to Pick-Up for this Trip \n({@Trip})\n did not have a bay assigned to Fetch it from.",
+                    pickUpLoad,
+                    trip);
+
+                if (bay.BayStatus == BayStatus.WaitingFetchStart)
+                {
+                    logger.LogInformation("Bay \n({@Bay})\n has assigned BayStatus {@BayStatus}" +
+                                          "and can therefore not wait longer to Fetch the Load \n({@Load})\n" +
+                                          "for this Trip \n({@Trip})",
+                        bay,
+                        BayStatus.WaitingFetchStart,
+                        pickUpLoad,
+                        trip);
+                    
+                    logger.LogDebug("Unsetting Pick-Up Load \n({@Load})\n for this Trip \n({@Trip})",
+                        pickUpLoad,
+                        trip);
+                    await loadRepository.UnsetPickUpAsync(pickUpLoad, trip, cancellationToken);
+                }
+                else
+                {
+                    logger.LogInformation("Bay \n({@Bay})\n has assigned BayStatus {@BayStatus}" +
+                                          "and can therefore wait longer to Fetch the Load \n({@Load})\n" +
+                                          "for this Trip \n({@Trip})",
+                        bay,
+                        bay.BayStatus,
+                        pickUpLoad,
+                        trip);
+                    
+                    logger.LogDebug("Starting Drop-Off Work for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
+                        bayStaff,
+                        bay);
+                    await StartDropOffAsync(bay, bayStaff, cancellationToken);
+
+                    return;
+                }
+            }
+            else if (pickUpLoadBay.Id != bay.Id)
+            {
+                logger.LogInformation("Load \n({@Load})\n to Pick-Up for this Trip \n({@Trip})\n is not assigned to the same Bay \n({@Bay})\n as this Bay \n({@Bay})",
+                    pickUpLoad,
+                    trip,
+                    pickUpLoadBay,
+                    bay);
+                
+                logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
+                    WorkType.Fetch,
+                    bayStaff,
+                    bay);
+                await workService.AddAsync(bay, bayStaff, WorkType.Fetch, cancellationToken);
+                
+                return;
+            }
+            else
+            {
+                logger.LogInformation("Load \n({@Load})\n to Pick-Up for this Trip \n({@Trip})\n is assigned to the same Bay \n({@Bay})\n as this Bay \n({@Bay})",
+                    pickUpLoad,
+                    trip,
+                    pickUpLoadBay,
+                    bay);
+            }
         }
             
         logger.LogInformation("Fetch Work could not be started for this Trip \n({@Trip})\n and is therefore completed.",
