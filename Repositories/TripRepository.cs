@@ -11,7 +11,9 @@ public sealed class TripRepository(
     BayRepository bayRepository,
     ParkingSpotRepository parkingSpotRepository,
     AdminStaffRepository adminStaffRepository,
-    TruckRepository truckRepository)
+    TruckRepository truckRepository,
+    HubRepository hubRepository,
+    LoadRepository loadRepository)
 {
     public IQueryable<Trip> Get()
     {
@@ -182,6 +184,90 @@ public sealed class TripRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
     
+    
+    public async Task SetDropOffAsync(Trip trip, Load dropOff, CancellationToken cancellationToken)
+    {
+        var hub = await hubRepository.GetAsync(dropOff, cancellationToken);
+        if (hub == null)
+        {
+            logger.LogError("Load ({@Load}) to set as Drop-Off for this Trip ({@Trip}) has no Hub assigned.",
+                dropOff,
+                trip);
+            
+            logger.LogDebug("Removing invalid Drop-Off Load ({@Load}) for this Trip ({@Trip}).",
+                dropOff,
+                trip);
+            await loadRepository.RemoveAsync(dropOff, cancellationToken);
+            
+            return;
+        }
+
+        if (trip.Hub == null)
+        {
+            trip.Hub = hub;
+            hub.Trips.Add(trip);
+        }
+        else if (trip.HubId != hub.Id)
+        {
+            logger.LogError(
+                "Load ({@Load}) to set as Drop-Off for this Trip ({@Trip}) has a different Hub ({@Hub}) " +
+                "assigned than the Hub Pick-Up Load has assigned ({@Hub}).",
+                dropOff,
+                trip,
+                hub,
+                trip.Hub);
+
+            return;
+        }
+        
+        trip.DropOff = dropOff;
+        dropOff.DropOffTrip = trip;
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SetPickUpAsync(Trip trip, Load pickUp, CancellationToken cancellationToken)
+    {
+        var hub = await hubRepository.GetAsync(pickUp, cancellationToken);
+        if (hub == null)
+        {
+            logger.LogError("Load ({@Load}) to set as Pick-Up for this Trip ({@Trip}) has no Hub assigned.",
+                pickUp,
+                trip);
+            
+            logger.LogDebug("Removing invalid Pick-Up Load ({@Load}) for this Trip ({@Trip}).",
+                pickUp,
+                trip);
+            await loadRepository.RemoveAsync(pickUp, cancellationToken);
+            
+            return;
+        }
+
+        if (trip.Hub == null)
+        {
+            trip.Hub = hub;
+            hub.Trips.Add(trip);
+        }
+        else if (trip.HubId != hub.Id)
+        {
+            logger.LogError(
+                "Load ({@Load}) to set as Pick-Up for this Trip ({@Trip}) has a different Hub ({@Hub}) " +
+                "assigned than the Hub Drop-Off Load has assigned ({@Hub}).",
+                pickUp,
+                trip,
+                hub,
+                trip.Hub);
+
+            return;
+        }
+        
+        trip.PickUp = pickUp;
+        pickUp.PickUpTrip = trip;
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+
     public async Task UnsetAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
         trip.ParkingSpot = null;

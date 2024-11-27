@@ -27,75 +27,56 @@ public sealed class TripService(
         while (true)
         {
             var dropOff = await loadService.SelectUnclaimedDropOffAsync(truckCompany, cancellationToken);
-            Load? pickUp;
-            Hub? dropOffHub = null;
-            Hub? pickUpHub = null;
-
-            if (dropOff == null)
+            Load? pickUp = null;
+            Trip? trip = null;
+    
+            if (dropOff != null)
             {
-                logger.LogInformation("TruckCompany ({@TruckCompany}) did not have an unclaimed Drop-Off Load to be assigned to this new Trip.",
-                    truckCompany);
-
-                pickUp = await loadService.SelectUnclaimedPickUpAsync(truckCompany, cancellationToken);
-                if (pickUp == null)
-                {
-                    logger.LogInformation("TruckCompany ({@TruckCompany}) did not have any Load to be assigned to this new Trip.",
-                        truckCompany);
-
-                    return null;
-                }
-
-                pickUpHub = await hubRepository.GetAsync(pickUp, cancellationToken);
-            }
-            else
-            {
-                dropOffHub = await hubRepository.GetAsync(dropOff, cancellationToken);
+                trip = new Trip();
+                
+                await tripRepository.AddAsync(trip, cancellationToken);
+                await tripRepository.SetDropOffAsync(trip, dropOff, cancellationToken);
+    
+                var dropOffHub = await hubRepository.GetAsync(dropOff, cancellationToken);
                 if (dropOffHub == null)
                 {
                     logger.LogError("Drop-Off Load ({@Load}) for this TruckCompany ({@TruckCompany}) did not have a Hub assigned.",
                         dropOff,
                         truckCompany);
-
+    
                     logger.LogDebug("Removing invalid Drop-Off Load ({@Load}) for this TruckCompany ({@TruckCompany}).",
                         dropOff,
                         truckCompany);
                     await loadRepository.RemoveAsync(dropOff, cancellationToken);
-
+    
                     continue;
                 }
-
+                
                 pickUp = await loadService.SelectUnclaimedPickUpAsync(dropOffHub, truckCompany, cancellationToken);
-            }
-
-            var hub = dropOffHub ?? pickUpHub;
-            if (hub == null)
-            {
-                logger.LogError("Pick-Up Load ({@Load}) for this TruckCompany ({@TruckCompany}) did not have a Hub assigned.",
-                    pickUp,
-                    truckCompany);
 
                 if (pickUp != null)
                 {
-                    logger.LogDebug("Removing invalid Load Pick-Up ({@Load}) for this TruckCompany ({@TruckCompany}).",
-                        dropOff,
-                        truckCompany);
-                    await loadRepository.RemoveAsync(pickUp, cancellationToken);
+                    await tripRepository.SetPickUpAsync(trip, pickUp, cancellationToken);
                 }
-                
-                continue;
+            }
+            else
+            {
+                pickUp = await loadService.SelectUnclaimedPickUpAsync(truckCompany, cancellationToken);
+                if (pickUp != null)
+                {
+                    trip = new Trip();
+                    await tripRepository.AddAsync(trip, cancellationToken);
+                    await tripRepository.SetPickUpAsync(trip, pickUp, cancellationToken);
+                }
             }
 
-            var trip = new Trip
+            if (trip != null)
             {
-                DropOff = dropOff,
-                PickUp = pickUp,
-                Hub = hub
-            };
-
-            logger.LogDebug("Setting TruckCompany ({@TruckCompany}) location to this Trip ({@Trip})...",
-                truckCompany,
-                trip);
-            await locationService.SetAsync(trip, truckCompany, cancellationToken);
+                logger.LogDebug("Setting TruckCompany ({@TruckCompany}) location to this Trip ({@Trip})...",
+                                truckCompany,
+                                trip);
+                            await locationService.SetAsync(trip, truckCompany, cancellationToken);
+            }
 
             return trip;
         }
@@ -106,7 +87,6 @@ public sealed class TripService(
         var trip = await GetNewObjectAsync(truckCompany, cancellationToken);
         while (trip != null)
         {
-            await tripRepository.AddAsync(trip, cancellationToken);
             logger.LogInformation("New Trip created for this TruckCompany ({@TruckCOmpany}): Trip={@Trip}",
                 truckCompany,
                 trip);
@@ -120,7 +100,8 @@ public sealed class TripService(
     
     public async Task<Trip?> GetNextAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var trips = await (tripRepository.Get(truckCompany))
+        var trips = await (tripRepository.Get(truckCompany)
+                .Where(t => t.Truck == null))
             .ToListAsync(cancellationToken);
 
         if (trips.Count <= 0)
