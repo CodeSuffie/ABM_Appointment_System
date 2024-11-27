@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Repositories;
+using Serilog;
 using Services;
 using Services.Abstractions;
 using Services.AdminStaffServices;
@@ -22,8 +23,15 @@ public static class ServiceCollectionExtensions
     {
         services.AddLogging(configure =>
         {
-            configure.SetMinimumLevel(LogLevel.Debug);
             configure.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Console()
+                .CreateLogger();
+            
+            configure.ClearProviders();
+            configure.AddSerilog(Log.Logger);
         });
 
         services.AddDbContext<ModelDbContext>();
