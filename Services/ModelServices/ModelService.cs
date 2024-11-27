@@ -1,5 +1,4 @@
 using Database;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
 namespace Services.ModelServices;
@@ -7,19 +6,29 @@ namespace Services.ModelServices;
 public sealed class ModelService(
     ModelDbContext context,
     ModelInitialize modelInitialize,
-    ModelStepper modelStepper) : BackgroundService
+    ModelStepper modelStepper)
 {
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    private CancellationTokenSource _cancellationTokenSource = new();
+    private CancellationToken CancellationToken => _cancellationTokenSource.Token;
+    
+    public async Task InitializeAsync()
     {
-        await context.Database.EnsureDeletedAsync(cancellationToken);
-        // await context.Database.MigrateAsync(cancellationToken);
-        await context.Database.EnsureCreatedAsync(cancellationToken);
+        await context.Database.EnsureDeletedAsync(CancellationToken);
+        await context.Database.EnsureCreatedAsync(CancellationToken);
         
-        await modelInitialize.InitializeModelAsync(cancellationToken);
-        
-        while (!cancellationToken.IsCancellationRequested)
+        await modelInitialize.InitializeModelAsync(CancellationToken);
+    }
+
+    public Task RunFrameAsync()
+    {
+        return modelStepper.StepAsync(CancellationToken);
+    }
+    
+    public async Task RunAsync()
+    {
+        while (!CancellationToken.IsCancellationRequested)
         {
-            await modelStepper.StepAsync(cancellationToken);
+            await RunFrameAsync();
         }
     }
 }
