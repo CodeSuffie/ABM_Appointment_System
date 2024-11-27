@@ -32,20 +32,14 @@ public sealed class LoadRepository(
         return loads;
     }
     
-    public async Task<Load?> GetPickUpAsync(Trip trip, CancellationToken cancellationToken)
+    public Task<Load?> GetPickUpAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var load = await context.Loads
-            .FirstOrDefaultAsync(l => l.PickUpTripId == trip.Id, cancellationToken);
-
-        return load;
+        return context.Loads.FirstOrDefaultAsync(l => l.PickUpTripId == trip.Id, cancellationToken);
     }
     
-    public async Task<Load?> GetDropOffAsync(Trip trip, CancellationToken cancellationToken)
+    public Task<Load?> GetDropOffAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var load = await context.Loads
-            .FirstOrDefaultAsync(l => l.DropOffTripId == trip.Id, cancellationToken);
-
-        return load;
+        return context.Loads.FirstOrDefaultAsync(l => l.DropOffTripId == trip.Id, cancellationToken);
     }
     
     public IQueryable<Load> GetUnclaimedDropOff(TruckCompany truckCompany)
@@ -80,12 +74,10 @@ public sealed class LoadRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task RemoveAsync(Load load, CancellationToken cancellationToken)
+    public Task RemoveAsync(Load load, CancellationToken cancellationToken)
     {
-        context.Loads
-            .Remove(load);
-        
-        await context.SaveChangesAsync(cancellationToken);
+        context.Loads.Remove(load);
+        return context.SaveChangesAsync(cancellationToken);
     }
     
     public async Task SetAsync(Load load, Bay bay, CancellationToken cancellationToken)
@@ -102,26 +94,25 @@ public sealed class LoadRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task SetAsync(Load load, LoadType loadType, CancellationToken cancellationToken)
+    public Task SetAsync(Load load, LoadType loadType, CancellationToken cancellationToken)
     {
         load.LoadType = loadType;
-        
-        await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task UnsetAsync(Load load, Bay bay, CancellationToken cancellationToken)
+    public Task UnsetAsync(Load load, Bay bay, CancellationToken cancellationToken)
     {
         load.Bay = null;
         bay.Loads.Remove(load);
         
-        await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task UnsetPickUpAsync(Load load, Trip trip, CancellationToken cancellationToken)
+    public Task UnsetPickUpAsync(Load load, Trip trip, CancellationToken cancellationToken)
     {
         load.PickUpTrip = null;
         trip.PickUp = null;
         
-        await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
 }

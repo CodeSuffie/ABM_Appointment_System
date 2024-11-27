@@ -17,70 +17,47 @@ public sealed class TripRepository(
 {
     public IQueryable<Trip> Get()
     {
-        var trips = context.Trips;
-
-        return trips;
+        return context.Trips;
     }
     
     public IQueryable<Trip> Get(Hub hub)
     {
-        var trips = context.Trips
-            .Where(t => t.HubId == hub.Id);
-
-        return trips;
+        return Get().Where(t => t.HubId == hub.Id);
     }
     
     public IQueryable<Trip> Get(TruckCompany truckCompany)
     {
-        var trips = context.Trips
-            .Where(t => t.DropOff != null ||
-                        t.PickUp != null)
+        return Get().Where(t => t.DropOff != null ||
+                                t.PickUp != null)
             .Where(t => t.DropOff == null ||
                         t.DropOff.TruckCompanyStartId == truckCompany.Id)
             .Where(t => t.PickUp == null ||
                         t.PickUp.TruckCompanyEndId == truckCompany.Id);
-        
-        return trips;
     }
     
-    public async Task<Trip?> GetAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
+    public Task<Trip?> GetAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
-        var trip = await context.Trips
-            .FirstOrDefaultAsync(t => t.ParkingSpotId == parkingSpot.Id, cancellationToken);
-
-        return trip;
+        return context.Trips.FirstOrDefaultAsync(t => t.ParkingSpotId == parkingSpot.Id, cancellationToken);
     }
     
-    public async Task<Trip?> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    public Task<Trip?> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var trip = await context.Trips
-            .FirstOrDefaultAsync(t => t.AdminStaffId == adminStaff.Id, cancellationToken);
-
-        return trip;
+        return context.Trips.FirstOrDefaultAsync(t => t.AdminStaffId == adminStaff.Id, cancellationToken);
     }
     
-    public async Task<Trip?> GetAsync(Bay bay, CancellationToken cancellationToken)
+    public Task<Trip?> GetAsync(Bay bay, CancellationToken cancellationToken)
     {
-        var trip = await context.Trips
-            .FirstOrDefaultAsync(t=> t.BayId == bay.Id, cancellationToken);
-        
-        return trip;
+        return context.Trips.FirstOrDefaultAsync(t=> t.BayId == bay.Id, cancellationToken);
     }
     
-    public async Task<Trip?> GetAsync(Work work, CancellationToken cancellationToken)
+    public Task<Trip?> GetAsync(Work work, CancellationToken cancellationToken)
     {
-        var trip = await context.Trips
-            .FirstOrDefaultAsync(t => t.WorkId == work.Id, cancellationToken);
-
-        return trip;
+        return context.Trips.FirstOrDefaultAsync(t => t.WorkId == work.Id, cancellationToken);
     }
     
-    public async Task<Trip?> GetAsync(Truck truck, CancellationToken cancellationToken)
+    public Task<Trip?> GetAsync(Truck truck, CancellationToken cancellationToken)
     {
-        var trip = await context.Trips
-            .FirstOrDefaultAsync(t=> t.Id == truck.TripId, cancellationToken);
-        
-        return trip;
+        return context.Trips.FirstOrDefaultAsync(t=> t.Id == truck.TripId, cancellationToken);
     }
     
     public IQueryable<Trip> GetCurrent(Hub hub, WorkType workType, CancellationToken cancellationToken)
@@ -94,9 +71,7 @@ public sealed class TripRepository(
     
     public async Task AddAsync(Trip trip, CancellationToken cancellationToken)
     {
-        await context.Trips
-            .AddAsync(trip, cancellationToken);
-        
+        await context.Trips.AddAsync(trip, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
     
@@ -176,12 +151,12 @@ public sealed class TripRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task SetAsync(Trip trip, long xLocation, long yLocation, CancellationToken cancellationToken)
+    public Task SetAsync(Trip trip, long xLocation, long yLocation, CancellationToken cancellationToken)
     {
         trip.XLocation = xLocation;
         trip.YLocation = yLocation;
         
-        await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
     
     
@@ -268,35 +243,35 @@ public sealed class TripRepository(
     }
 
 
-    public async Task UnsetAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
+    public Task UnsetAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
         trip.ParkingSpot = null;
         parkingSpot.Trip = null;
         
-        await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task UnsetAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
+    public Task UnsetAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         trip.AdminStaff = null;
         adminStaff.Trip = null;
         
-        await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task UnsetAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
+    public Task UnsetAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
     {
         trip.Bay = null;
         bay.Trip = null;
         
-        await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task UnsetAsync(Trip trip, Truck truck, CancellationToken cancellationToken)
+    public Task UnsetAsync(Trip trip, Truck truck, CancellationToken cancellationToken)
     {
         trip.Truck = null;
         truck.Trip = null;
         
-        await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
 }

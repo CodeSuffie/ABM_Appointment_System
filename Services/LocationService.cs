@@ -106,28 +106,28 @@ public sealed class LocationService(
         parkingSpot.YLocation = hub.YLocation + modelState.AgentConfig.ParkingSpotLocations[parkingSpotCount - 1, 1];
     }
 
-    public async Task SetAsync(Trip trip, TruckCompany truckCompany, CancellationToken cancellationToken)
+    public Task SetAsync(Trip trip, TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        await tripRepository.SetAsync(trip, truckCompany.XLocation, truckCompany.YLocation, cancellationToken);
+        return tripRepository.SetAsync(trip, truckCompany.XLocation, truckCompany.YLocation, cancellationToken);
     }
     
-    public async Task SetAsync(Trip trip, Hub hub, CancellationToken cancellationToken)
+    public Task SetAsync(Trip trip, Hub hub, CancellationToken cancellationToken)
     {
-        await tripRepository.SetAsync(trip, hub.XLocation, hub.YLocation, cancellationToken);
+        return tripRepository.SetAsync(trip, hub.XLocation, hub.YLocation, cancellationToken);
     }
     
-    public async Task SetAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
+    public Task SetAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
-        await tripRepository.SetAsync(trip, parkingSpot.XLocation, parkingSpot.YLocation, cancellationToken);
+        return tripRepository.SetAsync(trip, parkingSpot.XLocation, parkingSpot.YLocation, cancellationToken);
     }
     
-    public async Task SetAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
+    public Task SetAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
     {
-        await tripRepository.SetAsync(trip, bay.XLocation, bay.YLocation, cancellationToken);
+        return tripRepository.SetAsync(trip, bay.XLocation, bay.YLocation, cancellationToken);
     }
     
-    public async Task SetAsync(Trip trip, long xLocation, long yLocation, CancellationToken cancellationToken)
+    public Task SetAsync(Trip trip, long xLocation, long yLocation, CancellationToken cancellationToken)
     {
-        await tripRepository.SetAsync(trip, xLocation, yLocation, cancellationToken);
+        return tripRepository.SetAsync(trip, xLocation, yLocation, cancellationToken);
     }
 }

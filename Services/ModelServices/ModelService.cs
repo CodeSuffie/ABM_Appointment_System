@@ -21,6 +21,7 @@ public sealed class ModelService(
 
     public Task RunFrameAsync()
     {
+        // await using var transaction = await context.Database.BeginTransactionAsync(CancellationToken);
         return modelStepper.StepAsync(CancellationToken);
     }
     
@@ -29,6 +30,7 @@ public sealed class ModelService(
         while (!CancellationToken.IsCancellationRequested)
         {
             await RunFrameAsync();
+            await Task.Yield();
         }
     }
 }
