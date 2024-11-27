@@ -205,6 +205,7 @@ public sealed class BayService(
     {
         switch (bay.BayStatus)
         {
+            case BayStatus.DroppingOffStarted:
             case BayStatus.FetchStarted:
                 
                 logger.LogInformation("Bay \n({@Bay})\n with assigned BayStatus {@BayStatus} can set its BayStatus to {@BayStatus}.",

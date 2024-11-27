@@ -131,7 +131,7 @@ async function initializeWorld() {
     window.simulationView.scene.add(harborGround);
 }
 
-export async function removeTruck(truckId) {
+export function removeTruck(truckId) {
     if (!isInitialized()) {
         return;
     }
@@ -144,7 +144,7 @@ export async function removeTruck(truckId) {
     window.simulationView.visibleTrucks[truckId] = undefined;
 }
 
-export async function addTruck(id, locationX, locationY) {
+export function addTruck(id, locationX, locationY) {
     if (!isInitialized()) {
         return;
     }
