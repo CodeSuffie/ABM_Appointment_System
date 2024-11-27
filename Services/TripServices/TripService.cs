@@ -106,20 +106,32 @@ public sealed class TripService(
     
     public async Task<Trip?> GetNextAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var trips = await (tripRepository.Get(truckCompany)
-                .Where(t => t.Truck == null)
-                .Where(t => !t.Completed))
-            .ToListAsync(cancellationToken);
-
-        if (trips.Count <= 0)
+        var trip = await GetNewObjectAsync(truckCompany, cancellationToken);
+        if (trip == null)
         {
-            logger.LogInformation("TruckCompany \n({@TruckCompany})\n did not have a Trip assigned.",
+            logger.LogInformation("TruckCompany \n({@TruckCompany})\n could not create a Trip.",
                 truckCompany);
 
             return null;
         }
 
-        var trip = trips[modelState.Random(trips.Count)];
+        if (trip.Truck != null)
+        {
+            logger.LogError("Trip \n({@Trip})\n already has a Truck assigned ({@Truck}).",
+                trip,
+                trip.Truck);
+
+            return null;
+        }
+
+        if (trip.Completed)
+        {
+            logger.LogError("Trip \n({@Trip})\n was already completed.",
+                trip);
+
+            return null;
+        }
+        
         return trip;
     }
 

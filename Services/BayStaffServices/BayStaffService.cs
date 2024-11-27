@@ -220,6 +220,36 @@ public sealed class BayStaffService(
     
     public async Task StartDropOffAsync(Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
     {
+        var trip = await tripRepository.GetAsync(bay, cancellationToken);
+        if (trip == null)
+        {
+            logger.LogError("Bay \n({@Bay})\n did not have a Trip assigned to start Drop-Off Work for.",
+                bay);
+            
+            return;
+        }
+        
+        var dropOffLoad = await loadRepository.GetDropOffAsync(trip, cancellationToken);
+        if (dropOffLoad == null)
+        {
+            logger.LogInformation("Trip \n({@Trip})\n did not have a Load assigned to Drop-Off.",
+                trip);
+            
+            logger.LogInformation("Drop-Off Work could not be started for this Trip \n({@Trip})\n and is therefore completed.",
+                trip);
+        
+            logger.LogDebug("Alerting Drop-Off Work has completed for this Bay \n({@Bay})",
+                bay);
+            await bayService.AlertDroppedOffAsync(bay, cancellationToken);
+            
+            logger.LogDebug("Alerting Free for this BayStaff \n({@BayStaff})\n to this Bay \n({@Bay})",
+                bayStaff,
+                bay);
+            await AlertFreeAsync(bayStaff, bay, cancellationToken);
+
+            return;
+        }
+        
         logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
             WorkType.DropOff,
             bayStaff,
@@ -331,6 +361,36 @@ public sealed class BayStaffService(
 
     public async Task StartPickUpAsync(Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
     {
+        var trip = await tripRepository.GetAsync(bay, cancellationToken);
+        if (trip == null)
+        {
+            logger.LogError("Bay \n({@Bay})\n did not have a Trip assigned to start Pick-Up Work for.",
+                bay);
+            
+            return;
+        }
+        
+        var pickUpLoad = await loadRepository.GetPickUpAsync(trip, cancellationToken);
+        if (pickUpLoad == null)
+        {
+            logger.LogInformation("Trip \n({@Trip})\n did not have a Load assigned to Pick-Up.",
+                trip);
+            
+            logger.LogInformation("Pick-Up Work could not be started for this Trip \n({@Trip})\n and is therefore completed.",
+                trip);
+        
+            logger.LogDebug("Alerting Pick-Up Work has completed for this Bay \n({@Bay})",
+                bay);
+            await bayService.AlertPickedUpAsync(bay, cancellationToken);
+            
+            logger.LogDebug("Alerting Free for this BayStaff \n({@BayStaff})\n to this Bay \n({@Bay})",
+                bayStaff,
+                bay);
+            await AlertFreeAsync(bayStaff, bay, cancellationToken);
+
+            return;
+        }
+        
         logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
             WorkType.PickUp,
             bayStaff,

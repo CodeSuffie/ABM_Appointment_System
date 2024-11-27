@@ -16,10 +16,10 @@ public sealed class TruckCompanyStepper(
 {
     public async Task StepAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        logger.LogDebug("Adding new Trips for TruckCompany \n({@TruckCompany})",
-            truckCompany);
+        // logger.LogDebug("Adding new Trips for TruckCompany \n({@TruckCompany})",
+            // truckCompany);
         
-        await tripService.AddNewObjectsAsync(truckCompany, cancellationToken);
+        // await tripService.AddNewObjectsAsync(truckCompany, cancellationToken);
     }
 
     public async Task StepAsync(CancellationToken cancellationToken)
