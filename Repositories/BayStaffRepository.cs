@@ -19,4 +19,12 @@ public sealed class BayStaffRepository(ModelDbContext context)
         
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task AddAsync(BayStaff bayStaff, BayShift bayShift, CancellationToken cancellationToken)
+    {
+        bayStaff.Shifts.Add(bayShift);
+        bayShift.BayStaff = bayStaff;
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
 }

@@ -11,9 +11,14 @@ public sealed class ModelStepper(
 {
     public async Task StepAsync(CancellationToken cancellationToken)
     {
+        if (modelState.ModelTime > modelState.ModelConfig.ModelTime)
+        {
+            return;
+        }
+        
         await loadService.AddNewLoadsAsync(modelState.ModelConfig.LoadsPerStep, cancellationToken);
         
-        logger.LogDebug("Handling this Step ({Step})...",
+        logger.LogDebug("Handling this Step \n({Step})",
             modelState.ModelTime);
         
         foreach (var stepperService in stepperServices)
@@ -21,7 +26,7 @@ public sealed class ModelStepper(
             await stepperService.StepAsync(cancellationToken);
         }
         
-        logger.LogDebug("Completed handling this Step ({Step}).",
+        logger.LogDebug("Completed handling this Step \n({Step})",
             modelState.ModelTime);
 
         await modelState.StepAsync(cancellationToken);

@@ -10,7 +10,7 @@ public sealed class WorkRepository(
     public async Task<Work?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
         var work = await context.Works
-            .FirstOrDefaultAsync(x => x.TripId == trip.Id, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == trip.WorkId, cancellationToken);
         
         return work;
     }

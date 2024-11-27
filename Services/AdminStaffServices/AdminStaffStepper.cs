@@ -22,25 +22,25 @@ public sealed class AdminStaffStepper(
         
         if (work == null)
         {
-            logger.LogInformation("AdminStaff ({@AdminStaff}) does not have active Work assigned in this Step ({Step}).",
+            logger.LogInformation("AdminStaff \n({@AdminStaff})\n does not have active Work assigned in this Step \n({Step})",
                              adminStaff,
                              modelState.ModelTime);
             
             var shift = await adminShiftService.GetCurrentAsync(adminStaff, cancellationToken);
             if (shift == null)
             {
-                logger.LogInformation("AdminStaff ({@AdminStaff}) is not working in this Step ({Step}).",
+                logger.LogInformation("AdminStaff \n({@AdminStaff})\n is not working in this Step \n({Step})",
                     adminStaff,
                     modelState.ModelTime);
                 
-                logger.LogDebug("AdminStaff ({@AdminStaff}) will remain idle in this Step ({Step})...",
+                logger.LogDebug("AdminStaff \n({@AdminStaff})\n will remain idle in this Step \n({Step})",
                     adminStaff,
                     modelState.ModelTime);
                 
                 return;
             }
             
-            logger.LogDebug("Alerting Free for this AdminStaff ({@AdminStaff}) in this Step ({Step}).",
+            logger.LogDebug("Alerting Free for this AdminStaff \n({@AdminStaff})\n in this Step \n({Step})",
                 adminStaff,
                 modelState.ModelTime);
             await adminStaffService.AlertFreeAsync(adminStaff, cancellationToken);
@@ -50,12 +50,12 @@ public sealed class AdminStaffStepper(
         
         if (workService.IsWorkCompleted(work))
         {
-            logger.LogInformation("AdminStaff ({@AdminStaff}) just completed assigned Work ({@Work}) in this Step ({Step}).",
+            logger.LogInformation("AdminStaff \n({@AdminStaff})\n just completed assigned Work \n({@Work})\n in this Step \n({Step})",
                 adminStaff,
                 work,
                 modelState.ModelTime);
             
-            logger.LogDebug("Alerting Work Completed for this AdminStaff ({@AdminStaff}) in this Step ({Step}).",
+            logger.LogDebug("Alerting Work Completed for this AdminStaff \n({@AdminStaff})\n in this Step \n({Step})",
                 adminStaff,
                 modelState.ModelTime);
             await adminStaffService.AlertWorkCompleteAsync(adminStaff, cancellationToken);
@@ -70,13 +70,13 @@ public sealed class AdminStaffStepper(
         
         await foreach (var adminStaff in adminStaffs)
         {
-            logger.LogDebug("Handling Step ({Step}) for this AdminStaff ({@AdminStaff})...",
+            logger.LogDebug("Handling Step \n({Step})\n for this AdminStaff \n({@AdminStaff})",
                 modelState.ModelTime,
                 adminStaff);
             
             await StepAsync(adminStaff, cancellationToken);
             
-            logger.LogDebug("Completed handling Step ({Step}) for this AdminStaff ({@AdminStaff}).",
+            logger.LogDebug("Completed handling Step \n({Step})\n for this AdminStaff \n({@AdminStaff})",
                 modelState.ModelTime,
                 adminStaff);
         }

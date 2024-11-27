@@ -15,7 +15,7 @@ public sealed class WorkService(
     {
         if (work.Duration == null)
         {
-            logger.LogError("Work ({@Work}) does not have a Duration",
+            logger.LogError("Work \n({@Work})\n does not have a Duration",
                 work);
 
             return false;
@@ -37,14 +37,14 @@ public sealed class WorkService(
 
         if (workType == null)
         {
-            logger.LogError("Bay ({@Bay}) with BayStatus {@BayStatus} does not have a valid BayStatus to adapt the workload for.",
+            logger.LogError("Bay \n({@Bay})\n with BayStatus {@BayStatus} does not have a valid BayStatus to adapt the workload for.",
                 bay,
                 bay.BayStatus);
             
             return;
         }
         
-        logger.LogDebug("Adapting workload for Work at this Bay ({@Bay}) with WorkType {@WorkType}...",
+        logger.LogDebug("Adapting workload for Work at this Bay \n({@Bay})\n with WorkType {@WorkType}...",
             bay,
             workType);
 
@@ -65,7 +65,7 @@ public sealed class WorkService(
         
         var newDuration = (totalDuration / count);
         
-        logger.LogInformation("Total Duration for Work at this Bay ({@Bay}) with WorkType {@WorkType} is " +
+        logger.LogInformation("Total Duration for Work at this Bay \n({@Bay})\n with WorkType {@WorkType} is " +
                               "{TimeSpan} spread over {Count} works. The new duration will be set to {TimeSpan}",
             bay,
             workType,
@@ -75,7 +75,7 @@ public sealed class WorkService(
 
         await foreach (var work in works)
         {
-            logger.LogDebug("Setting Duration of this Work ({@Work}) for this Bay ({@Bay}) to {TimeSpan}...",
+            logger.LogDebug("Setting Duration of this Work \n({@Work})\n for this Bay \n({@Bay})\n to {TimeSpan}...",
                 work,
                 bay,
                 newDuration);

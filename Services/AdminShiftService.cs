@@ -10,6 +10,7 @@ public sealed class AdminShiftService(
     ILogger<AdminShiftService> logger,
     HubRepository hubRepository,
     OperatingHourRepository operatingHourRepository,
+    AdminStaffRepository adminStaffRepository,
     AdminShiftRepository adminShiftRepository,
     ModelState modelState) 
 {
@@ -19,8 +20,8 @@ public sealed class AdminShiftService(
 
         if (maxShiftStart < TimeSpan.Zero)
         {
-            logger.LogError("AdminStaff ({@AdminStaff}) its ShiftLength ({TimeSpan}) " +
-                            "is longer than this OperatingHour ({@OperatingHour}) its Length ({TimeSpan}).",
+            logger.LogError("AdminStaff \n({@AdminStaff})\n its ShiftLength \n({TimeSpan})\n " +
+                            "is longer than this OperatingHour \n({@OperatingHour})\n its Length \n({TimeSpan})",
                 adminStaff,
                 adminStaff.AverageShiftLength,
                 operatingHour,
@@ -43,7 +44,7 @@ public sealed class AdminShiftService(
         
         if (hub != null) return adminStaff.WorkChance / hub.OperatingChance;
         
-        logger.LogError("AdminStaff ({@AdminStaff}) did not have a Hub assigned to get the OperatingHourChance for.",
+        logger.LogError("AdminStaff \n({@AdminStaff})\n did not have a Hub assigned to get the OperatingHourChance for.",
             adminStaff);
 
         return null;
@@ -55,7 +56,7 @@ public sealed class AdminShiftService(
         if (startTime == null)
         {
             logger.LogError("No start time could be assigned to the new AdminShift for this " +
-                            "AdminStaff ({@AdminStaff}) during this OperatingHour ({@OperatingHour}).",
+                            "AdminStaff \n({@AdminStaff})\n during this OperatingHour \n({@OperatingHour})",
                 adminStaff,
                 operatingHour);
 
@@ -76,7 +77,7 @@ public sealed class AdminShiftService(
         var hub = await hubRepository.GetAsync(adminStaff, cancellationToken);
         if (hub == null)
         {
-            logger.LogError("AdminStaff ({@AdminStaff}) did not have a Hub assigned to create AdminShifts for.",
+            logger.LogError("AdminStaff \n({@AdminStaff})\n did not have a Hub assigned to create AdminShifts for.",
                 adminStaff);
 
             return;
@@ -90,7 +91,7 @@ public sealed class AdminShiftService(
         {
             if (operatingHour.Duration == null)
             {
-                logger.LogError("OperatingHour ({@OperatingHour}) does not have a Duration.",
+                logger.LogError("OperatingHour \n({@OperatingHour})\n does not have a Duration.",
                     operatingHour);
                 
                 continue;
@@ -100,7 +101,7 @@ public sealed class AdminShiftService(
             if (workChance == null)
             {
                 logger.LogError("WorkChance could not be calculated for this AdminStaff " +
-                                "({@AdminStaff}) during this OperatingHour ({@OperatingHour}).",
+                                "\n({@AdminStaff})\n during this OperatingHour \n({@OperatingHour})",
                     adminStaff,
                     operatingHour);
 
@@ -109,8 +110,8 @@ public sealed class AdminShiftService(
             
             if (modelState.Random() > workChance)
             {
-                logger.LogInformation("AdminStaff ({@AdminStaff}) will not have an AdminShift during " +
-                                      "this OperatingHour ({@OperatingHour}).",
+                logger.LogInformation("AdminStaff \n({@AdminStaff})\n will not have an AdminShift during " +
+                                      "this OperatingHour \n({@OperatingHour})",
                     adminStaff,
                     operatingHour);
                 
@@ -121,16 +122,16 @@ public sealed class AdminShiftService(
             if (adminShift == null)
             {
                 logger.LogError("No new AdminShift could be created for this AdminStaff " +
-                                "({@AdminStaff}) during this OperatingHour ({@OperatingHour}).",
+                                "\n({@AdminStaff})\n during this OperatingHour \n({@OperatingHour})",
                     adminStaff,
                     operatingHour);
 
                 continue;
             }
-            
-            adminStaff.Shifts.Add(adminShift);
-            logger.LogInformation("New AdminShift created for this AdminStaff ({@AdminStaff}) during this " +
-                                  "OperatingHour ({@OperatingHour}): AdminShift={@AdminShift}",
+
+            await adminStaffRepository.AddAsync(adminStaff, adminShift, cancellationToken);
+            logger.LogInformation("New AdminShift created for this AdminStaff \n({@AdminStaff})\n during this " +
+                                  "OperatingHour \n({@OperatingHour})\n: AdminShift={@AdminShift}",
                 adminStaff,
                 operatingHour,
                 adminShift);
@@ -141,7 +142,7 @@ public sealed class AdminShiftService(
     {
         if (adminShift.Duration == null)
         {
-            logger.LogError("AdminShift ({@AdminShift}) does not have a Duration",
+            logger.LogError("AdminShift \n({@AdminShift})\n does not have a Duration",
                 adminShift);
 
             return false;
@@ -162,7 +163,7 @@ public sealed class AdminShiftService(
         {
             if (!IsCurrent(shift)) continue;
             
-            logger.LogInformation("AdminShift ({@AdminShift}) is currently active.",
+            logger.LogInformation("AdminShift \n({@AdminShift})\n is currently active.",
                 shift);
                 
             return shift;

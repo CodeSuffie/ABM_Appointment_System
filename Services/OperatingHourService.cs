@@ -1,11 +1,13 @@
 using Database.Models;
 using Microsoft.Extensions.Logging;
+using Repositories;
 using Services.ModelServices;
 
 namespace Services;
 
 public sealed class OperatingHourService(
     ILogger<OperatingHourService> logger,
+    HubRepository hubRepository,
     ModelState modelState)
 {
     private TimeSpan? GetStartTime(Hub hub, TimeSpan day)
@@ -15,7 +17,7 @@ public sealed class OperatingHourService(
 
         if (maxShiftStart < TimeSpan.Zero)
         {
-            logger.LogError("Hub ({@Hub}) its OperatingHourLength ({TimeSpan}) is longer than a full day.",
+            logger.LogError("Hub \n({@Hub})\n its OperatingHourLength \n({TimeSpan})\n is longer than a full day.",
                 hub,
                 hub.AverageOperatingHourLength);
 
@@ -36,7 +38,7 @@ public sealed class OperatingHourService(
         var startTime = GetStartTime(hub, day);
         if (startTime == null)
         {
-            logger.LogError("No start time could be assigned to the new OperatingHour for this Hub ({@Hub}).",
+            logger.LogError("No start time could be assigned to the new OperatingHour for this Hub \n({@Hub})",
                 hub);
 
             return null;
@@ -51,15 +53,15 @@ public sealed class OperatingHourService(
         return operatingHour;
     }
 
-    public void GetNewObjects(Hub hub)
+    public async Task GetNewObjectsAsync(Hub hub, CancellationToken cancellationToken)
     {
-        for (var i = 0; i < modelState.ModelTime.Days; i++)
+        for (var i = 0; i < modelState.ModelConfig.ModelTime.Days; i++)
         {
             var day = TimeSpan.FromDays(i);
             
             if (modelState.Random() > hub.OperatingChance)
             {
-                logger.LogInformation("Hub ({@Hub}) will not have an OperatingHour during this day ({TimeSpan}).",
+                logger.LogInformation("Hub \n({@Hub})\n will not have an OperatingHour during this day \n({TimeSpan})",
                     hub,
                     day);
                 
@@ -69,15 +71,15 @@ public sealed class OperatingHourService(
             var operatingHour = GetNewObject(hub, day);
             if (operatingHour == null)
             {
-                logger.LogError("No new OperatingHour could be created for this Hub ({@Hub}) during this day ({TimeSpan})",
+                logger.LogError("No new OperatingHour could be created for this Hub \n({@Hub})\n during this day \n({TimeSpan})\n",
                     hub,
                     day);
 
                 continue;
             }
-            
-            hub.OperatingHours.Add(operatingHour);
-            logger.LogInformation("New OperatingHour created for this Hub ({@Hub}) during this day ({TimeSpan}): OperatingHour={@OperatingHour}",
+
+            await hubRepository.AddAsync(hub, operatingHour, cancellationToken);
+            logger.LogInformation("New OperatingHour created for this Hub \n({@Hub})\n during this day \n({TimeSpan})\n: OperatingHour={@OperatingHour}",
                 hub,
                 day,
                 operatingHour);

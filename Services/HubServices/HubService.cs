@@ -25,13 +25,13 @@ public sealed class HubService(
 
         await hubRepository.AddAsync(hub, cancellationToken);
         
-        logger.LogDebug("Setting location for this Hub ({@Hub})...",
+        logger.LogDebug("Setting location for this Hub \n({@Hub})",
             hub);
         await locationService.InitializeObjectAsync(hub, cancellationToken);
         
-        logger.LogDebug("Setting OperatingHours for this Hub ({@Hub})...",
+        logger.LogDebug("Setting OperatingHours for this Hub \n({@Hub})",
             hub);
-        operatingHourService.GetNewObjects(hub);
+        await operatingHourService.GetNewObjectsAsync(hub, cancellationToken);
 
         return hub;
     }

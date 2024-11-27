@@ -25,7 +25,7 @@ public sealed class TruckService(
             return null;
         }
         
-        logger.LogDebug("TruckCompany ({@TruckCompany}) was selected for the new Truck.",
+        logger.LogDebug("TruckCompany \n({@TruckCompany})\n was selected for the new Truck.",
             truckCompany);
         
         var truck = new Truck
@@ -45,7 +45,7 @@ public sealed class TruckService(
         var truckCompany = await truckCompanyRepository.GetAsync(truck, cancellationToken);
         if (truckCompany == null)
         {
-            logger.LogError("Truck ({@Truck}) did not have a TruckCompany assigned to alert free for.",
+            logger.LogError("Truck \n({@Truck})\n did not have a TruckCompany assigned to alert free for.",
                 truck);
 
             return;
@@ -54,17 +54,17 @@ public sealed class TruckService(
         var trip = await tripService.GetNextAsync(truckCompany, cancellationToken);
         if (trip == null)
         {
-            logger.LogInformation("TruckCompany ({@TruckCompany}) did not have a Trip for this Truck ({@Truck}) to start.",
+            logger.LogInformation("TruckCompany \n({@TruckCompany})\n did not have a Trip for this Truck \n({@Truck})\n to start.",
                 truckCompany,
                 truck);
             
-            logger.LogDebug("Truck ({@Truck}) will remain idle...",
+            logger.LogDebug("Truck \n({@Truck})\n will remain idle...",
                 truck);
             
             return;
         }
         
-        logger.LogDebug("Alerting Free for this Truck ({@Truck}) to selected Trip ({@Trip})...",
+        logger.LogDebug("Alerting Free for this Truck \n({@Truck})\n to selected Trip \n({@Trip})",
             truck,
             trip);
         await tripService.AlertFreeAsync(trip, truck, cancellationToken);

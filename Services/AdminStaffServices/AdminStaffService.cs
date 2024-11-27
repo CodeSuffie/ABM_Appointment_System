@@ -28,7 +28,7 @@ public sealed class AdminStaffService(
             return null;
         }
         
-        logger.LogDebug("Hub ({@Hub}) was selected for the new AdminStaff.",
+        logger.LogDebug("Hub \n({@Hub})\n was selected for the new AdminStaff.",
             hub);
         
         var adminStaff = new AdminStaff
@@ -40,7 +40,7 @@ public sealed class AdminStaffService(
 
         await adminStaffRepository.AddAsync(adminStaff, cancellationToken);
         
-        logger.LogDebug("Setting AdminShifts for this AdminStaff ({@AdminStaff})...",
+        logger.LogDebug("Setting AdminShifts for this AdminStaff \n({@AdminStaff})",
             adminStaff);
         await adminShiftService.GetNewObjectsAsync(adminStaff, cancellationToken);
 
@@ -52,13 +52,13 @@ public sealed class AdminStaffService(
         var trip = await tripRepository.GetAsync(adminStaff, cancellationToken);
         if (trip == null)
         {
-            logger.LogError("AdminStaff ({@AdminStaff}) did not have a Trip assigned to alert completed Work for.",
+            logger.LogError("AdminStaff \n({@AdminStaff})\n did not have a Trip assigned to alert completed Work for.",
                 adminStaff);
 
             return;
         }
         
-        logger.LogDebug("Alerting Check-In Completed for this AdminStaff ({@AdminStaff}) to assigned Trip ({@Trip})...",
+        logger.LogDebug("Alerting Check-In Completed for this AdminStaff \n({@AdminStaff})\n to assigned Trip \n({@Trip})",
             adminStaff,
             trip);
         await tripService.AlertCheckInCompleteAsync(trip, cancellationToken);
@@ -66,7 +66,7 @@ public sealed class AdminStaffService(
         var work = await workRepository.GetAsync(adminStaff, cancellationToken);
         if (work == null) return;
         
-        logger.LogDebug("Removing completed Work ({@Work}) for this AdminStaff ({@AdminStaff})...",
+        logger.LogDebug("Removing completed Work \n({@Work})\n for this AdminStaff \n({@AdminStaff})",
             work,
             adminStaff);
         await workRepository.RemoveAsync(work, cancellationToken);
@@ -77,7 +77,7 @@ public sealed class AdminStaffService(
         var hub = await hubRepository.GetAsync(adminStaff, cancellationToken);
         if (hub == null)
         {
-            logger.LogError("AdminStaff ({@AdminStaff}) did not have a Hub assigned to alert free for.",
+            logger.LogError("AdminStaff \n({@AdminStaff})\n did not have a Hub assigned to alert free for.",
                 adminStaff);
 
             return;
@@ -86,17 +86,17 @@ public sealed class AdminStaffService(
         var trip = await tripService.GetNextAsync(hub, WorkType.WaitCheckIn, cancellationToken);
         if (trip == null)
         {
-            logger.LogInformation("Hub ({@Hub}) did not have a Trip for this AdminStaff ({@AdminStaff}) to assign Check-In Work for.",
+            logger.LogInformation("Hub \n({@Hub})\n did not have a Trip for this AdminStaff \n({@AdminStaff})\n to assign Check-In Work for.",
                 hub,
                 adminStaff);
             
-            logger.LogDebug("AdminStaff ({@AdminStaff}) will remain idle...",
+            logger.LogDebug("AdminStaff \n({@AdminStaff})\n will remain idle...",
                 adminStaff);
             
             return;
         }
 
-        logger.LogDebug("Alerting Free for this AdminStaff ({@AdminStaff}) to selected Trip ({@Trip})...",
+        logger.LogDebug("Alerting Free for this AdminStaff \n({@AdminStaff})\n to selected Trip \n({@Trip})",
             adminStaff,
             trip);
         await tripService.AlertFreeAsync(trip, adminStaff, cancellationToken);

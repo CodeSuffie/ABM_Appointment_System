@@ -76,7 +76,7 @@ public class LoadService(
 
         if (dropOffs.Count <= 0)
         {
-            logger.LogInformation("TruckCompany ({@TruckCompany}) did not have an unclaimed Drop-Off Load assigned.",
+            logger.LogInformation("TruckCompany \n({@TruckCompany})\n did not have an unclaimed Drop-Off Load assigned.",
                 truckCompany);
 
             return null;
@@ -93,7 +93,7 @@ public class LoadService(
 
         if (pickUps.Count <= 0)
         {
-            logger.LogInformation("TruckCompany ({@TruckCompany}) did not have an unclaimed Pick-Up Load assigned.",
+            logger.LogInformation("TruckCompany \n({@TruckCompany})\n did not have an unclaimed Pick-Up Load assigned.",
                 truckCompany);
 
             return null;
@@ -110,7 +110,7 @@ public class LoadService(
 
         if (pickUps.Count <= 0)
         {
-            logger.LogInformation("TruckCompany ({@TruckCompany}) did not have an unclaimed Pick-Up Load assigned for Hub ({@Hub}).",
+            logger.LogInformation("TruckCompany \n({@TruckCompany})\n did not have an unclaimed Pick-Up Load assigned for Hub \n({@Hub})",
                 truckCompany,
                 hub);
 

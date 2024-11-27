@@ -16,7 +16,7 @@ public sealed class TruckCompanyStepper(
 {
     public async Task StepAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        logger.LogDebug("Adding new Trips for TruckCompany ({@TruckCompany})...",
+        logger.LogDebug("Adding new Trips for TruckCompany \n({@TruckCompany})",
             truckCompany);
         
         await tripService.AddNewObjectsAsync(truckCompany, cancellationToken);
@@ -30,13 +30,13 @@ public sealed class TruckCompanyStepper(
         
         await foreach (var truckCompany in truckCompanies)
         {
-            logger.LogDebug("Handling Step ({Step}) for TruckCompany ({@TruckCompany})...",
+            logger.LogDebug("Handling Step \n({Step})\n for TruckCompany \n({@TruckCompany})",
                 modelState.ModelTime,
                 truckCompany);
             
             await StepAsync(truckCompany, cancellationToken);
             
-            logger.LogDebug("Completed handling Step ({Step}) for TruckCompany ({@TruckCompany}).",
+            logger.LogDebug("Completed handling Step \n({Step})\n for TruckCompany \n({@TruckCompany})",
                 modelState.ModelTime,
                 truckCompany);
         }

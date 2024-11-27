@@ -20,22 +20,22 @@ public sealed class ParkingSpotStepper(
 
         if (trip != null)
         {
-            logger.LogDebug("ParkingSpot ({@ParkingSpot}) has an active Trip assigned in this Step ({Step})...",
+            logger.LogDebug("ParkingSpot \n({@ParkingSpot})\n has an active Trip assigned in this Step \n({Step})",
                 parkingSpot,
                 modelState.ModelTime);
 
-            logger.LogDebug("ParkingSpot ({@ParkingSpot}) will remain idle in this Step ({Step})...",
+            logger.LogDebug("ParkingSpot \n({@ParkingSpot})\n will remain idle in this Step \n({Step})",
                 parkingSpot,
                 modelState.ModelTime);
 
             return;
         }
 
-        logger.LogInformation("ParkingSpot ({@ParkingSpot}) has no active Trip assigned in this Step ({Step}).",
+        logger.LogInformation("ParkingSpot \n({@ParkingSpot})\n has no active Trip assigned in this Step \n({Step})",
             parkingSpot,
             modelState.ModelTime);
         
-        logger.LogDebug("Alerting Free for this ParkingSpot ({@ParkingSpot}) in this Step ({Step}).",
+        logger.LogDebug("Alerting Free for this ParkingSpot \n({@ParkingSpot})\n in this Step \n({Step})",
             parkingSpot,
             modelState.ModelTime);
         await parkingSpotService.AlertFreeAsync(parkingSpot, cancellationToken);
@@ -49,13 +49,13 @@ public sealed class ParkingSpotStepper(
         
         await foreach (var parkingSpot in parkingSpots)
         {
-            logger.LogDebug("Handling Step ({Step}) for this ParkingSpot ({@ParkingSpot})...",
+            logger.LogDebug("Handling Step \n({Step})\n for this ParkingSpot \n({@ParkingSpot})",
                 modelState.ModelTime,
                 parkingSpot);
             
             await StepAsync(parkingSpot, cancellationToken);
             
-            logger.LogDebug("Completed handling Step ({Step}) for this ParkingSpot ({@ParkingSpot}).",
+            logger.LogDebug("Completed handling Step \n({Step})\n for this ParkingSpot \n({@ParkingSpot})",
                 modelState.ModelTime,
                 parkingSpot);
         }

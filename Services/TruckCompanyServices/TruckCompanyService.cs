@@ -22,7 +22,7 @@ public sealed class TruckCompanyService(
 
         await truckCompanyRepository.AddAsync(truckCompany, cancellationToken);
         
-        logger.LogDebug("Setting location for this TruckCompany ({@TruckCompany})...",
+        logger.LogDebug("Setting location for this TruckCompany \n({@TruckCompany})",
             truckCompany);
         await locationService.InitializeObjectAsync(truckCompany, cancellationToken);
         

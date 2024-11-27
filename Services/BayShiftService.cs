@@ -12,6 +12,7 @@ public sealed class BayShiftService(
     HubRepository hubRepository,
     OperatingHourRepository operatingHourRepository,
     BayService bayService,
+    BayStaffRepository bayStaffRepository,
     BayShiftRepository bayShiftRepository,
     ModelState modelState)
 {
@@ -22,8 +23,8 @@ public sealed class BayShiftService(
 
         if (maxShiftStart < TimeSpan.Zero)
         {
-            logger.LogError("BayStaff ({@BayStaff}) its ShiftLength ({TimeSpan}) " +
-                            "is longer than this OperatingHour ({@OperatingHour}) its Length ({TimeSpan}).",
+            logger.LogError("BayStaff \n({@BayStaff})\n its ShiftLength \n({TimeSpan})\n " +
+                            "is longer than this OperatingHour \n({@OperatingHour})\n its Length \n({TimeSpan})",
                 bayStaff,
                 bayStaff.AverageShiftLength,
                 operatingHour,
@@ -46,7 +47,7 @@ public sealed class BayShiftService(
         
         if (hub != null) return bayStaff.WorkChance / hub.OperatingChance;
         
-        logger.LogError("BayStaff ({@BayStaff}) did not have a Hub assigned to get the OperatingHourChance for.",
+        logger.LogError("BayStaff \n({@BayStaff})\n did not have a Hub assigned to get the OperatingHourChance for.",
             bayStaff);
 
         return null;
@@ -61,8 +62,8 @@ public sealed class BayShiftService(
         var bay = await bayService.SelectBayAsync(hub, cancellationToken);
         if (bay == null)
         {
-            logger.LogError("The Hub ({@Hub}) did not have a Bay to assign " +
-                            "to the new BayShift for this BayStaff ({@AdminStaff}).",
+            logger.LogError("The Hub \n({@Hub})\n did not have a Bay to assign " +
+                            "to the new BayShift for this BayStaff \n({@AdminStaff})",
                 hub,
                 bayStaff);
 
@@ -73,7 +74,7 @@ public sealed class BayShiftService(
         if (startTime == null)
         {
             logger.LogError("No start time could be assigned to the new BayShift for this " +
-                            "BayStaff ({@BayStaff}) during this OperatingHour ({@OperatingHour}).",
+                            "BayStaff \n({@BayStaff})\n during this OperatingHour \n({@OperatingHour})",
                 bayStaff,
                 operatingHour);
 
@@ -95,7 +96,7 @@ public sealed class BayShiftService(
         var hub = await hubRepository.GetAsync(bayStaff, cancellationToken);
         if (hub == null)
         {
-            logger.LogError("BayStaff ({@BayStaff}) did not have a Hub assigned to create BayShifts for.",
+            logger.LogError("BayStaff \n({@BayStaff})\n did not have a Hub assigned to create BayShifts for.",
                 bayStaff);
 
             return;
@@ -109,7 +110,7 @@ public sealed class BayShiftService(
         {
             if (operatingHour.Duration == null)
             {
-                logger.LogError("OperatingHour ({@OperatingHour}) does not have a Duration.",
+                logger.LogError("OperatingHour \n({@OperatingHour})\n does not have a Duration.",
                     operatingHour);
                 continue;
             }
@@ -118,7 +119,7 @@ public sealed class BayShiftService(
             if (workChance == null)
             {
                 logger.LogError("WorkChance could not be calculated for this BayStaff " +
-                                "({@BayStaff}) during this OperatingHour ({@OperatingHour}).",
+                                "\n({@BayStaff})\n during this OperatingHour \n({@OperatingHour})",
                     bayStaff,
                     operatingHour);
 
@@ -128,8 +129,8 @@ public sealed class BayShiftService(
             
             if (modelState.Random() > workChance)
             {
-                logger.LogInformation("BayStaff ({@BayStaff}) will not have a BayShift during " +
-                                      "this OperatingHour ({@OperatingHour}).",
+                logger.LogInformation("BayStaff \n({@BayStaff})\n will not have a BayShift during " +
+                                      "this OperatingHour \n({@OperatingHour})",
                     bayStaff,
                     operatingHour);
                 
@@ -140,16 +141,16 @@ public sealed class BayShiftService(
             if (bayShift == null)
             {
                 logger.LogError("No new BayShift could be created for this BayStaff " +
-                                "({@BayStaff}) during this OperatingHour ({@OperatingHour})",
+                                "\n({@BayStaff})\n during this OperatingHour \n({@OperatingHour})\n",
                     bayStaff,
                     operatingHour);
 
                 continue;
             }
-            
-            bayStaff.Shifts.Add(bayShift);
-            logger.LogInformation("New BayShift created for this BayStaff ({@BayStaff}) during this " +
-                                  "OperatingHour ({@OperatingHour}): BayShift={@BayShift}",
+
+            await bayStaffRepository.AddAsync(bayStaff, bayShift, cancellationToken);
+            logger.LogInformation("New BayShift created for this BayStaff \n({@BayStaff})\n during this " +
+                                  "OperatingHour \n({@OperatingHour})\n: BayShift={@BayShift}",
                 bayStaff,
                 operatingHour,
                 bayShift);
@@ -160,7 +161,7 @@ public sealed class BayShiftService(
     {
         if (bayShift.Duration == null)
         {
-            logger.LogError("BayShift ({@BayShift}) does not have a Duration",
+            logger.LogError("BayShift \n({@BayShift})\n does not have a Duration",
                 bayShift);
 
             return false;
@@ -181,7 +182,7 @@ public sealed class BayShiftService(
         {
             if (!IsCurrent(shift)) continue;
             
-            logger.LogInformation("BayShift ({@BayShift}) is currently active.",
+            logger.LogInformation("BayShift \n({@BayShift})\n is currently active.",
                 shift);
                 
             return shift;

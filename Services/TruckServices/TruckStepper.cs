@@ -19,22 +19,22 @@ public sealed class TruckStepper(
         var trip = await tripRepository.GetAsync(truck, cancellationToken);
         if (trip != null)
         {
-            logger.LogDebug("Truck ({@Truck}) has an active Trip assigned in this Step ({Step})...",
+            logger.LogDebug("Truck \n({@Truck})\n has an active Trip assigned in this Step \n({Step})",
                 truck,
                 modelState.ModelTime);
             
-            logger.LogDebug("Truck ({@Truck}) will remain idle in this Step ({Step})...",
+            logger.LogDebug("Truck \n({@Truck})\n will remain idle in this Step \n({Step})",
                 truck,
                 modelState.ModelTime);
             
             return;
         }
         
-        logger.LogInformation("Truck ({@Truck}) has no active Trip assigned in this Step ({Step}).",
+        logger.LogInformation("Truck \n({@Truck})\n has no active Trip assigned in this Step \n({Step})",
             truck,
             modelState.ModelTime);
 
-        logger.LogDebug("Alerting Free for this Truck ({@Truck}) in this Step ({Step}).",
+        logger.LogDebug("Alerting Free for this Truck \n({@Truck})\n in this Step \n({Step})",
             truck,
             modelState.ModelTime);
         await truckService.AlertFreeAsync(truck, cancellationToken);
@@ -48,13 +48,13 @@ public sealed class TruckStepper(
         
         await foreach (var truck in trucks)
         {
-            logger.LogDebug("Handling Step ({Step}) for Truck ({@Truck})...",
+            logger.LogDebug("Handling Step \n({Step})\n for Truck \n({@Truck})",
                 modelState.ModelTime,
                 truck);
             
             await StepAsync(truck, cancellationToken);
             
-            logger.LogDebug("Completed handling Step ({Step}) for Truck ({@Truck}).",
+            logger.LogDebug("Completed handling Step \n({Step})\n for Truck \n({@Truck})",
                 modelState.ModelTime,
                 truck);
         }

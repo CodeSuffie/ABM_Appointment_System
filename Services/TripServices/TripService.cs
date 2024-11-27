@@ -40,11 +40,11 @@ public sealed class TripService(
                 var dropOffHub = await hubRepository.GetAsync(dropOff, cancellationToken);
                 if (dropOffHub == null)
                 {
-                    logger.LogError("Drop-Off Load ({@Load}) for this TruckCompany ({@TruckCompany}) did not have a Hub assigned.",
+                    logger.LogError("Drop-Off Load \n({@Load})\n for this TruckCompany \n({@TruckCompany})\n did not have a Hub assigned.",
                         dropOff,
                         truckCompany);
     
-                    logger.LogDebug("Removing invalid Drop-Off Load ({@Load}) for this TruckCompany ({@TruckCompany}).",
+                    logger.LogDebug("Removing invalid Drop-Off Load \n({@Load})\n for this TruckCompany \n({@TruckCompany})",
                         dropOff,
                         truckCompany);
                     await loadRepository.RemoveAsync(dropOff, cancellationToken);
@@ -72,7 +72,7 @@ public sealed class TripService(
 
             if (trip != null)
             {
-                logger.LogDebug("Setting TruckCompany ({@TruckCompany}) location to this Trip ({@Trip})...",
+                logger.LogDebug("Setting TruckCompany \n({@TruckCompany})\n location to this Trip \n({@Trip})",
                                 truckCompany,
                                 trip);
                             await locationService.SetAsync(trip, truckCompany, cancellationToken);
@@ -87,14 +87,14 @@ public sealed class TripService(
         var trip = await GetNewObjectAsync(truckCompany, cancellationToken);
         while (trip != null)
         {
-            logger.LogInformation("New Trip created for this TruckCompany ({@TruckCOmpany}): Trip={@Trip}",
+            logger.LogInformation("New Trip created for this TruckCompany \n({@TruckCOmpany})\n: Trip={@Trip}",
                 truckCompany,
                 trip);
             
             trip = await GetNewObjectAsync(truckCompany, cancellationToken);
         }
         
-        logger.LogInformation("TruckCompany ({@TruckCompany}) could not construct any more new Trips...",
+        logger.LogInformation("TruckCompany \n({@TruckCompany})\n could not construct any more new Trips...",
             truckCompany);
     }
     
@@ -106,7 +106,7 @@ public sealed class TripService(
 
         if (trips.Count <= 0)
         {
-            logger.LogInformation("TruckCompany ({@TruckCompany}) did not have a Trip assigned.",
+            logger.LogInformation("TruckCompany \n({@TruckCompany})\n did not have a Trip assigned.",
                 truckCompany);
 
             return null;
@@ -131,14 +131,14 @@ public sealed class TripService(
             if (nextTrip != null && (work == null ||
                                      (work.StartTime > earliestStart))) continue;
             
-            logger.LogDebug("Trip ({@Trip}) is now has the earliest StartTime ({StartTime}) for its Work ({@Work}) with WorkType ({WorkType}).",
+            logger.LogDebug("Trip \n({@Trip})\n is now has the earliest StartTime \n({StartTime})\n for its Work \n({@Work})\n with WorkType \n({WorkType})",
                 trip,
                 earliestStart,
                 work,
                 workType);
         }
         
-        logger.LogInformation("Trip ({@Trip}) has the earliest StartTime ({StartTime}) for its Work with WorkType ({WorkType}).",
+        logger.LogInformation("Trip \n({@Trip})\n has the earliest StartTime \n({StartTime})\n for its Work with WorkType \n({WorkType})",
             nextTrip,
             earliestStart,
             workType);
@@ -150,8 +150,8 @@ public sealed class TripService(
         var work = await workRepository.GetAsync(trip, cancellationToken);
         if (work != null)
         {
-            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned " +
-                            "and can therefore not claim this Truck ({@Truck}).",
+            logger.LogError("Trip \n({@Trip})\n has active Work \n({@Work})\n assigned " +
+                            "and can therefore not claim this Truck \n({@Truck})",
                 trip,
                 work,
                 truck);
@@ -159,17 +159,17 @@ public sealed class TripService(
             return;
         }
         
-        logger.LogDebug("Setting this Truck ({@Truck}) to this Trip ({@Trip})...",
+        logger.LogDebug("Setting this Truck \n({@Truck})\n to this Trip \n({@Trip})",
             truck,
             trip);
         await tripRepository.SetAsync(trip, truck, cancellationToken);
         
-        logger.LogDebug("Adding Work of type {WorkType} to this Trip ({@Trip})...",
+        logger.LogDebug("Adding Work of type {WorkType} to this Trip \n({@Trip})",
             WorkType.TravelHub,
             trip);
         await workService.AddAsync(trip, WorkType.TravelHub, cancellationToken);
         
-        logger.LogInformation("Truck ({@Truck}) successfully linked to this Trip ({@Trip}).",
+        logger.LogInformation("Truck \n({@Truck})\n successfully linked to this Trip \n({@Trip})",
             truck,
             trip);
     }
@@ -179,8 +179,8 @@ public sealed class TripService(
         var work = await workRepository.GetAsync(trip, cancellationToken);
         if (work is not { WorkType: WorkType.WaitParking })
         {
-            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType}" +
-                            "and can therefore not claim this ParkingSpot ({@ParkingSpot}).",
+            logger.LogError("Trip \n({@Trip})\n has active Work \n({@Work})\n assigned with WorkType not of type {@WorkType}" +
+                            "and can therefore not claim this ParkingSpot \n({@ParkingSpot})",
                 trip,
                 work,
                 WorkType.WaitParking,
@@ -189,27 +189,27 @@ public sealed class TripService(
             return;
         }
         
-        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+        logger.LogDebug("Removing active Work \n({@Work})\n assigned to this Trip \n({@Trip})",
             work,
             trip);
         await workRepository.RemoveAsync(work, cancellationToken);
         
-        logger.LogDebug("Setting this ParkingSpot ({@ParkingSpot}) to this Trip ({@Trip})...",
+        logger.LogDebug("Setting this ParkingSpot \n({@ParkingSpot})\n to this Trip \n({@Trip})",
             parkingSpot,
             trip);
         await tripRepository.SetAsync(trip, parkingSpot, cancellationToken);
         
-        logger.LogDebug("Setting ParkingSpot ({@ParkingSpot}) location to this Trip ({@Trip})...",
+        logger.LogDebug("Setting ParkingSpot \n({@ParkingSpot})\n location to this Trip \n({@Trip})",
             parkingSpot,
             trip);
         await locationService.SetAsync(trip, parkingSpot, cancellationToken);
         
-        logger.LogDebug("Adding Work of type {WorkType} to this Trip ({@Trip})...",
+        logger.LogDebug("Adding Work of type {WorkType} to this Trip \n({@Trip})",
             WorkType.WaitCheckIn,
             trip);
         await workService.AddAsync(trip, WorkType.WaitCheckIn, cancellationToken);
         
-        logger.LogInformation("ParkingSpot ({@ParkingSpot}) successfully linked to this Trip ({@Trip}).",
+        logger.LogInformation("ParkingSpot \n({@ParkingSpot})\n successfully linked to this Trip \n({@Trip})",
             parkingSpot,
             trip);
     }
@@ -219,8 +219,8 @@ public sealed class TripService(
         var work = await workRepository.GetAsync(trip, cancellationToken);
         if (work is not { WorkType: WorkType.WaitCheckIn })
         {
-            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType}" +
-                            "and can therefore not claim this AdminStaff ({@AdminStaff}).",
+            logger.LogError("Trip \n({@Trip})\n has active Work \n({@Work})\n assigned with WorkType not of type {@WorkType}" +
+                            "and can therefore not claim this AdminStaff \n({@AdminStaff})",
                 trip,
                 work,
                 WorkType.WaitCheckIn,
@@ -229,22 +229,22 @@ public sealed class TripService(
             return;
         }
 
-        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+        logger.LogDebug("Removing active Work \n({@Work})\n assigned to this Trip \n({@Trip})",
             work,
             trip);
         await workRepository.RemoveAsync(work, cancellationToken);
         
-        logger.LogDebug("Setting this AdminStaff ({@AdminStaff}) to this Trip ({@Trip})...",
+        logger.LogDebug("Setting this AdminStaff \n({@AdminStaff})\n to this Trip \n({@Trip})",
             adminStaff,
             trip);
         await tripRepository.SetAsync(trip, adminStaff, cancellationToken);
         
-        logger.LogDebug("Adding Work for this AdminStaff ({@AdminStaff}) to this Trip ({@Trip})...",
+        logger.LogDebug("Adding Work for this AdminStaff \n({@AdminStaff})\n to this Trip \n({@Trip})",
             adminStaff,
             trip);
         await workService.AddAsync(trip, adminStaff, cancellationToken);
         
-        logger.LogInformation("AdminStaff ({@AdminStaff}) successfully linked to this Trip ({@Trip}).",
+        logger.LogInformation("AdminStaff \n({@AdminStaff})\n successfully linked to this Trip \n({@Trip})",
             adminStaff,
             trip);
     }
@@ -254,8 +254,8 @@ public sealed class TripService(
         var work = await workRepository.GetAsync(trip, cancellationToken);
         if (work is not { WorkType: WorkType.WaitBay })
         {
-            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType} " +
-                            "and can therefore not claim this Bay ({@Bay}).",
+            logger.LogError("Trip \n({@Trip})\n has active Work \n({@Work})\n assigned with WorkType not of type {@WorkType} " +
+                            "and can therefore not claim this Bay \n({@Bay})",
                 trip,
                 work,
                 WorkType.WaitBay,
@@ -265,7 +265,7 @@ public sealed class TripService(
         }
         
         
-        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+        logger.LogDebug("Removing active Work \n({@Work})\n assigned to this Trip \n({@Trip})",
             work,
             trip);
         await workRepository.RemoveAsync(work, cancellationToken);
@@ -273,41 +273,41 @@ public sealed class TripService(
         var parkingSpot = await parkingSpotRepository.GetAsync(trip, cancellationToken);
         if (parkingSpot == null)
         {
-            logger.LogError("Trip ({@Trip}) has no ParkingSpot assigned to complete its Wait for a Bay at.",
+            logger.LogError("Trip \n({@Trip})\n has no ParkingSpot assigned to complete its Wait for a Bay at.",
                 trip);
         }
         else
         {
-            logger.LogDebug("Removing ParkingSpot ({@ParkingSpot}) from this Trip ({@Trip})...",
+            logger.LogDebug("Removing ParkingSpot \n({@ParkingSpot})\n from this Trip \n({@Trip})",
                 parkingSpot,
                 trip);
             await tripRepository.UnsetAsync(trip, parkingSpot, cancellationToken);
-            logger.LogInformation("ParkingSpot ({@ParkingSpot}) successfully removed from this Trip ({@Trip}).",
+            logger.LogInformation("ParkingSpot \n({@ParkingSpot})\n successfully removed from this Trip \n({@Trip})",
                 parkingSpot,
                 trip);
         }
         
-        logger.LogDebug("Setting this Bay ({@Bay}) to this Trip ({@Trip})...",
+        logger.LogDebug("Setting this Bay \n({@Bay})\n to this Trip \n({@Trip})",
             bay,
             trip);
         await tripRepository.SetAsync(trip, bay, cancellationToken);
         
-        logger.LogDebug("Setting Bay ({@Bay}) location to this Trip ({@Trip})...",
+        logger.LogDebug("Setting Bay \n({@Bay})\n location to this Trip \n({@Trip})",
             bay,
             trip);
         await locationService.SetAsync(trip, bay, cancellationToken);
         
-        logger.LogDebug("Setting the BayStatus of this Bay ({@Bay}) to {BayStatus}...",
+        logger.LogDebug("Setting the BayStatus of this Bay \n({@Bay})\n to {BayStatus}...",
             bay,
             BayStatus.Claimed);
         await bayRepository.SetAsync(bay, BayStatus.Claimed, cancellationToken);
         
-        logger.LogDebug("Adding Work for this Bay ({@Bay}) to this Trip ({@Trip})...",
+        logger.LogDebug("Adding Work for this Bay \n({@Bay})\n to this Trip \n({@Trip})",
             bay,
             trip);
         await workService.AddAsync(trip, bay, cancellationToken);
         
-        logger.LogInformation("Bay ({@Bay}) successfully linked to this Trip ({@Trip}).",
+        logger.LogInformation("Bay \n({@Bay})\n successfully linked to this Trip \n({@Trip})",
             bay,
             trip);
     }
@@ -317,7 +317,7 @@ public sealed class TripService(
         var work = await workRepository.GetAsync(trip, cancellationToken);
         if (work is not { WorkType: WorkType.TravelHub })
         {
-            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType} " +
+            logger.LogError("Trip \n({@Trip})\n has active Work \n({@Work})\n assigned with WorkType not of type {@WorkType} " +
                             "and can therefore not be alerted to have its travel to the Hub completed.",
                 trip,
                 work,
@@ -326,17 +326,17 @@ public sealed class TripService(
             return;
         }
 
-        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+        logger.LogDebug("Removing active Work \n({@Work})\n assigned to this Trip \n({@Trip})",
             work,
             trip);
         await workRepository.RemoveAsync(work, cancellationToken);
         
-        logger.LogDebug("Adding Work of type {WorkType} to this Trip ({@Trip})...",
+        logger.LogDebug("Adding Work of type {WorkType} to this Trip \n({@Trip})",
             WorkType.WaitParking,
             trip);
         await workService.AddAsync(trip, WorkType.WaitParking, cancellationToken);
         
-        logger.LogInformation("Trip ({@Trip}) successfully arrived at the Hub.",
+        logger.LogInformation("Trip \n({@Trip})\n successfully arrived at the Hub.",
             trip);
     }
     
@@ -345,7 +345,7 @@ public sealed class TripService(
         var work = await workRepository.GetAsync(trip, cancellationToken);
         if (work is not { WorkType: WorkType.CheckIn })
         {
-            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType} " +
+            logger.LogError("Trip \n({@Trip})\n has active Work \n({@Work})\n assigned with WorkType not of type {@WorkType} " +
                             "and can therefore not be alerted to have its Check-In completed.",
                 trip,
                 work,
@@ -354,7 +354,7 @@ public sealed class TripService(
             return;
         }
         
-        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+        logger.LogDebug("Removing active Work \n({@Work})\n assigned to this Trip \n({@Trip})",
             work,
             trip);
         await workRepository.RemoveAsync(work, cancellationToken);
@@ -362,26 +362,26 @@ public sealed class TripService(
         var adminStaff = await adminStaffRepository.GetAsync(trip, cancellationToken);
         if (adminStaff == null)
         {
-            logger.LogError("Trip ({@Trip}) has no AdminStaff assigned to complete its Check-In at...",
+            logger.LogError("Trip \n({@Trip})\n has no AdminStaff assigned to complete its Check-In at...",
                 trip);
         }
         else
         {
-            logger.LogDebug("Removing AdminStaff ({@AdminStaff}) from this Trip ({@Trip})...",
+            logger.LogDebug("Removing AdminStaff \n({@AdminStaff})\n from this Trip \n({@Trip})",
                 adminStaff,
                 trip);
             await tripRepository.UnsetAsync(trip, adminStaff, cancellationToken);
-            logger.LogInformation("AdminStaff ({@AdminStaff}) successfully removed from this Trip ({@Trip}).",
+            logger.LogInformation("AdminStaff \n({@AdminStaff})\n successfully removed from this Trip \n({@Trip})",
                 adminStaff,
                 trip);
         }
         
-        logger.LogDebug("Adding Work of type {WorkType} to this Trip ({@Trip})...",
+        logger.LogDebug("Adding Work of type {WorkType} to this Trip \n({@Trip})",
             WorkType.WaitBay,
             trip);
         await workService.AddAsync(trip, WorkType.WaitBay, cancellationToken);
         
-        logger.LogInformation("Trip ({@Trip}) successfully completed Check-In.",
+        logger.LogInformation("Trip \n({@Trip})\n successfully completed Check-In.",
             trip);
     }
     
@@ -390,7 +390,7 @@ public sealed class TripService(
         var work = await workRepository.GetAsync(trip, cancellationToken);
         if (work is not { WorkType: WorkType.Bay })
         {
-            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType} " +
+            logger.LogError("Trip \n({@Trip})\n has active Work \n({@Work})\n assigned with WorkType not of type {@WorkType} " +
                             "and can therefore not be alerted to have its Bay Work completed.",
                 trip,
                 work,
@@ -399,7 +399,7 @@ public sealed class TripService(
             return;
         }
 
-        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+        logger.LogDebug("Removing active Work \n({@Work})\n assigned to this Trip \n({@Trip})",
             work,
             trip);
         await workRepository.RemoveAsync(work, cancellationToken);
@@ -407,26 +407,26 @@ public sealed class TripService(
         var bay = await bayRepository.GetAsync(trip, cancellationToken);
         if (bay == null)
         {
-            logger.LogError("Trip ({@Trip}) has no Bay assigned to complete its Bay Work at...",
+            logger.LogError("Trip \n({@Trip})\n has no Bay assigned to complete its Bay Work at...",
                 trip);
         }
         else
         {
-            logger.LogDebug("Removing Bay ({@Bay}) from this Trip ({@Trip})...",
+            logger.LogDebug("Removing Bay \n({@Bay})\n from this Trip \n({@Trip})",
                 bay,
                 trip);
             await tripRepository.UnsetAsync(trip, bay, cancellationToken);
-            logger.LogInformation("Bay ({@Bay}) successfully removed from this Trip ({@Trip}).",
+            logger.LogInformation("Bay \n({@Bay})\n successfully removed from this Trip \n({@Trip})",
                 bay,
                 trip);
         }
         
-        logger.LogDebug("Adding Work of type {WorkType} to this Trip ({@Trip})...",
+        logger.LogDebug("Adding Work of type {WorkType} to this Trip \n({@Trip})",
             WorkType.TravelHome,
             trip);
         await workService.AddAsync(trip, WorkType.TravelHome, cancellationToken);
         
-        logger.LogInformation("Trip ({@Trip}) successfully completed Bay Work.",
+        logger.LogInformation("Trip ({@Trip})\n successfully completed Bay Work.",
             trip);
     }
     
@@ -435,7 +435,7 @@ public sealed class TripService(
         var work = await workRepository.GetAsync(trip, cancellationToken);
         if (work is not { WorkType: WorkType.TravelHome })
         {
-            logger.LogError("Trip ({@Trip}) has active Work ({@Work}) assigned with WorkType not of type {@WorkType} " +
+            logger.LogError("Trip ({@Trip})\n has active Work ({@Work})\n assigned with WorkType not of type {@WorkType} " +
                             "and can therefore not be alerted to have its Travel Home completed.",
                 trip,
                 work,
@@ -444,7 +444,7 @@ public sealed class TripService(
             return;
         }
         
-        logger.LogDebug("Removing active Work ({@Work}) assigned to this Trip ({@Trip})...",
+        logger.LogDebug("Removing active Work ({@Work})\n assigned to this Trip ({@Trip})",
             work,
             trip);
         await workRepository.RemoveAsync(work, cancellationToken);
@@ -452,21 +452,21 @@ public sealed class TripService(
         var truck = await truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
         {
-            logger.LogError("Trip ({@Trip}) has no Truck assigned to complete its Travel Home with...",
+            logger.LogError("Trip ({@Trip})\n has no Truck assigned to complete its Travel Home with...",
                 trip);
         }
         else
         {
-            logger.LogDebug("Removing Truck ({@Truck}) from this Trip ({@Trip})...",
+            logger.LogDebug("Removing Truck ({@Truck})\n from this Trip ({@Trip})",
                 truck,
                 trip);
             await tripRepository.UnsetAsync(trip, truck, cancellationToken);
-            logger.LogInformation("Truck ({@Truck}) successfully removed from this Trip ({@Trip}).",
+            logger.LogInformation("Truck ({@Truck})\n successfully removed from this Trip ({@Trip})",
                 truck,
                 trip);
         }
         
-        logger.LogInformation("Trip ({@Trip}) successfully COMPLETED!!!",
+        logger.LogInformation("Trip ({@Trip})\n successfully COMPLETED!!!",
             trip);
     }
     
@@ -480,7 +480,7 @@ public sealed class TripService(
         var yTravel = yDiff > truck.Speed ? truck.Speed : yDiff;
         var newYLocation = trip.YLocation + yTravel;
 
-        logger.LogDebug("Setting new location (XLocation={XLocation} YLocation={YLocation}) to this Trip ({@Trip})...",
+        logger.LogDebug("Setting new location (XLocation={XLocation} YLocation={YLocation})\n to this Trip ({@Trip})",
             newXLocation,
             newYLocation,
             trip);
@@ -502,7 +502,7 @@ public sealed class TripService(
         var truck = await truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
         {
-            logger.LogError("Trip ({@Trip}) has no Truck assigned to travel to the Hub with.",
+            logger.LogError("Trip ({@Trip})\n has no Truck assigned to travel to the Hub with.",
                 trip);
             
             return;
@@ -511,7 +511,7 @@ public sealed class TripService(
         var hub = await hubRepository.GetAsync(trip, cancellationToken);
         if (hub == null)
         {
-            logger.LogError("Trip ({@Trip}) has no Hub assigned to travel to.",
+            logger.LogError("Trip ({@Trip})\n has no Hub assigned to travel to.",
                 trip);
             
             return;
@@ -525,7 +525,7 @@ public sealed class TripService(
         var truck = await truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
         {
-            logger.LogError("Trip ({@Trip}) has no Truck assigned to travel home with.",
+            logger.LogError("Trip ({@Trip})\n has no Truck assigned to travel home with.",
                 trip);
             
             return;
@@ -534,7 +534,7 @@ public sealed class TripService(
         var truckCompany = await truckCompanyRepository.GetAsync(truck, cancellationToken);
         if (truckCompany == null)
         {
-            logger.LogError("Trip ({@Trip}) has no TruckCompany assigned to travel home to, poor thing...",
+            logger.LogError("Trip ({@Trip})\n has no TruckCompany assigned to travel home to, poor thing...",
                 trip);
             
             return;
@@ -551,7 +551,7 @@ public sealed class TripService(
             return hub.XLocation == trip.XLocation &&
                    hub.YLocation == trip.YLocation;
         
-        logger.LogError("Trip ({@Trip}) has no Hub assigned to travel to.",
+        logger.LogError("Trip ({@Trip})\n has no Hub assigned to travel to.",
             trip);
         
         return false;
@@ -563,7 +563,7 @@ public sealed class TripService(
         var truck = await truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
         {
-            logger.LogError("Trip ({@Trip}) has no Truck assigned to travel home with.",
+            logger.LogError("Trip ({@Trip})\n has no Truck assigned to travel home with.",
                 trip);
             
             return false;
@@ -574,7 +574,7 @@ public sealed class TripService(
             return truckCompany.XLocation == trip.XLocation &&
                    truckCompany.YLocation == trip.YLocation;
         
-        logger.LogError("Trip ({@Trip}) has no TruckCompany assigned to travel home to, poor thing...",
+        logger.LogError("Trip ({@Trip})\n has no TruckCompany assigned to travel home to, poor thing...",
             trip);
             
         return false;

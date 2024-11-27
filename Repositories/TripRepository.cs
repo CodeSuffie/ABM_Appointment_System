@@ -78,7 +78,7 @@ public sealed class TripRepository(
     public async Task<Trip?> GetAsync(Truck truck, CancellationToken cancellationToken)
     {
         var trip = await context.Trips
-            .FirstOrDefaultAsync(t=> t.TruckId == truck.Id, cancellationToken);
+            .FirstOrDefaultAsync(t=> t.Id == truck.TripId, cancellationToken);
         
         return trip;
     }

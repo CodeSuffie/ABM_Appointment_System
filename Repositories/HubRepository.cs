@@ -79,4 +79,12 @@ public sealed class HubRepository(ModelDbContext context)
         
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task AddAsync(Hub hub, OperatingHour operatingHour, CancellationToken cancellationToken)
+    {
+        hub.OperatingHours.Add(operatingHour);
+        operatingHour.Hub = hub;
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
 }
