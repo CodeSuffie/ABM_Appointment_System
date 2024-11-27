@@ -8,83 +8,55 @@ public sealed class HubRepository(ModelDbContext context)
 {
     public IQueryable<Hub> Get()
     {
-        var hubs = context.Hubs;
-
-        return hubs;
+        return context.Hubs;
     }
     
-    public async Task<Hub?> GetAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
+    public Task<Hub?> GetAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
-        var hub = await context.Hubs
-            .FirstOrDefaultAsync(h => h.Id == parkingSpot.HubId, cancellationToken);
-
-        return hub;
+        return context.Hubs.FirstOrDefaultAsync(h => h.Id == parkingSpot.HubId, cancellationToken);
     }
     
-    public async Task<Hub?> GetAsync(Bay bay, CancellationToken cancellationToken)
+    public Task<Hub?> GetAsync(Bay bay, CancellationToken cancellationToken)
     {
-        var hub = await context.Hubs
-            .FirstOrDefaultAsync(h=> h.Id == bay.HubId, cancellationToken);
-
-        // if (hub == null)
-        //     throw new Exception("There was no Hub assigned to this Bay.");
-        
-        return hub;
+        return context.Hubs.FirstOrDefaultAsync(h=> h.Id == bay.HubId, cancellationToken);
     }
     
-    public async Task<Hub?> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    public Task<Hub?> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var hub = await context.Hubs
-            .FirstOrDefaultAsync(h => h.Id == adminStaff.HubId, cancellationToken);
-
-        return hub;
+        return context.Hubs.FirstOrDefaultAsync(h => h.Id == adminStaff.HubId, cancellationToken);
     }
     
-    public async Task<Hub?> GetAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    public Task<Hub?> GetAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        var hub = await context.Hubs
-            .FirstOrDefaultAsync(h => h.Id == bayStaff.HubId, cancellationToken);
-
-        return hub;
+        return context.Hubs.FirstOrDefaultAsync(h => h.Id == bayStaff.HubId, cancellationToken);
     }
     
-    public async Task<Hub?> GetAsync(Load load, CancellationToken cancellationToken)
+    public Task<Hub?> GetAsync(Load load, CancellationToken cancellationToken)
     {
-        var hub = await context.Hubs
-            .FirstOrDefaultAsync(h => h.Id == load.HubId, cancellationToken);
-
-        return hub;
+        return context.Hubs.FirstOrDefaultAsync(h => h.Id == load.HubId, cancellationToken);
     }
     
-    public async Task<Hub?> GetAsync(Trip trip, CancellationToken cancellationToken)
+    public Task<Hub?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var hub = await context.Hubs
-            .FirstOrDefaultAsync(h => h.Id == trip.HubId, cancellationToken);
-
-        return hub;
+        return context.Hubs.FirstOrDefaultAsync(h => h.Id == trip.HubId, cancellationToken);
     }
 
-    public async Task<int> GetCountAsync(CancellationToken cancellationToken)
+    public Task<int> GetCountAsync(CancellationToken cancellationToken)
     {
-        var count = await context.Hubs
-            .CountAsync(cancellationToken);
-
-        return count;
+        return context.Hubs.CountAsync(cancellationToken);
     }
     
     public async Task AddAsync(Hub hub, CancellationToken cancellationToken)
     {
-        await context.Hubs
-            .AddAsync(hub, cancellationToken);
-        
+        await context.Hubs.AddAsync(hub, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task AddAsync(Hub hub, OperatingHour operatingHour, CancellationToken cancellationToken)
+    public Task AddAsync(Hub hub, OperatingHour operatingHour, CancellationToken cancellationToken)
     {
         hub.OperatingHours.Add(operatingHour);
         operatingHour.Hub = hub;
         
-        await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
 }

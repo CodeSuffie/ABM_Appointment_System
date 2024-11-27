@@ -171,9 +171,9 @@ public static class ServiceCollectionExtensions
                         BayId = w.BayId,
                         BayStaffId = w.BayStaffId
                     })
-                .MinimumLevel.Debug()
+                .MinimumLevel.Fatal()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                .WriteTo.Console(theme: AnsiConsoleTheme.Code)
+                // .WriteTo.Console(theme: AnsiConsoleTheme.Code)
                 .CreateLogger();
             
             configure.ClearProviders();

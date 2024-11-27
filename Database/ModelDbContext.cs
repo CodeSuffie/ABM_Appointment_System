@@ -29,7 +29,8 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlite(WebConfig.DbConnectionString);
+        // optionsBuilder.UseSqlite(WebConfig.DbConnectionString);
+        optionsBuilder.UseInMemoryDatabase("Models");
     }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
