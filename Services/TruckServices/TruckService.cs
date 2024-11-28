@@ -31,8 +31,7 @@ public sealed class TruckService(
         var truck = new Truck
         {
             TruckCompany = truckCompany,
-            Speed = modelState.AgentConfig.TruckAverageSpeed,
-            Planned = false
+            Speed = modelState.AgentConfig.TruckAverageSpeed
         };
 
         await truckRepository.AddAsync(truck, cancellationToken);
