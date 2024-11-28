@@ -37,6 +37,10 @@ public sealed partial class Simulation
         
         // initialize model service
         await ModelService.InitializeAsync();
+
+        // add parking spots
+        await AddParkingSpotsAsync(ModelDbContext.ParkingSpots.ToArray());
+        await AddBaysAsync(ModelDbContext.Bays.ToArray());
         
         // create new timer
         _timer = new Timer(TimerCallback, null, 0, 100);
@@ -51,6 +55,52 @@ public sealed partial class Simulation
         }
         
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async ValueTask AddBayAsync(Bay bay)
+    {
+        if (_javaScriptModule == null)
+        {
+            return;
+        }
+        
+        await _javaScriptModule.InvokeVoidAsync("addBay", 
+            bay.Id,
+            bay.XLocation,
+            bay.YLocation,
+            bay.XSize,
+            bay.YSize);
+    }
+    
+    private async ValueTask AddBaysAsync(Bay[] bays)
+    {
+        foreach (var bay in bays)
+        {
+            await AddBayAsync(bay);
+        }
+    }
+    
+    private async ValueTask AddParkingSpotAsync(ParkingSpot parkingSpot)
+    {
+        if (_javaScriptModule == null)
+        {
+            return;
+        }
+        
+        await _javaScriptModule.InvokeVoidAsync("addParkingSpot", 
+            parkingSpot.Id,
+            parkingSpot.XLocation,
+            parkingSpot.YLocation,
+            parkingSpot.XSize,
+            parkingSpot.YSize);
+    }
+
+    private async ValueTask AddParkingSpotsAsync(ParkingSpot[] parkingSpots)
+    {
+        foreach (var parkingSpot in parkingSpots)
+        {
+            await AddParkingSpotAsync(parkingSpot);
+        }
     }
     
     private async ValueTask AddTruckAsync(Truck truck)

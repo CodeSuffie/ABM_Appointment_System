@@ -6,7 +6,9 @@ import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-const levelScale = 1500;
+const levelScale = 2500;
+const scaleX = 4;
+const scaleY = 4;
 
 const gltfLoader = new GLTFLoader();
 const objLoader = new OBJLoader();
@@ -37,6 +39,8 @@ export async function initialize() {
             warehouse_02: null,
         },
         visibleTrucks: {},
+        parkingSpots: {},
+        bays: {},
     };
 
     // load models
@@ -125,23 +129,82 @@ async function initializeWorld() {
 
     harborGroundPlane.rotateX(1.5707963);
     harborGround.position.x = levelScale / 2;
-    harborGround.position.y = -1;
+    harborGround.position.y = -0.5;
     harborGround.position.z = levelScale / 2;
 
     window.simulationView.scene.add(harborGround);
 }
 
-export function removeTruck(truckId) {
+export function addBay(id, locationX, locationY, sizeX, sizeY) {
+    if (!isInitialized()) {
+        return;
+    }
+
+    if (window.simulationView.bays.hasOwnProperty(id)) {
+        return;
+    }
+
+    const groundPlane = new THREE.PlaneGeometry(sizeX * scaleX, sizeY * scaleY);
+    const groundMaterial = new THREE.MeshPhongMaterial({
+        side: THREE.DoubleSide
+    });
+    groundMaterial.color.setHSL(0, 1, .5);  // red
+    groundMaterial.flatShading = true;
+    const ground = new THREE.Mesh(groundPlane, groundMaterial);
+
+    groundPlane.rotateX(1.5707963);
+    ground.position.x = locationX * scaleX;
+    ground.position.y = -0.49;
+    ground.position.z = locationY * scaleY;
+
+    window.simulationView.scene.add(ground);
+    window.simulationView.bays[id] = {
+        id: id,
+        plane: ground,
+    };
+}
+
+export function addParkingSpot(id, locationX, locationY, sizeX, sizeY) {
+    if (!isInitialized()) {
+        return;
+    }
+
+    if (window.simulationView.parkingSpots.hasOwnProperty(id)) {
+        return;
+    }
+    
+    const groundPlane = new THREE.PlaneGeometry(sizeX * scaleX, sizeY * scaleY);
+    const groundMaterial = new THREE.MeshPhongMaterial({
+        side: THREE.DoubleSide
+    });
+    groundMaterial.color.setHSL(0, 1, .5);  // red
+    groundMaterial.flatShading = true;
+    const ground = new THREE.Mesh(groundPlane, groundMaterial);
+
+    groundPlane.rotateX(1.5707963);
+    ground.position.x = locationX * scaleX;
+    ground.position.y = -0.49;
+    ground.position.z = locationY * scaleY;
+
+    window.simulationView.scene.add(ground);
+    window.simulationView.parkingSpots[id] = {
+        id: id,
+        plane: ground,
+    };
+}
+
+export function removeTruck(id) {
     if (!isInitialized()) {
         return;
     }
     
-   if (!window.simulationView.visibleTrucks.hasOwnProperty(truckId)) {
+   if (!window.simulationView.visibleTrucks.hasOwnProperty(id)) {
        return;
    }
 
-    window.simulationView.scene.remove(window.simulationView.visibleTrucks[truckId].model);
-    window.simulationView.visibleTrucks[truckId] = undefined;
+    window.simulationView.visibleTrucks[id].model.removeFromParent();
+    window.simulationView.visibleTrucks[id].model = undefined;
+    delete window.simulationView.visibleTrucks[id];
 }
 
 export function addTruck(id, locationX, locationY) {
@@ -149,26 +212,30 @@ export function addTruck(id, locationX, locationY) {
         return;
     }
 
+    locationX *= scaleX;
+    locationY *= scaleY;
+
     const hasTruck = window.simulationView.visibleTrucks.hasOwnProperty(id);
     if (!hasTruck) {
         let model = window.simulationView.models.truck_01.clone();
+        model.scale.set(0.25, 0.25, 0.25);
+        window.simulationView.scene.add(model);
+
         window.simulationView.visibleTrucks[id] = {
             id: id,
             model: model,
         }
-
-        window.simulationView.scene.add(model);
     }
     
     const truck = window.simulationView.visibleTrucks[id];
+    if (hasTruck) {
+        truck.model.lookAt(locationX, 0, locationY);
+    }
+    
     truck.model.position.x = locationX;
-    truck.model.position.y = 1;
+    truck.model.position.y = 0;
     truck.model.position.z = locationY;
     truck.model.needsUpdate = true;
-    
-    if (!hasTruck) {
-        console.log(truck);
-    }
 }
 
 function createRenderer() {
@@ -192,15 +259,15 @@ function createRenderer() {
 
     // setup camera
     let camera = new THREE.PerspectiveCamera( 65, container.offsetWidth / container.offsetHeight, 1, (levelScale / 6) * 3 );
-    camera.position.set( 0, 40, -50 );
+    camera.position.set( 0, 40, 0 );
     window.simulationView.camera = camera;
 
     // setup controls
     let controls = new OrbitControls( camera, renderer.domElement );
     controls.maxPolarAngle = Math.PI * 0.495;
-    controls.target.set( 0, 0, 0 );
-    controls.minDistance = 10.0;
-    controls.maxDistance = levelScale / 12;
+    controls.target.set( 100, 1, 100 );
+    controls.minDistance = 0.0;
+    controls.maxDistance = levelScale;
     controls.update();
     window.simulationView.controls = controls;
 
