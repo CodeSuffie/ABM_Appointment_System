@@ -7,8 +7,11 @@ import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const levelScale = 2500;
-const scaleX = 4;
-const scaleY = 4;
+const scaleX = 4.5;
+const scaleY = 4.5;
+
+const truckScale = 0.25;
+const wheelStopperScale = 0.0075;
 
 const gltfLoader = new GLTFLoader();
 const objLoader = new OBJLoader();
@@ -20,6 +23,26 @@ const textureLoader = new THREE.TextureLoader();
  */
 function isInitialized() {
     return !(window.simulationView === undefined || window.simulationView === null);
+}
+
+async function initializeModels() {
+    // load models
+    window.simulationView.models.truck_01 = await loadModel('truck/truck_01');
+    window.simulationView.models.wheel_stopper = await loadModel('parking/wheel_stopper');
+    // window.simulationView.models.warehouse_01 = await loadModel('warehouse/01/scene', 'gltf');
+    // window.simulationView.models.warehouse_02 = await loadModel('warehouse/02/scene', 'gltf');
+}
+
+async function initializeTextures() {
+    // load textures
+    window.simulationView.textures.grass.color = await loadTexture('grass/01', 'png');
+    
+    // gravel
+    window.simulationView.textures.gravel.color = await loadTexture('gravel/01/color', 'jpg');
+    window.simulationView.textures.gravel.specular = await loadTexture('gravel/01/specular', 'jpg');
+    window.simulationView.textures.gravel.bump = await loadTexture('gravel/01/bump', 'png');
+    window.simulationView.textures.gravel.normal = await loadTexture('gravel/01/normal', 'jpg');
+    window.simulationView.textures.gravel.displacement = await loadTexture('gravel/01/displacement', 'jpg');
 }
 
 export async function initialize() {
@@ -37,16 +60,29 @@ export async function initialize() {
             truck_01: null,
             warehouse_01: null,
             warehouse_02: null,
+            wheel_stopper: null,
+        },
+        textures: {
+            grass: {
+                color: null,
+            },
+            gravel: {
+                color: null,
+                specular: null,
+                bump: null,
+                normal: null,
+                displacement: null,
+            }
         },
         visibleTrucks: {},
         parkingSpots: {},
         bays: {},
     };
 
-    // load models
-    window.simulationView.models.truck_01 = await loadModel('truck/truck_01');
-    // window.simulationView.models.warehouse_01 = await loadModel('warehouse/01/scene', 'gltf');
-    // window.simulationView.models.warehouse_02 = await loadModel('warehouse/02/scene', 'gltf');
+    await initializeModels();
+    await initializeTextures();
+
+
 
     window.simulationView.domContainer = document.getElementById( 'container' );
     createRenderer();
@@ -113,26 +149,64 @@ export async function initialize() {
     requestAnimationFrame(onFrame);
 }
 
-async function initializeWorld() {
-    const asphalt_02_diff = await loadTexture('grass/01', 'png');
-    // const asphalt_02_disp = await loadTexture('asphalt_02_disp_4k', 'png');
-    // const asphalt_02_rough = await loadTexture('asphalt_02_rough_4k');
+function createHorizontalMaterialPlane(material, sizeX, sizeY) {
+    const plane = new THREE.PlaneGeometry(sizeX * scaleX, sizeY * scaleY);
+    const planeMesh = new THREE.Mesh(plane, material);
 
-    const harborGroundPlane = new THREE.PlaneGeometry(levelScale, levelScale);
-    const harborGroundMaterial = new THREE.MeshBasicMaterial({
-        map: asphalt_02_diff,
-        // bumpMap: asphalt_02_rough,
-        // displacementMap: asphalt_02_disp,
+    plane.rotateX(1.5707963);
+    return planeMesh;
+}
+
+function createGrassPlane(sizeX, sizeY) {
+    // clone textures
+    const map = window.simulationView.textures.grass.color.clone();
+
+    // repeat based on X/Y size
+    map.repeat.set(sizeX, sizeY);
+
+    // construct material
+    const material = new THREE.MeshBasicMaterial({
+        map: map,
         side: THREE.DoubleSide
     });
-    const harborGround = new THREE.Mesh(harborGroundPlane, harborGroundMaterial);
+    
+    return createHorizontalMaterialPlane(material, sizeX, sizeY);
+}
 
-    harborGroundPlane.rotateX(1.5707963);
-    harborGround.position.x = levelScale / 2;
-    harborGround.position.y = -0.5;
-    harborGround.position.z = levelScale / 2;
+function createGravelPlane(sizeX, sizeY) {
+    // clone textures
+    const map = window.simulationView.textures.gravel.color.clone();
+    const specularMap = window.simulationView.textures.gravel.specular.clone();
+    const bumpMap = window.simulationView.textures.gravel.bump.clone();
+    const normalMap = window.simulationView.textures.gravel.normal.clone();
+    const displacementMap = window.simulationView.textures.gravel.displacement.clone();
+    
+    // repeat based on X/Y size
+    map.repeat.set(sizeX, sizeY);
+    specularMap.repeat.set(sizeX, sizeY);
+    bumpMap.repeat.set(sizeX, sizeY);
+    normalMap.repeat.set(sizeX, sizeY);
+    displacementMap.repeat.set(sizeX, sizeY);
+    
+    // construct material
+    const material = new THREE.MeshBasicMaterial({
+        map: map,
+        specularMap: specularMap,
+        bumpMap: bumpMap,
+        normalMap: normalMap,
+        displacementMap: displacementMap,
+        side: THREE.DoubleSide
+    });
 
-    window.simulationView.scene.add(harborGround);
+    return createHorizontalMaterialPlane(material, sizeX, sizeY);
+}
+
+async function initializeWorld() {
+    const plane = createGrassPlane(levelScale, levelScale);
+    plane.position.x = levelScale / 2;
+    plane.position.y = -0.5;
+    plane.position.z = levelScale / 2;
+    window.simulationView.scene.add(plane);
 }
 
 export function addBay(id, locationX, locationY, sizeX, sizeY) {
@@ -173,23 +247,23 @@ export function addParkingSpot(id, locationX, locationY, sizeX, sizeY) {
         return;
     }
     
-    const groundPlane = new THREE.PlaneGeometry(sizeX * scaleX, sizeY * scaleY);
-    const groundMaterial = new THREE.MeshPhongMaterial({
-        side: THREE.DoubleSide
-    });
-    groundMaterial.color.setHSL(0, 1, .5);  // red
-    groundMaterial.flatShading = true;
-    const ground = new THREE.Mesh(groundPlane, groundMaterial);
-
-    groundPlane.rotateX(1.5707963);
+    const ground = createGravelPlane(sizeX, sizeY);
     ground.position.x = locationX * scaleX;
     ground.position.y = -0.49;
     ground.position.z = locationY * scaleY;
-
     window.simulationView.scene.add(ground);
+
+    const model = window.simulationView.models.wheel_stopper.clone();
+    model.position.x = locationX * scaleX;
+    model.position.y = -0.49;
+    model.position.z = (locationY * scaleY) + ((scaleY / 2) - 2);
+    model.scale.set(wheelStopperScale, wheelStopperScale / 3, wheelStopperScale / 4);
+    window.simulationView.scene.add(model);
+    
     window.simulationView.parkingSpots[id] = {
         id: id,
         plane: ground,
+        model: model,
     };
 }
 
@@ -218,7 +292,7 @@ export function addTruck(id, locationX, locationY) {
     const hasTruck = window.simulationView.visibleTrucks.hasOwnProperty(id);
     if (!hasTruck) {
         let model = window.simulationView.models.truck_01.clone();
-        model.scale.set(0.25, 0.25, 0.25);
+        model.scale.set(truckScale, truckScale, truckScale);
         window.simulationView.scene.add(model);
 
         window.simulationView.visibleTrucks[id] = {
@@ -341,7 +415,6 @@ async function loadTexture(textureName, extension) {
     return new Promise((resolve, reject) => {
         textureLoader.load(`/3d/textures/${textureName}.${extension}`, texture => {
             texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set( 8, 2 );
             resolve(texture);
         }, undefined, error => {
             reject(error);
