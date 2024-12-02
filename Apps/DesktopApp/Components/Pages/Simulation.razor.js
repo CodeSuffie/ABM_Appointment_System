@@ -14,6 +14,7 @@ const scaleY = 4.5 * globalScale;
 const truckScale = 0.25 * globalScale;
 const wheelStopperScale = 0.0075 * globalScale;
 const rollingShutterScale = 1 * globalScale;
+const chainLinkFenceScale = 0.55 * globalScale;
 
 const gltfLoader = new GLTFLoader();
 const objLoader = new OBJLoader();
@@ -32,6 +33,7 @@ async function initializeModels() {
     window.simulationView.models.truck_01 = await loadModel('truck/truck_01');
     window.simulationView.models.wheel_stopper = await loadModel('parking/wheel_stopper');
     window.simulationView.models.rolling_shutter = await loadModel('hub/rolling_shutter');
+    window.simulationView.models.chain_link_fence = await loadModel('hub/chain_link_fence');
     // window.simulationView.models.warehouse_01 = await loadModel('warehouse/01/scene', 'gltf');
     // window.simulationView.models.warehouse_02 = await loadModel('warehouse/02/scene', 'gltf');
 }
@@ -79,6 +81,7 @@ export async function initialize() {
             warehouse_02: null,
             wheel_stopper: null,
             rolling_shutter: null,
+            chain_link_fence : null,
         },
         textures: {
             grass: [
@@ -285,6 +288,39 @@ export function addBay(id, locationX, locationY, sizeX, sizeY) {
         id: id,
         plane: ground,
     };
+}
+
+function addFence(locationX, locationY, onXAxis) {
+    const model = window.simulationView.models.chain_link_fence.clone();
+
+    model.position.y = -(1 * globalScale);
+
+    if (onXAxis) {
+        model.position.x = ((locationX * scaleX)) - (0.625 * globalScale);
+        model.position.z = ((locationY * scaleY) - scaleY) + (1 * globalScale);
+    } else {
+        model.position.x = ((locationX * scaleX) - scaleX) + (1 * globalScale);
+        model.position.z = ((locationY * scaleY)) + (0.625 * globalScale);
+        model.rotateY(1.5707963);
+    }
+
+    model.scale.set(chainLinkFenceScale, chainLinkFenceScale, chainLinkFenceScale);
+    window.simulationView.scene.add(model);
+}
+
+export function addBoundaries(id, minX, maxX, minY, maxY) {
+    var sizeX = maxX - minX;
+    var sizeY = maxY - minY;
+    
+    for (var i = 0; i < sizeX + 1; i++) {
+        addFence(minX + i, minY, true);
+        addFence(minX + i, maxY + 1, true);
+    }
+    
+    for (var i = 0; i < sizeY + 1; i++) {
+        addFence(minX, minY + i, false);
+        addFence(maxX + 1, minY + i, false);
+    }
 }
 
 export function addParkingSpot(id, locationX, locationY, sizeX, sizeY) {

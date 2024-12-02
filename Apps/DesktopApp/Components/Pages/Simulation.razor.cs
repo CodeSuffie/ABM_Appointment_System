@@ -39,8 +39,25 @@ public sealed partial class Simulation
         await ModelService.InitializeAsync();
 
         // add parking spots
-        await AddParkingSpotsAsync(ModelDbContext.ParkingSpots.ToArray());
-        await AddBaysAsync(ModelDbContext.Bays.ToArray());
+        var hubs = ModelDbContext.Hubs.ToArray();
+        var parkingSpots = ModelDbContext.ParkingSpots.ToArray();
+        var bays = ModelDbContext.Bays.ToArray();
+        await AddParkingSpotsAsync(parkingSpots);
+        await AddBaysAsync(bays);
+
+        // loop over hubs, calculate boundaries
+        foreach (var hub in hubs)
+        {
+            var hubParkingSpots = parkingSpots.Where(p => p.HubId == hub.Id).ToArray();
+            var hubBays = bays.Where(b => b.HubId == hub.Id).ToArray();
+
+            var minX = Math.Min(hubParkingSpots.Min(p => p.XLocation), hubBays.Min(b => b.XLocation));
+            var maxX = Math.Max(hubParkingSpots.Max(p => p.XLocation), hubBays.Max(b => b.XLocation));
+            var minY = Math.Min(hubParkingSpots.Min(p => p.YLocation), hubBays.Min(b => b.YLocation));
+            var maxY = Math.Max(hubParkingSpots.Max(p => p.YLocation), hubBays.Max(b => b.YLocation));
+
+            await AddBoundariesAsync(hub.Id, minX - 1, maxX + 1, minY - 1, maxY + 1);
+        }
         
         // create new timer
         _timer = new Timer(TimerCallback, null, 0, 100);
@@ -78,6 +95,21 @@ public sealed partial class Simulation
         {
             await AddBayAsync(bay);
         }
+    }
+    
+    private async ValueTask AddBoundariesAsync(long id, long minX, long maxX, long minY, long maxY)
+    {
+        if (_javaScriptModule == null)
+        {
+            return;
+        }
+        
+        await _javaScriptModule.InvokeVoidAsync("addBoundaries", 
+            id,
+            minX,
+            maxX,
+            minY,
+            maxY);
     }
     
     private async ValueTask AddParkingSpotAsync(ParkingSpot parkingSpot)
