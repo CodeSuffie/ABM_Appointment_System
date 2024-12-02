@@ -190,7 +190,7 @@ export async function initialize() {
     requestAnimationFrame(onFrame);
 }
 
-function createHorizontalMaterialPlane(materialData, sizeX, sizeY) {
+function createMaterial(materialData, sizeX, sizeY) {
     // clone textures
     const map = materialData.hasOwnProperty('color') ? materialData.color.clone() : undefined;
     const specularMap = materialData.hasOwnProperty('specular') ? materialData.specular.clone() : undefined;
@@ -204,9 +204,9 @@ function createHorizontalMaterialPlane(materialData, sizeX, sizeY) {
     bumpMap?.repeat.set(sizeX, sizeY);
     normalMap?.repeat.set(sizeX, sizeY);
     displacementMap?.repeat.set(sizeX, sizeY);
-    
+
     // construct material
-    const material = new THREE.MeshBasicMaterial({
+    return new THREE.MeshBasicMaterial({
         map: map,
         specularMap: specularMap,
         bumpMap: bumpMap,
@@ -214,7 +214,18 @@ function createHorizontalMaterialPlane(materialData, sizeX, sizeY) {
         displacementMap: displacementMap,
         side: THREE.DoubleSide
     });
+}
+
+function createVerticalMaterialPlane(materialData, sizeX, sizeY) {
+    const material = createMaterial(materialData, sizeX, sizeY);
+    const plane = new THREE.PlaneGeometry(sizeX * scaleX, sizeY * scaleY);
+    const planeMesh = new THREE.Mesh(plane, material);
     
+    return planeMesh;
+}
+
+function createHorizontalMaterialPlane(materialData, sizeX, sizeY) {
+    const material = createMaterial(materialData, sizeX, sizeY);
     const plane = new THREE.PlaneGeometry(sizeX * scaleX, sizeY * scaleY);
     const planeMesh = new THREE.Mesh(plane, material);
 
@@ -222,36 +233,72 @@ function createHorizontalMaterialPlane(materialData, sizeX, sizeY) {
     return planeMesh;
 }
 
-function createGrassPlane(sizeX, sizeY, variant) {
+function createGrassPlane(sizeX, sizeY, variant, horizontal) {
     if (variant === null || variant === undefined || variant >= window.simulationView.textures.grass.length) {
         variant = 0;
     }
-    
-    return createHorizontalMaterialPlane(window.simulationView.textures.grass[variant], sizeX, sizeY);
+
+    if (horizontal === null || horizontal === undefined) {
+        horizontal = true;
+    }
+
+    const material = window.simulationView.textures.grass[variant];
+    if (horizontal) {
+        return createHorizontalMaterialPlane(material, sizeX, sizeY);
+    }
+
+    return createVerticalMaterialPlane(material, sizeX, sizeY);
 }
 
-function createGravelPlane(sizeX, sizeY, variant) {
+function createGravelPlane(sizeX, sizeY, variant, horizontal) {
     if (variant === null || variant === undefined || variant >= window.simulationView.textures.gravel.length) {
         variant = 0;
     }
 
-    return createHorizontalMaterialPlane(window.simulationView.textures.gravel[variant], sizeX, sizeY);
+    if (horizontal === null || horizontal === undefined) {
+        horizontal = true;
+    }
+
+    const material = window.simulationView.textures.gravel[variant];
+    if (horizontal) {
+        return createHorizontalMaterialPlane(material, sizeX, sizeY);
+    }
+        
+    return createVerticalMaterialPlane(material, sizeX, sizeY);
 }
 
-function createMetalPlane(sizeX, sizeY, variant) {
+function createMetalPlane(sizeX, sizeY, variant, horizontal) {
     if (variant === null || variant === undefined || variant >= window.simulationView.textures.metal.length) {
         variant = 0;
     }
 
-    return createHorizontalMaterialPlane(window.simulationView.textures.metal[variant], sizeX, sizeY);
+    if (horizontal === null || horizontal === undefined) {
+        horizontal = true;
+    }
+
+    const material = window.simulationView.textures.metal[variant];
+    if (horizontal) {
+        return createHorizontalMaterialPlane(material, sizeX, sizeY);
+    }
+
+    return createVerticalMaterialPlane(material, sizeX, sizeY);
 }
 
-function createBrickPlane(sizeX, sizeY, variant) {
+function createBrickPlane(sizeX, sizeY, variant, horizontal) {
     if (variant === null || variant === undefined || variant >= window.simulationView.textures.brick.length) {
         variant = 0;
     }
+    
+    if (horizontal === null || horizontal === undefined) {
+        horizontal = true;
+    }
 
-    return createHorizontalMaterialPlane(window.simulationView.textures.brick[variant], sizeX, sizeY);
+    const material = window.simulationView.textures.brick[variant];
+    if (horizontal) {
+        return createHorizontalMaterialPlane(material, sizeX, sizeY);
+    }
+
+    return createVerticalMaterialPlane(material, sizeX, sizeY);
 }
 
 async function initializeWorld() {
@@ -280,7 +327,7 @@ export function addBay(id, locationX, locationY, sizeX, sizeY) {
     const model = window.simulationView.models.rolling_shutter.clone();
     model.position.x = locationX * scaleX;
     model.position.y = -0.49;
-    model.position.z = (locationY * scaleY) - (scaleY / 2);
+    model.position.z = ((locationY * scaleY) - (scaleY / 2)) + 0.2;
     model.scale.set(rollingShutterScale, rollingShutterScale, rollingShutterScale);
     window.simulationView.scene.add(model);
     
@@ -321,6 +368,44 @@ export function addBoundaries(id, minX, maxX, minY, maxY) {
         addFence(minX, minY + i, false);
         addFence(maxX + 1, minY + i, false);
     }
+}
+
+function addWall(locationX, locationY, sizeX, sizeY, onXAxis) {
+    const plane = createBrickPlane(sizeX, sizeY, 0, false);
+
+    plane.position.y = -0.49;
+    if (onXAxis) {
+        plane.position.x = (locationX * scaleX) + scaleX;
+        plane.position.z = (locationY * scaleY) - ((sizeX * scaleY) / 2);
+    } else {
+        plane.position.x = (locationX * scaleX) - (scaleX / 2);
+        plane.position.z = (locationY * scaleY) - (sizeX * scaleY);
+        plane.rotateY(1.5707963);
+    }
+    
+    window.simulationView.scene.add(plane);
+}
+
+function addRoof(locationX, locationY, sizeX, sizeY) {
+    const plane = createMetalPlane(sizeX, sizeY);
+
+    plane.position.x = (locationX * scaleX) + scaleX;
+    plane.position.y = 1.6;
+    plane.position.z = (locationY * scaleY) - scaleY;
+
+    window.simulationView.scene.add(plane);
+}
+
+export function addHub(id, minX, maxX, minY, maxY) {
+    var sizeX = maxX - minX;
+    var sizeY = maxY - minY;
+    
+    addWall(minX, minY, sizeX, 1, true);
+    addWall(minX, maxY, sizeX, 1, true);
+    addWall(minX, minY, sizeY, 1, false);
+    addWall(maxX, minY, sizeY, 1, false);
+
+    addRoof(minX, minY, sizeX, sizeY);
 }
 
 export function addParkingSpot(id, locationX, locationY, sizeX, sizeY) {

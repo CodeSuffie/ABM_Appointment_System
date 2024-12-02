@@ -51,12 +51,18 @@ public sealed partial class Simulation
             var hubParkingSpots = parkingSpots.Where(p => p.HubId == hub.Id).ToArray();
             var hubBays = bays.Where(b => b.HubId == hub.Id).ToArray();
 
-            var minX = Math.Min(hubParkingSpots.Min(p => p.XLocation), hubBays.Min(b => b.XLocation));
-            var maxX = Math.Max(hubParkingSpots.Max(p => p.XLocation), hubBays.Max(b => b.XLocation));
-            var minY = Math.Min(hubParkingSpots.Min(p => p.YLocation), hubBays.Min(b => b.YLocation));
-            var maxY = Math.Max(hubParkingSpots.Max(p => p.YLocation), hubBays.Max(b => b.YLocation));
+            var hubBayMinX = hubBays.Min(b => b.XLocation);
+            var hubBayMaxX = hubBays.Max(b => b.XLocation);
+            var hubBayMinY = hubBays.Min(b => b.YLocation);
+            var hubBayMaxY = hubBays.Max(b => b.YLocation);
+            
+            var minX = Math.Min(hubParkingSpots.Min(p => p.XLocation), hubBayMinX);
+            var maxX = Math.Max(hubParkingSpots.Max(p => p.XLocation), hubBayMaxX);
+            var minY = Math.Min(hubParkingSpots.Min(p => p.YLocation), hubBayMinY);
+            var maxY = Math.Max(hubParkingSpots.Max(p => p.YLocation), hubBayMaxY);
 
             await AddBoundariesAsync(hub.Id, minX - 1, maxX + 1, minY - 1, maxY + 1);
+            await AddHubAsync(hub.Id, hubBayMinX, hubBayMaxX + 1, hubBayMinY, hubBayMaxY + 1);
         }
         
         // create new timer
@@ -105,6 +111,21 @@ public sealed partial class Simulation
         }
         
         await _javaScriptModule.InvokeVoidAsync("addBoundaries", 
+            id,
+            minX,
+            maxX,
+            minY,
+            maxY);
+    }
+    
+    private async ValueTask AddHubAsync(long id, long minX, long maxX, long minY, long maxY)
+    {
+        if (_javaScriptModule == null)
+        {
+            return;
+        }
+        
+        await _javaScriptModule.InvokeVoidAsync("addHub", 
             id,
             minX,
             maxX,

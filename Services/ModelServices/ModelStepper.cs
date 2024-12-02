@@ -1,34 +1,54 @@
+using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging;
 using Services.Abstractions;
 
 namespace Services.ModelServices;
 
-public sealed class ModelStepper(
-    ILogger<ModelStepper> logger,
-    ModelState modelState,
-    LoadService loadService,
-    IEnumerable<IStepperService> stepperServices)
+public sealed class ModelStepper
 {
+    private readonly ILogger<ModelStepper> _logger;
+    private readonly ModelState _modelState;
+    private readonly LoadService _loadService;
+    private readonly IEnumerable<IStepperService> _stepperServices;
+    private readonly Counter<int> _stepCounter;
+    
+    public ModelStepper(
+        ILogger<ModelStepper> logger,
+        ModelState modelState,
+        LoadService loadService,
+        IEnumerable<IStepperService> stepperServices,
+        Meter meter)
+    {
+        _logger = logger;
+        _modelState = modelState;
+        _loadService = loadService;
+        _stepperServices = stepperServices;
+
+        _stepCounter = meter.CreateCounter<int>("steps");
+    }
+    
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        if (modelState.ModelTime > modelState.ModelConfig.ModelTime)
+        if (_modelState.ModelTime > _modelState.ModelConfig.ModelTime)
         {
             return;
         }
         
-        await loadService.AddNewLoadsAsync(modelState.ModelConfig.LoadsPerStep, cancellationToken);
+        _stepCounter.Add(1);
         
-        logger.LogDebug("Handling this Step \n({Step})",
-            modelState.ModelTime);
+        await _loadService.AddNewLoadsAsync(_modelState.ModelConfig.LoadsPerStep, cancellationToken);
         
-        foreach (var stepperService in stepperServices)
+        _logger.LogDebug("Handling this Step \n({Step})",
+            _modelState.ModelTime);
+        
+        foreach (var stepperService in _stepperServices)
         {
             await stepperService.StepAsync(cancellationToken);
         }
         
-        logger.LogDebug("Completed handling this Step \n({Step})",
-            modelState.ModelTime);
+        _logger.LogDebug("Completed handling this Step \n({Step})",
+            _modelState.ModelTime);
 
-        await modelState.StepAsync(cancellationToken);
+        await _modelState.StepAsync(cancellationToken);
     }
 }
