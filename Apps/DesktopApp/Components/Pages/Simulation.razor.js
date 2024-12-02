@@ -382,13 +382,13 @@ function createRenderer() {
 
     // setup camera
     let camera = new THREE.PerspectiveCamera( 65, container.offsetWidth / container.offsetHeight, 1, (levelScale / 6) * 3 );
-    camera.position.set( 0, 40, 0 );
+    camera.position.set( 400, 50, 400 );
     window.simulationView.camera = camera;
 
     // setup controls
     let controls = new OrbitControls( camera, renderer.domElement );
     controls.maxPolarAngle = Math.PI * 0.495;
-    controls.target.set( 100, 1, 100 );
+    controls.target.set( 450, 1, 450 );
     controls.minDistance = 0.0;
     controls.maxDistance = levelScale;
     controls.update();
