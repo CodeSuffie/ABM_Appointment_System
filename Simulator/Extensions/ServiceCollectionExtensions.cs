@@ -27,7 +27,10 @@ namespace Simulator.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddSimulator(this IServiceCollection services)
+    public static IServiceCollection AddSimulator(
+        this IServiceCollection services //,
+        //IMeterFactory meterFactory
+        )
     {
         services.AddLogging(configure =>
         {
@@ -98,41 +101,33 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ModelStepper>();
         services.AddScoped<ModelState>();
         services.AddScoped<ModelService>();
-
-        var meterName = "simulator";
-        var meter = new Meter(meterName);
-        services.AddSingleton(meter);
         
-        var serviceName = "Simulator";
+        var serviceName = "Simulator";  // Maybe Apps.ConsoleApp & Apps.DesktopApp?
         var serviceVersion = "1.0.0";
         var serviceEnvironment = "";
         
-        var resourceBuilder = ResourceBuilder.CreateEmpty()
-            .AddService(serviceName)
-            .AddAttributes(new Dictionary<string, object>
-            {
-                ["service.name"] = serviceName,
-                ["service.version"] = serviceVersion,
-                ["deployment.environment"] = serviceEnvironment,
-            });
-        
         services.AddOpenTelemetry()
+            .ConfigureResource(resource => resource.AddService(
+                serviceName: serviceName, 
+                serviceVersion: serviceVersion))
             .WithTracing(providerBuilder => providerBuilder
                 .AddSource(serviceName)
-                .SetResourceBuilder(resourceBuilder)
                 .AddOtlpExporter(exporter =>
                 {
-                    exporter.Endpoint = new Uri("http://collector:4317/");
+                    exporter.Endpoint = new Uri("http://grafana-collector:4317/");
                     exporter.Protocol = OtlpExportProtocol.Grpc;
-                }))
+                }))     // What is this for?
             .WithMetrics(providerBuilder => providerBuilder
-                .AddMeter(meterName)
-                .SetResourceBuilder(resourceBuilder)
+                .AddMeter(serviceName)
                 .AddOtlpExporter(exporter =>
                 {
-                    exporter.Endpoint = new Uri("http://collector:4317/");
+                    exporter.Endpoint = new Uri("http://grafana-collector:4317/");
                     exporter.Protocol = OtlpExportProtocol.Grpc;
-                }));
+                }));        // PrometheusExporter() ?
+        
+        var meter = new Meter(serviceName, serviceVersion);
+        // var meter = meterFactory.Create(serviceName, serviceVersion); ?
+        services.AddSingleton(meter);
         
         return services;
     }

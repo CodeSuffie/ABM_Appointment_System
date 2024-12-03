@@ -24,7 +24,7 @@ public sealed class ModelStepper
         _loadService = loadService;
         _stepperServices = stepperServices;
 
-        _stepCounter = meter.CreateCounter<int>("steps");
+        _stepCounter = meter.CreateCounter<int>("steps", "Steps", "Number of steps executed.");
     }
     
     public async Task StepAsync(CancellationToken cancellationToken)
@@ -33,8 +33,6 @@ public sealed class ModelStepper
         {
             return;
         }
-        
-        _stepCounter.Add(1);
         
         await _loadService.AddNewLoadsAsync(_modelState.ModelConfig.LoadsPerStep, cancellationToken);
         
@@ -45,6 +43,8 @@ public sealed class ModelStepper
         {
             await stepperService.StepAsync(cancellationToken);
         }
+        
+        _stepCounter.Add(1);
         
         _logger.LogDebug("Completed handling this Step \n({Step})",
             _modelState.ModelTime);

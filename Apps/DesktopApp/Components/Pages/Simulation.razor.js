@@ -390,7 +390,7 @@ function addRoof(locationX, locationY, sizeX, sizeY) {
     const plane = createMetalPlane(sizeX, sizeY);
 
     plane.position.x = (locationX * scaleX) + scaleX;
-    plane.position.y = 1.6;
+    plane.position.y = 1.76;
     plane.position.z = (locationY * scaleY) - scaleY;
 
     window.simulationView.scene.add(plane);
