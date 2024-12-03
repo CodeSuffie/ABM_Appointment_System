@@ -62,6 +62,13 @@ async function initializeTextures() {
     window.simulationView.textures.brick[0].bump = await loadTexture('brick/01/bump', 'png');
     window.simulationView.textures.brick[0].normal = await loadTexture('brick/01/normal', 'jpg');
     window.simulationView.textures.brick[0].displacement = await loadTexture('brick/01/displacement', 'jpg');
+
+    // road
+    window.simulationView.textures.road[0].color = await loadTexture('road/01/color', 'jpg');
+    window.simulationView.textures.road[0].specular = await loadTexture('road/01/specular', 'jpg');
+    window.simulationView.textures.road[0].bump = await loadTexture('road/01/bump', 'png');
+    window.simulationView.textures.road[0].normal = await loadTexture('road/01/normal', 'jpg');
+    window.simulationView.textures.road[0].displacement = await loadTexture('road/01/displacement', 'jpg');
 }
 
 export async function initialize() {
@@ -114,6 +121,15 @@ export async function initialize() {
                     bump: null,
                     normal: null,
                     displacement: null,
+                }
+            ],
+            road: [
+                {
+                    color: null,
+                    specular: null,
+                    bump: null,
+                    normal: null,
+                    displacement: null
                 }
             ]
         },
