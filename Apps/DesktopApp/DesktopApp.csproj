@@ -71,7 +71,7 @@
     <ItemGroup>
       <Folder Include="wwwroot\3d\models\" />
       <Folder Include="wwwroot\3d\textures\" />
-      <Folder Include="wwwroot\js\" />
+      <Folder Include="wwwroot\js\three.interaction\" />
     </ItemGroup>
 
 </Project>

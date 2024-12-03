@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import Interaction from 'three.interaction/src/interaction/Interaction.js';
 
 const globalScale = 1;
 const levelScale = 2500 * globalScale;
@@ -82,6 +83,11 @@ export async function initialize() {
         camera: null,
         renderer: null,
         controls: null,
+        screen: {
+            width: 0,
+            height: 0
+        },
+        interaction: null,
         models: {
             truck_01: null,
             warehouse_01: null,
@@ -137,23 +143,23 @@ export async function initialize() {
         parkingSpots: {},
         bays: {},
     };
-
+    
     await initializeModels();
     await initializeTextures();
     
-    window.simulationView.domContainer = document.getElementById( 'container' );
+    const domContainer = document.getElementById( 'container' );
+    window.simulationView.domContainer = domContainer;
     createRenderer();
 
     const renderer = window.simulationView.renderer;
-
+    
     // setup window events
-    window.addEventListener( 'resize', onWindowResize );
-
+    window.addEventListener('resize', onWindowResize);
+    
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x606060, 1, (levelScale / 4) * 3);
     scene.perObjectFrustumCulled = true;
     window.simulationView.scene = scene;
-
     initializeWorld();
 
     // add ambient light
@@ -479,6 +485,11 @@ export function addTruck(id, locationX, locationY) {
     if (!hasTruck) {
         let model = window.simulationView.models.truck_01.clone();
         model.scale.set(truckScale, truckScale, truckScale);
+        model.cursor = 'pointer';
+        model.on('click', function(event) {
+            console.log(`Truck ${id} clicked!`);
+            console.log(event);
+        });
         window.simulationView.scene.add(model);
 
         window.simulationView.visibleTrucks[id] = {
@@ -501,13 +512,17 @@ export function addTruck(id, locationX, locationY) {
 function createRenderer() {
     const container = window.simulationView.domContainer;
 
+    // store screen parameters
+    window.simulationView.screen.width = container.offsetWidth;
+    window.simulationView.screen.height = container.offsetHeight;
+    
     // setup renderer
     let renderer = new THREE.WebGLRenderer({
         antialias: false,
         powerPreference: "high-performance",
     });
     renderer.setPixelRatio( window.devicePixelRatio );
-    renderer.setSize( container.offsetWidth, container.offsetHeight );
+    renderer.setSize( window.simulationView.screen.width, window.simulationView.screen.height );
     // r.toneMapping = THREE.ACESFilmicToneMapping;
     // r.toneMappingExposure = 0.5;
     renderer.sortObjects = false;
@@ -543,9 +558,16 @@ function onFrame() {
         return;
     }
 
-    requestAnimationFrame(onFrame);
+    // setup interaction
+    if (window.simulationView.interaction === null) {
+        window.simulationView.interaction = new Interaction(
+            window.simulationView.renderer,
+            window.simulationView.scene,
+            window.simulationView.camera);
+    }
     
-    window.simulationView.renderer.render( window.simulationView.scene, window.simulationView.camera );
+    requestAnimationFrame(onFrame);
+    window.simulationView.renderer.render(window.simulationView.scene, window.simulationView.camera);
 }
 
 /*
@@ -624,9 +646,13 @@ function onWindowResize() {
         return;
     }
 
-    camera.aspect = container.offsetWidth / container.offsetHeight;
+    // store screen parameters
+    window.simulationView.screen.width = container.offsetWidth;
+    window.simulationView.screen.height = container.offsetHeight;
+
+    camera.aspect = window.simulationView.screen.width / window.simulationView.screen.height;
     camera.updateProjectionMatrix();
-    renderer.setSize( container.offsetWidth, container.offsetHeight);
+    renderer.setSize( window.simulationView.screen.width, window.simulationView.screen.height);
 }
 
 
