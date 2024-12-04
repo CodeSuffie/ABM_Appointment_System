@@ -8,62 +8,53 @@ public sealed class LoadRepository(
     ModelDbContext context,
     BayRepository bayRepository)
 {
-    public IQueryable<Load> GetByStart(TruckCompany truckCompany)
+    public IQueryable<Load> Get()
     {
-        var loads = context.Loads
-            .Where(l => l.TruckCompanyStartId == truckCompany.Id);
+        var loads = context.Loads;
 
         return loads;
     }
     
-    public IQueryable<Load> GetByEnd(TruckCompany truckCompany)
+    public IQueryable<Load> Get(TruckCompany truckCompany)
     {
-        var loads = context.Loads
-            .Where(l => l.TruckCompanyEndId == truckCompany.Id);
+        var loads = Get()
+            .Where(l => l.TruckCompanyId == truckCompany.Id);
 
         return loads;
     }
     
     public IQueryable<Load> Get(Hub hub)
     {
-        var loads = context.Loads
+        var loads = Get()
             .Where(l => l.HubId == hub.Id);
 
         return loads;
     }
     
-    public Task<Load?> GetPickUpAsync(Trip trip, CancellationToken cancellationToken)
+    public IQueryable<Load> Get(Trip trip)
     {
-        return context.Loads.FirstOrDefaultAsync(l => l.PickUpTripId == trip.Id, cancellationToken);
-    }
-    
-    public Task<Load?> GetDropOffAsync(Trip trip, CancellationToken cancellationToken)
-    {
-        return context.Loads.FirstOrDefaultAsync(l => l.DropOffTripId == trip.Id, cancellationToken);
-    }
-    
-    public IQueryable<Load> GetUnclaimedDropOff(TruckCompany truckCompany)
-    {
-        var dropOffs = GetByStart(truckCompany)
-            .Where(l => l.DropOffTrip == null);
+        var load = Get()
+            .Where(l => l.TripId == trip.Id);
 
-        return dropOffs;
+        return load;
     }
     
-    public IQueryable<Load> GetUnclaimedPickUp(TruckCompany truckCompany)
+    public async Task<Load?> GetPickUpAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var pickUps = GetByEnd(truckCompany)
-            .Where(l => l.PickUpTrip == null);
+        var load = await Get(trip)
+            .FirstOrDefaultAsync(l => trip.PickUpId == l.Id,
+                cancellationToken);
 
-        return pickUps;
+        return load;
     }
     
-    public IQueryable<Load> GetUnclaimedPickUp(Hub hub, TruckCompany truckCompany)
+    public async Task<Load?> GetDropOffAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var pickUps = GetUnclaimedPickUp(truckCompany)
-            .Where(l => l.HubId == hub.Id);
+        var load = await Get(trip)
+            .FirstOrDefaultAsync(l => trip.DropOffId == l.Id,
+                cancellationToken);
 
-        return pickUps;
+        return load;
     }
     
     public async Task AddAsync(Load load, CancellationToken cancellationToken)
@@ -79,54 +70,17 @@ public sealed class LoadRepository(
         context.Loads.Remove(load);
         return context.SaveChangesAsync(cancellationToken);
     }
-    
-    public async Task SetAsync(Load load, Bay bay, CancellationToken cancellationToken)
-    {
-        var oldBay = await bayRepository.GetAsync(load, cancellationToken);
-        if (oldBay != null)
-        {
-            await UnsetAsync(load, oldBay, cancellationToken);
-        }
-
-        load.Bay = bay;
-        bay.Loads.Add(load);
-        
-        await context.SaveChangesAsync(cancellationToken);
-    }
 
     public Task SetAsync(Load load, LoadType loadType, CancellationToken cancellationToken)
     {
         load.LoadType = loadType;
         return context.SaveChangesAsync(cancellationToken);
     }
-    
-    public Task UnsetAsync(Load load, Bay bay, CancellationToken cancellationToken)
-    {
-        load.Bay = null;
-        bay.Loads.Remove(load);
-        
-        return context.SaveChangesAsync(cancellationToken);
-    }
-    
-    public Task UnsetPickUpAsync(Load load, Trip trip, CancellationToken cancellationToken)
-    {
-        load.PickUpTrip = null;
-        trip.PickUp = null;
-        
-        return context.SaveChangesAsync(cancellationToken);
-    }
 
     public Task<int> CountUnclaimedAsync(CancellationToken cancellationToken)
     {
         return context.Loads
-            .Where(l => l.DropOffTrip == null)
-            .CountAsync(cancellationToken);
-    }
-
-    public Task<int> CountDroppedOffAsync(CancellationToken cancellationToken)
-    {
-        return context.Loads
-            .Where(l => l.LoadType != LoadType.DropOff)
+            .Where(l => l.Trip == null)
             .CountAsync(cancellationToken);
     }
 }

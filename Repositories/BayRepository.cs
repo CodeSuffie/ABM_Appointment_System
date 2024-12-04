@@ -47,12 +47,12 @@ public sealed class BayRepository(ModelDbContext context)
         return bay;
     }
     
-    public async Task<Bay?> GetAsync(Load load, CancellationToken cancellationToken)
+    public async Task<Bay?> GetAsync(Pellet pellet, CancellationToken cancellationToken)
     {
-        if (load.BayId == null) return null;
+        if (pellet.BayId == null) return null;
         
         var bay = await Get()
-            .FirstOrDefaultAsync(b => b.Id == load.BayId, cancellationToken);
+            .FirstOrDefaultAsync(b => b.Id == pellet.BayId, cancellationToken);
 
         return bay;
     }

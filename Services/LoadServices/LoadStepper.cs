@@ -12,7 +12,7 @@ public sealed class LoadStepper : IStepperService
     private readonly LoadRepository _loadRepository;
     private readonly ModelState _modelState;
     private readonly Histogram<int> _unclaimedLoadsHistogram;
-    private readonly Histogram<int> _droppedOffLoadsHistogram;
+    // private readonly Histogram<int> _droppedOffLoadsHistogram;
     
     public LoadStepper(
         ILogger<LoadStepper> logger,
@@ -25,7 +25,7 @@ public sealed class LoadStepper : IStepperService
         _modelState = modelState;
 
         _unclaimedLoadsHistogram = meter.CreateHistogram<int>("unclaimed-load", "Load", "#Loads Unclaimed.");
-        _droppedOffLoadsHistogram = meter.CreateHistogram<int>("dropped-off-load", "Load", "#Loads Dropped Off.");
+        // _droppedOffLoadsHistogram = meter.CreateHistogram<int>("dropped-off-load", "Load", "#Loads Dropped Off.");
     }
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)
@@ -36,8 +36,9 @@ public sealed class LoadStepper : IStepperService
         var unclaimed = await _loadRepository.CountUnclaimedAsync(cancellationToken);
         _unclaimedLoadsHistogram.Record(unclaimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
-        var droppedOff = await _loadRepository.CountDroppedOffAsync(cancellationToken);
-        _droppedOffLoadsHistogram.Record(droppedOff, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        // TODO: Refactor to runtime counter
+        // var droppedOff = await _loadRepository.CountDroppedOffAsync(cancellationToken);
+        // _droppedOffLoadsHistogram.Record(droppedOff, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
         _logger.LogDebug("Finished handling Data Collection for Load in this Step \n({Step})",
             _modelState.ModelTime);

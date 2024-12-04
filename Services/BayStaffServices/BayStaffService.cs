@@ -312,7 +312,8 @@ public sealed class BayStaffService
         }
         else
         {
-            var pickUpLoadBay = await _bayRepository.GetAsync(pickUpLoad, cancellationToken);
+            // TODO: BIG REFACTOR HERE
+            Bay? pickUpLoadBay = null; // TODO: Refactor | await _bayRepository.GetAsync(pickUpLoad, cancellationToken);
             if (pickUpLoadBay == null)
             {
                 _logger.LogInformation("Load \n({@Load})\n to Pick-Up for this Trip \n({@Trip})\n did not have a bay assigned to Fetch it from.",
@@ -332,7 +333,7 @@ public sealed class BayStaffService
                     _logger.LogDebug("Unsetting Pick-Up Load \n({@Load})\n for this Trip \n({@Trip})",
                         pickUpLoad,
                         trip);
-                    await _loadRepository.UnsetPickUpAsync(pickUpLoad, trip, cancellationToken);
+                    // TODO: Refactor | await _loadRepository.UnsetPickUpAsync(pickUpLoad, trip, cancellationToken);
                     
                     _pickUpMissCounter.Add(1, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
                 }

@@ -15,15 +15,28 @@ public sealed class TruckCompanyRepository(ModelDbContext context)
     
     public async Task<TruckCompany?> GetAsync(Truck truck, CancellationToken cancellationToken)
     {
-        var truckCompany = await context.TruckCompanies
+        var truckCompany = await Get()
             .FirstOrDefaultAsync(tc => tc.Id == truck.TruckCompanyId, cancellationToken);
+
+        return truckCompany;
+    }
+    
+    public async Task<TruckCompany?> GetAsync(Load load, CancellationToken cancellationToken)
+    {
+        if (load.TruckCompanyId == null)
+        {
+            return null;
+        }
+        
+        var truckCompany = await Get()
+            .FirstOrDefaultAsync(tc => tc.Id == load.TruckCompanyId, cancellationToken);
 
         return truckCompany;
     }
 
     public async Task<int> CountAsync(CancellationToken cancellationToken)
     {
-        var count = await context.TruckCompanies
+        var count = await Get()
             .CountAsync(cancellationToken);
 
         return count;

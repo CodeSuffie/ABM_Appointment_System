@@ -38,8 +38,5 @@ public sealed class ModelInitialize(
             await initializationService.InitializeObjectsAsync(cancellationToken);
         }
         logger.LogInformation("Initialization Completed.");
-        
-        logger.LogInformation("Initializing Model Loads...");
-        await loadService.AddNewLoadsAsync(modelState.ModelConfig.InitialLoads, cancellationToken);
     }
 }

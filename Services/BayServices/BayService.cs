@@ -179,20 +179,19 @@ public sealed class BayService(
         var dropOffLoad = await loadRepository.GetDropOffAsync(trip, cancellationToken);
         if (dropOffLoad == null)
         {
-            logger.LogError("Trip \n({@Trip})\n at Bay \n({@Bay})\n did not have a Load assigned to Drop Off.",
+            logger.LogInformation("Trip \n({@Trip})\n at Bay \n({@Bay})\n did not have a Load assigned to Drop Off.",
                 trip,
                 bay);
             
-            // TODO: THIS CAN ACTUALLY HAPPEN
-
             return;
         }
         
+        // TODO: BIG REFACTOR HERE
         logger.LogDebug("Moving the Dropped Off Load \n({@Load})\n for this Trip \n({@Trip})\n to this Bay \n({@Bay})",
             dropOffLoad,
             trip,
             bay);
-        await loadRepository.SetAsync(dropOffLoad, bay, cancellationToken);
+        // await loadRepository.SetAsync(dropOffLoad, bay, cancellationToken);
         
         logger.LogDebug("Setting Dropped Off Load \n({@Load})\n for this Trip \n({@Trip})\n to be of type {LoadType}...",
             dropOffLoad,
@@ -262,11 +261,12 @@ public sealed class BayService(
             return;
         }
         
+        // TODO: BIG REFACTOR HERE
         logger.LogDebug("Moving the Fetched Load \n({@Load})\n for this Trip \n({@Trip})\n to this Bay \n({@Bay})",
             pickUpLoad,
             trip,
             bay);
-        await loadRepository.SetAsync(pickUpLoad, bay, cancellationToken);
+        // await loadRepository.SetAsync(pickUpLoad, bay, cancellationToken);
     }
     
     public async Task AlertPickedUpAsync(Bay bay, CancellationToken cancellationToken)
@@ -311,11 +311,12 @@ public sealed class BayService(
         }
         else
         {
+            // TODO: BIG REFACTOR HERE
             logger.LogDebug("Removing the Picked Up Load \n({@Load})\n for this Trip \n({@Trip})\n from this Bay \n({@Bay})",
                         pickUpLoad,
                         trip,
                         bay);
-                    await loadRepository.UnsetAsync(pickUpLoad, bay, cancellationToken);
+            // await loadRepository.UnsetAsync(pickUpLoad, bay, cancellationToken);
         }
         
         

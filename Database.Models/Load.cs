@@ -6,21 +6,29 @@ public class Load
     
     public LoadType LoadType { get; set; }
 
-    public TruckCompany? TruckCompanyStart { get; set; }
-    public long TruckCompanyStartId { get; set; }
+    // public TruckCompany? TruckCompanyStart { get; set; }
+    // public long TruckCompanyStartId { get; set; }
     
-    public TruckCompany? TruckCompanyEnd { get; set; }
-    public long TruckCompanyEndId { get; set; }
+    // public TruckCompany? TruckCompanyEnd { get; set; }
+    // public long TruckCompanyEndId { get; set; }
+    
+    public TruckCompany? TruckCompany { get; set; }
+    public long? TruckCompanyId { get; set; }
 
     public Hub? Hub { get; set; }
     public long? HubId { get; set; }
     
-    public Bay? Bay { get; set; }
-    public long? BayId { get; set; }
+    // public Bay? Bay { get; set; }
+    // public long? BayId { get; set; }
     
-    public Trip? DropOffTrip { get; set; }
-    public long? DropOffTripId { get; set; }
+    // public Trip? DropOffTrip { get; set; }
+    // public long? DropOffTripId { get; set; }
     
-    public Trip? PickUpTrip { get; set; }
-    public long? PickUpTripId { get; set; }
+    // public Trip? PickUpTrip { get; set; }
+    // public long? PickUpTripId { get; set; }
+    
+    public Trip? Trip { get; set; }
+    public long? TripId { get; set; }
+
+    public List<Pellet> Pellets { get; set; } = [];
 }

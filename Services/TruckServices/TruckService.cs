@@ -31,7 +31,8 @@ public sealed class TruckService(
         var truck = new Truck
         {
             TruckCompany = truckCompany,
-            Speed = modelState.AgentConfig.TruckAverageSpeed
+            Speed = modelState.AgentConfig.TruckAverageSpeed,
+            Capacity = modelState.AgentConfig.TruckAverageCapacity
         };
 
         await truckRepository.AddAsync(truck, cancellationToken);
@@ -41,20 +42,10 @@ public sealed class TruckService(
 
     public async Task AlertFreeAsync(Truck truck, CancellationToken cancellationToken)
     {
-        var truckCompany = await truckCompanyRepository.GetAsync(truck, cancellationToken);
-        if (truckCompany == null)
-        {
-            logger.LogError("Truck \n({@Truck})\n did not have a TruckCompany assigned to alert free for.",
-                truck);
-
-            return;
-        }
-        
-        var trip = await tripService.GetNextAsync(truckCompany, cancellationToken);
+        var trip = await tripService.GetNextAsync(truck, cancellationToken);
         if (trip == null)
         {
-            logger.LogInformation("TruckCompany \n({@TruckCompany})\n did not have a Trip for this Truck \n({@Truck})\n to start.",
-                truckCompany,
+            logger.LogInformation("Truck \n({@Truck})\n could not receive a Trip to start.",
                 truck);
             
             logger.LogDebug("Truck \n({@Truck})\n will remain idle...",

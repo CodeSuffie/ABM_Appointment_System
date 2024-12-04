@@ -46,8 +46,6 @@ public sealed class ModelStepper
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        await _loadService.AddNewLoadsAsync(_modelState.ModelConfig.LoadsPerStep, cancellationToken);
-        
         _logger.LogDebug("Handling this Step \n({Step})",
             _modelState.ModelTime);
         

@@ -12,4 +12,5 @@ public class TruckCompany : ILocation
     public long YLocation { get; set; }
     
     public List<Truck> Trucks { get; set; } = [];
+    public List<Pellet> Pellets { get; set; } = [];
 }

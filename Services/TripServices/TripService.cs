@@ -51,11 +51,11 @@ public sealed class TripService
         _loadRepository = loadRepository;
     }
 
-    public async Task<Trip?> GetNewObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    public async Task<Trip?> GetNextAsync(Truck truck, CancellationToken cancellationToken)
     {
         while (true)
         {
-            var dropOff = await _loadService.SelectUnclaimedDropOffAsync(truckCompany, cancellationToken);
+            var dropOff = await _loadService.GetNewDropOffAsync(truck, cancellationToken);
             Load? pickUp;
             Trip? trip = null;
     
@@ -72,19 +72,18 @@ public sealed class TripService
                 var dropOffHub = await _hubRepository.GetAsync(dropOff, cancellationToken);
                 if (dropOffHub == null)
                 {
-                    _logger.LogError("Drop-Off Load \n({@Load})\n for this TruckCompany \n({@TruckCompany})\n did not have a Hub assigned.",
+                    _logger.LogError("Drop-Off Load \n({@Load})\n for this Truck \n({@Truck})\n did not have a Hub assigned.",
                         dropOff,
-                        truckCompany);
+                        truck);
     
-                    _logger.LogDebug("Removing invalid Drop-Off Load \n({@Load})\n for this TruckCompany \n({@TruckCompany})",
-                        dropOff,
-                        truckCompany);
+                    _logger.LogDebug("Removing invalid Drop-Off Load \n({@Load})",
+                        dropOff);
                     await _loadRepository.RemoveAsync(dropOff, cancellationToken);
     
                     continue;
                 }
                 
-                pickUp = await _loadService.SelectUnclaimedPickUpAsync(dropOffHub, truckCompany, cancellationToken);
+                pickUp = await _loadService.GetNewPickUpAsync(truck, dropOffHub, cancellationToken);
 
                 if (pickUp != null)
                 {
@@ -93,7 +92,7 @@ public sealed class TripService
             }
             else
             {
-                pickUp = await _loadService.SelectUnclaimedPickUpAsync(truckCompany, cancellationToken);
+                pickUp = await _loadService.GetNewPickUpAsync(truck, cancellationToken);
                 if (pickUp != null)
                 {
                     trip = new Trip
@@ -107,61 +106,23 @@ public sealed class TripService
 
             if (trip != null)
             {
+                var truckCompany = await _truckCompanyRepository.GetAsync(truck, cancellationToken);
+                if (truckCompany == null)
+                {
+                    _logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) to create the new Trip for.",
+                        truck);
+
+                    return null;
+                }
+                
                 _logger.LogDebug("Setting TruckCompany \n({@TruckCompany})\n location to this Trip \n({@Trip})",
                                 truckCompany,
                                 trip);
-                            await _locationService.SetAsync(trip, truckCompany, cancellationToken);
+                await _locationService.SetAsync(trip, truckCompany, cancellationToken);
             }
 
             return trip;
         }
-    }
-
-    public async Task AddNewObjectsAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
-    {
-        var trip = await GetNewObjectAsync(truckCompany, cancellationToken);
-        while (trip != null)
-        {
-            _logger.LogInformation("New Trip created for this TruckCompany \n({@TruckCOmpany})\n: Trip={@Trip}",
-                truckCompany,
-                trip);
-            
-            trip = await GetNewObjectAsync(truckCompany, cancellationToken);
-        }
-        
-        _logger.LogInformation("TruckCompany \n({@TruckCompany})\n could not construct any more new Trips...",
-            truckCompany);
-    }
-    
-    public async Task<Trip?> GetNextAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
-    {
-        var trip = await GetNewObjectAsync(truckCompany, cancellationToken);
-        if (trip == null)
-        {
-            _logger.LogInformation("TruckCompany \n({@TruckCompany})\n could not create a Trip.",
-                truckCompany);
-
-            return null;
-        }
-
-        if (trip.Truck != null)
-        {
-            _logger.LogError("Trip \n({@Trip})\n already has a Truck assigned ({@Truck}).",
-                trip,
-                trip.Truck);
-
-            return null;
-        }
-
-        if (trip.Completed)
-        {
-            _logger.LogError("Trip \n({@Trip})\n was already completed.",
-                trip);
-
-            return null;
-        }
-        
-        return trip;
     }
 
     public async Task<Trip?> GetNextAsync(Hub hub, WorkType workType, CancellationToken cancellationToken)

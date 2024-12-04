@@ -59,7 +59,7 @@ public sealed class OperatingHourService(
         {
             var day = TimeSpan.FromDays(i);
             
-            if (modelState.Random() > hub.OperatingChance)
+            if (modelState.RandomDouble() > hub.OperatingChance)
             {
                 logger.LogInformation("Hub \n({@Hub})\n will not have an OperatingHour during this day \n({TimeSpan})",
                     hub,

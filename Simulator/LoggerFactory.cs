@@ -37,7 +37,7 @@ internal static class LoggerFactory
                         BayStatus = b.BayStatus,
                         HubId = b.HubId,
                         TripId = b.TripId,
-                        LoadIds = b.Loads.Select(l => l.Id),
+                        PelletIds = b.Pellets.Select(l => l.Id),
                         WorkIds = b.Works.Select(w => w.Id),
                         XSize = b.XSize,
                         YSize = b.YSize,
@@ -85,12 +85,10 @@ internal static class LoggerFactory
                     {
                         Id = l.Id,
                         LoadType = l.LoadType,
-                        TruckCompanyStartId = l.TruckCompanyStartId,
+                        TruckCompanyId = l.TruckCompanyId,
                         HubId = l.HubId,
-                        TruckCompanyEndId = l.TruckCompanyEndId,
-                        DropOffTripId = l.DropOffTripId,
-                        PickUpTripId = l.PickUpTripId,
-                        BayId = l.BayId,
+                        TripId = l.TripId,
+                        PelletIds = l.Pellets.Select(p => p.Id)
                     })
                 .Destructure.ByTransforming<OperatingHour>(
                     oh => new { 
@@ -109,6 +107,14 @@ internal static class LoggerFactory
                         YSize = ps.YSize,
                         XLocation = ps.XLocation,
                         YLocation = ps.YLocation
+                    })
+                .Destructure.ByTransforming<Pellet>(
+                    p => new
+                    {
+                        Id = p.Id,
+                        TruckCompanyId = p.TruckCompanyId,
+                        LoadId = p.LoadId,
+                        BayId = p.BayId,
                     })
                 .Destructure.ByTransforming<Trip>(
                     tp => new
@@ -141,7 +147,8 @@ internal static class LoggerFactory
                         XSize = tc.XSize,
                         YSize = tc.YSize,
                         XLocation = tc.XLocation,
-                        YLocation = tc.YLocation
+                        YLocation = tc.YLocation,
+                        PelletIds = tc.Pellets.Select(p => p.Id),
                     })
                 .Destructure.ByTransforming<Work>(
                     w => new

@@ -17,7 +17,8 @@ public abstract class ModelConfigBase
     public abstract int MaxY { get; }
     public abstract int MinDistanceBetween { get; }
 
-    public abstract int InitialLoads { get; }
+    public abstract int InitialTruckCompanyPellets { get; }
+    public abstract int InitialBayPellets { get; }
     public abstract int LoadsPerStep { get; }
 }
 
@@ -39,6 +40,7 @@ public class ModelConfig : ModelConfigBase
     public override int MaxY { get; } = 200;
     public override int MinDistanceBetween { get; } = 9;
     
-    public override int InitialLoads { get; } = 9;
+    public override int InitialTruckCompanyPellets { get; } = 99;
+    public override int InitialBayPellets { get; } = 40;
     public override int LoadsPerStep { get; } = 1;
 }

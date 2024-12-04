@@ -8,9 +8,14 @@ public sealed class ModelState
     public ModelConfigBase ModelConfig = new ModelConfig();
     public AgentConfigBase AgentConfig = new AgentConfig();
     
-    public double Random()
+    public double RandomDouble()
     {
         return ModelConfig.Random.NextDouble();
+    }
+    
+    public int Random()
+    {
+        return ModelConfig.Random.Next();
     }
     
     public int Random(int maximum)

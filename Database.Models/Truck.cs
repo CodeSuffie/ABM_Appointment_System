@@ -3,6 +3,7 @@ namespace Database.Models;
 public class Truck
 {
     public long Id { get; set; }
+    public long Capacity { get; set; }
     public long Speed { get; set; }
 
     public TruckCompany TruckCompany { get; set; } = new();

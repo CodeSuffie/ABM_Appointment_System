@@ -8,12 +8,12 @@ public class TripConfiguration : IEntityTypeConfiguration<Trip>
     public void Configure(EntityTypeBuilder<Trip> builder)
     {
         builder.HasOne(x => x.PickUp)
-            .WithOne(x => x.PickUpTrip)
-            .HasForeignKey<Load>(x => x.PickUpTripId);
+            .WithOne(x => x.Trip)
+            .HasForeignKey<Load>(x => x.TripId);
         
         builder.HasOne(x => x.DropOff)
-            .WithOne(x => x.DropOffTrip)
-            .HasForeignKey<Load>(x => x.DropOffTripId);
+            .WithOne(x => x.Trip)
+            .HasForeignKey<Load>(x => x.TripId);
 
         builder.HasOne(x => x.Truck)
             .WithOne(x => x.Trip)

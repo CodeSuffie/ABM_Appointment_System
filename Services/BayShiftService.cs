@@ -119,7 +119,7 @@ public sealed class BayShiftService(
             }
 
             
-            if (modelState.Random() > workChance)
+            if (modelState.RandomDouble() > workChance)
             {
                 logger.LogInformation("BayStaff \n({@BayStaff})\n will not have a BayShift during " +
                                       "this OperatingHour \n({@OperatingHour})",

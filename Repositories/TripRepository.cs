@@ -40,9 +40,9 @@ public sealed class TripRepository(
         return Get().Where(t => t.DropOff != null ||
                                 t.PickUp != null)
             .Where(t => t.DropOff == null ||
-                        t.DropOff.TruckCompanyStartId == truckCompany.Id)
+                        t.DropOff.TruckCompanyId == truckCompany.Id)
             .Where(t => t.PickUp == null ||
-                        t.PickUp.TruckCompanyEndId == truckCompany.Id);
+                        t.PickUp.TruckCompanyId == truckCompany.Id);
     }
     
     public Task<Trip?> GetAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
@@ -221,7 +221,7 @@ public sealed class TripRepository(
         }
         
         trip.DropOff = dropOff;
-        dropOff.DropOffTrip = trip;
+        dropOff.Trip = trip;
 
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -262,7 +262,7 @@ public sealed class TripRepository(
         }
         
         trip.PickUp = pickUp;
-        pickUp.PickUpTrip = trip;
+        pickUp.Trip = trip;
 
         await context.SaveChangesAsync(cancellationToken);
     }

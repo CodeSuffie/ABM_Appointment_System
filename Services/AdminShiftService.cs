@@ -99,7 +99,7 @@ public sealed class AdminShiftService(
                 continue;
             }
             
-            if (modelState.Random() > workChance)
+            if (modelState.RandomDouble() > workChance)
             {
                 logger.LogInformation("AdminStaff \n({@AdminStaff})\n will not have an AdminShift during " +
                                       "this OperatingHour \n({@OperatingHour})",

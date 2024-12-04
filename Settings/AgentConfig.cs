@@ -11,6 +11,7 @@ public abstract class AgentConfigBase
     public abstract TimeSpan BayShiftAverageLength { get; }
     
     public abstract int TruckCount { get; }
+    public abstract int TruckAverageCapacity { get; }
     public abstract int TruckAverageSpeed { get; }
     
     public abstract double HubAverageOperatingDays { get; }
@@ -36,6 +37,7 @@ public class AgentConfig : AgentConfigBase
     public override TimeSpan BayShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
     public override int TruckCount { get; } = 20;
+    public override int TruckAverageCapacity { get; } = 10;
     public override int TruckAverageSpeed { get; } = 10;
     
     public override double HubAverageOperatingDays { get; } = 1;

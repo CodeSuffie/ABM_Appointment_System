@@ -19,6 +19,6 @@ public class Bay : ILocation
     public Trip? Trip { get; set; }
     public long? TripId { get; set; }
     
-    public List<Load> Loads { get; set; } = [];
+    public List<Pellet> Pellets { get; set; } = [];
     public List<Work> Works { get; set; } = [];
 }
