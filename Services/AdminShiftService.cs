@@ -16,7 +16,7 @@ public sealed class AdminShiftService(
 {
     private TimeSpan? GetStartTime(AdminStaff adminStaff, OperatingHour operatingHour)
     {
-        var maxShiftStart = operatingHour.Duration!.Value - adminStaff.AverageShiftLength;
+        var maxShiftStart = operatingHour.Duration - adminStaff.AverageShiftLength;
 
         if (maxShiftStart < TimeSpan.Zero)
         {
@@ -25,7 +25,7 @@ public sealed class AdminShiftService(
                 adminStaff,
                 adminStaff.AverageShiftLength,
                 operatingHour,
-                operatingHour.Duration!.Value);
+                operatingHour.Duration);
 
             return null;
         }
@@ -88,14 +88,6 @@ public sealed class AdminShiftService(
         
         await foreach (var operatingHour in operatingHours)
         {
-            if (operatingHour.Duration == null)
-            {
-                logger.LogError("OperatingHour \n({@OperatingHour})\n does not have a Duration.",
-                    operatingHour);
-                
-                continue;
-            }
-
             var workChance = await GetWorkChanceAsync(adminStaff, cancellationToken);
             if (workChance == null)
             {
@@ -139,15 +131,7 @@ public sealed class AdminShiftService(
     
     private bool IsCurrent(AdminShift adminShift)
     {
-        if (adminShift.Duration == null)
-        {
-            logger.LogError("AdminShift \n({@AdminShift})\n does not have a Duration",
-                adminShift);
-
-            return false;
-        }
-            
-        var endTime = (TimeSpan)(adminShift.StartTime + adminShift.Duration);
+        var endTime = adminShift.StartTime + adminShift.Duration;
         
         return modelState.ModelTime >= adminShift.StartTime && modelState.ModelTime <= endTime;
     }

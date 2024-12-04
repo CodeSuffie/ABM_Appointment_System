@@ -1,6 +1,7 @@
 using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging;
 using Services.Abstractions;
+using Services.LoadServices;
 
 namespace Services.ModelServices;
 
@@ -24,18 +25,27 @@ public sealed class ModelStepper
         _loadService = loadService;
         _stepperServices = stepperServices;
 
-        _stepCounter = meter.CreateCounter<int>("steps");
+        _stepCounter = meter.CreateCounter<int>("steps", "Steps", "Number of steps executed.");
     }
-    
-    public async Task StepAsync(CancellationToken cancellationToken)
+
+    public async Task DataCollectAsync(CancellationToken cancellationToken)
     {
-        if (_modelState.ModelTime > _modelState.ModelConfig.ModelTime)
+        _logger.LogDebug("Handling Data Collection for this Step \n({Step})",
+            _modelState.ModelTime);
+        
+        foreach (var stepperService in _stepperServices)
         {
-            return;
+            await stepperService.StepAsync(cancellationToken);
         }
         
-        _stepCounter.Add(1);
+        _logger.LogDebug("Completed Data Collection for this Step \n({Step})",
+            _modelState.ModelTime);
         
+        _stepCounter.Add(1, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+    }
+
+    public async Task StepAsync(CancellationToken cancellationToken)
+    {
         await _loadService.AddNewLoadsAsync(_modelState.ModelConfig.LoadsPerStep, cancellationToken);
         
         _logger.LogDebug("Handling this Step \n({Step})",
@@ -48,7 +58,5 @@ public sealed class ModelStepper
         
         _logger.LogDebug("Completed handling this Step \n({Step})",
             _modelState.ModelTime);
-
-        await _modelState.StepAsync(cancellationToken);
     }
 }

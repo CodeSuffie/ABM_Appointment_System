@@ -29,6 +29,7 @@ public class ModelConfig : ModelConfigBase
     public override TimeSpan ModelTime { get; } = TimeSpan.FromDays(7);
     public override TimeSpan ModelStep { get; } = TimeSpan.FromMinutes(10);
     
+    // TODO: Work measured in steps not Timespan
     public override TimeSpan CheckInWorkTime { get; } = TimeSpan.FromMinutes(9);
     public override TimeSpan DropOffWorkTime { get; } = TimeSpan.FromMinutes(9);
     public override TimeSpan PickUpWorkTime { get; } = TimeSpan.FromMinutes(9);

@@ -29,4 +29,11 @@ public sealed class TruckRepository(ModelDbContext context)
         
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public Task<int> CountUnclaimedAsync(CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(t => t.Trip == null)
+            .CountAsync(cancellationToken);
+    }
 }

@@ -21,12 +21,19 @@ public sealed class ParkingSpotRepository(ModelDbContext context)
         return parkingSpot;
     }
 
-    public async Task<int> GetCountAsync(Hub hub, CancellationToken cancellationToken)
+    public async Task<int> CountAsync(Hub hub, CancellationToken cancellationToken)
     {
         var bayCount = await context.ParkingSpots
             .CountAsync(ps => ps.HubId == hub.Id, cancellationToken);
 
         return bayCount;
+    }
+
+    public Task<int> CountUnclaimedAsync(CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(ps => ps.Trip == null)
+            .CountAsync(cancellationToken);
     }
     
     public async Task SetAsync(ParkingSpot parkingSpot, Hub hub, CancellationToken cancellationToken)

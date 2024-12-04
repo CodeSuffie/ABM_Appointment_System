@@ -19,7 +19,7 @@ public sealed class BayShiftService(
 
     private TimeSpan? GetStartTime(BayStaff bayStaff, OperatingHour operatingHour)
     {
-        var maxShiftStart = operatingHour.Duration!.Value - bayStaff.AverageShiftLength;
+        var maxShiftStart = operatingHour.Duration - bayStaff.AverageShiftLength;
 
         if (maxShiftStart < TimeSpan.Zero)
         {
@@ -28,7 +28,7 @@ public sealed class BayShiftService(
                 bayStaff,
                 bayStaff.AverageShiftLength,
                 operatingHour,
-                operatingHour.Duration!.Value);
+                operatingHour.Duration);
 
             return null;
         }
@@ -107,13 +107,6 @@ public sealed class BayShiftService(
         
         await foreach (var operatingHour in operatingHours)
         {
-            if (operatingHour.Duration == null)
-            {
-                logger.LogError("OperatingHour \n({@OperatingHour})\n does not have a Duration.",
-                    operatingHour);
-                continue;
-            }
-            
             var workChance = await GetWorkChanceAsync(bayStaff, cancellationToken);
             if (workChance == null)
             {
@@ -158,15 +151,7 @@ public sealed class BayShiftService(
     
     private bool IsCurrent(BayShift bayShift)
     {
-        if (bayShift.Duration == null)
-        {
-            logger.LogError("BayShift \n({@BayShift})\n does not have a Duration",
-                bayShift);
-
-            return false;
-        }
-            
-        var endTime = (TimeSpan)(bayShift.StartTime + bayShift.Duration);
+        var endTime = bayShift.StartTime + bayShift.Duration;
         
         return modelState.ModelTime >= bayShift.StartTime && modelState.ModelTime <= endTime;
     }

@@ -36,4 +36,21 @@ public sealed class BayStaffRepository(ModelDbContext context)
         
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public Task<int> CountAsync(TimeSpan time, CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(bs => bs.Shifts
+                .Any(sh => sh.StartTime <= time && 
+                                             sh.StartTime + sh.Duration >= time))
+            .CountAsync(cancellationToken);
+    }
+
+    public Task<int> CountAsync(WorkType workType, CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(bs => bs.Work != null &&
+                        bs.Work.WorkType == workType)
+            .CountAsync(cancellationToken);
+    }
 }

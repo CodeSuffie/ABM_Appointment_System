@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -7,77 +8,117 @@ using Services.ModelServices;
 
 namespace Services.AdminStaffServices;
 
-public sealed class AdminStaffStepper(
-    ILogger<AdminStaffStepper> logger,
-    AdminStaffService adminStaffService,
-    WorkRepository workRepository,
-    WorkService workService,
-    AdminShiftService adminShiftService,
-    AdminStaffRepository adminStaffRepository,
-    ModelState modelState) : IStepperService<AdminStaff>
+public sealed class AdminStaffStepper : IStepperService<AdminStaff>
 {
+    private readonly ILogger<AdminStaffStepper> _logger;
+    private readonly AdminStaffService _adminStaffService;
+    private readonly WorkRepository _workRepository;
+    private readonly WorkService _workService;
+    private readonly AdminShiftService _adminShiftService;
+    private readonly AdminStaffRepository _adminStaffRepository;
+    private readonly ModelState _modelState;
+    private readonly Histogram<int> _workingAdminStaffHistogram;
+    private readonly Histogram<int> _occupiedAdminStaffHistogram;
+
+    public AdminStaffStepper(
+        ILogger<AdminStaffStepper> logger,
+        AdminStaffService adminStaffService,
+        WorkRepository workRepository,
+        WorkService workService,
+        AdminShiftService adminShiftService,
+        AdminStaffRepository adminStaffRepository,
+        ModelState modelState,
+        Meter meter)
+    {
+        _logger = logger;
+        _adminStaffService = adminStaffService;
+        _workRepository = workRepository;
+        _workService = workService;
+        _adminShiftService = adminShiftService;
+        _adminStaffRepository = adminStaffRepository;
+        _modelState = modelState;
+
+        _workingAdminStaffHistogram = meter.CreateHistogram<int>("working-admin-staff", "AdminStaff", "#AdminStaff Working.");
+        _occupiedAdminStaffHistogram = meter.CreateHistogram<int>("occupied-admin-staff", "AdminStaff", "#AdminStaff Occupied.");
+    }
+
+    public async Task DataCollectAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogDebug("Handling Data Collection for AdminStaff in this Step \n({Step})",
+            _modelState.ModelTime);
+        
+        var working = await _adminStaffRepository.CountAsync(_modelState.ModelTime, cancellationToken);
+        _workingAdminStaffHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        
+        var occupied = await _adminStaffRepository.CountOccupiedAsync(cancellationToken);
+        _occupiedAdminStaffHistogram.Record(occupied, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        
+        _logger.LogDebug("Finished handling Data Collection for AdminStaff in this Step \n({Step})",
+            _modelState.ModelTime);
+    }
+    
     public async Task StepAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var work = await workRepository.GetAsync(adminStaff, cancellationToken);
+        var work = await _workRepository.GetAsync(adminStaff, cancellationToken);
         
         if (work == null)
         {
-            logger.LogInformation("AdminStaff \n({@AdminStaff})\n does not have active Work assigned in this Step \n({Step})",
+            _logger.LogInformation("AdminStaff \n({@AdminStaff})\n does not have active Work assigned in this Step \n({Step})",
                              adminStaff,
-                             modelState.ModelTime);
+                             _modelState.ModelTime);
             
-            var shift = await adminShiftService.GetCurrentAsync(adminStaff, cancellationToken);
+            var shift = await _adminShiftService.GetCurrentAsync(adminStaff, cancellationToken);
             if (shift == null)
             {
-                logger.LogInformation("AdminStaff \n({@AdminStaff})\n is not working in this Step \n({Step})",
+                _logger.LogInformation("AdminStaff \n({@AdminStaff})\n is not working in this Step \n({Step})",
                     adminStaff,
-                    modelState.ModelTime);
+                    _modelState.ModelTime);
                 
-                logger.LogDebug("AdminStaff \n({@AdminStaff})\n will remain idle in this Step \n({Step})",
+                _logger.LogDebug("AdminStaff \n({@AdminStaff})\n will remain idle in this Step \n({Step})",
                     adminStaff,
-                    modelState.ModelTime);
+                    _modelState.ModelTime);
                 
                 return;
             }
             
-            logger.LogDebug("Alerting Free for this AdminStaff \n({@AdminStaff})\n in this Step \n({Step})",
+            _logger.LogDebug("Alerting Free for this AdminStaff \n({@AdminStaff})\n in this Step \n({Step})",
                 adminStaff,
-                modelState.ModelTime);
-            await adminStaffService.AlertFreeAsync(adminStaff, cancellationToken);
+                _modelState.ModelTime);
+            await _adminStaffService.AlertFreeAsync(adminStaff, cancellationToken);
             
             return;
         }
         
-        if (workService.IsWorkCompleted(work))
+        if (_workService.IsWorkCompleted(work))
         {
-            logger.LogInformation("AdminStaff \n({@AdminStaff})\n just completed assigned Work \n({@Work})\n in this Step \n({Step})",
+            _logger.LogInformation("AdminStaff \n({@AdminStaff})\n just completed assigned Work \n({@Work})\n in this Step \n({Step})",
                 adminStaff,
                 work,
-                modelState.ModelTime);
+                _modelState.ModelTime);
             
-            logger.LogDebug("Alerting Work Completed for this AdminStaff \n({@AdminStaff})\n in this Step \n({Step})",
+            _logger.LogDebug("Alerting Work Completed for this AdminStaff \n({@AdminStaff})\n in this Step \n({Step})",
                 adminStaff,
-                modelState.ModelTime);
-            await adminStaffService.AlertWorkCompleteAsync(adminStaff, cancellationToken);
+                _modelState.ModelTime);
+            await _adminStaffService.AlertWorkCompleteAsync(adminStaff, cancellationToken);
         }
     }
     
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        var adminStaffs = adminStaffRepository.Get()
+        var adminStaffs = _adminStaffRepository.Get()
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         
         await foreach (var adminStaff in adminStaffs)
         {
-            logger.LogDebug("Handling Step \n({Step})\n for this AdminStaff \n({@AdminStaff})",
-                modelState.ModelTime,
+            _logger.LogDebug("Handling Step \n({Step})\n for this AdminStaff \n({@AdminStaff})",
+                _modelState.ModelTime,
                 adminStaff);
             
             await StepAsync(adminStaff, cancellationToken);
             
-            logger.LogDebug("Completed handling Step \n({Step})\n for this AdminStaff \n({@AdminStaff})",
-                modelState.ModelTime,
+            _logger.LogDebug("Completed handling Step \n({Step})\n for this AdminStaff \n({@AdminStaff})",
+                _modelState.ModelTime,
                 adminStaff);
         }
     }

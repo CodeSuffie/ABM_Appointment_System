@@ -22,10 +22,10 @@ public sealed class TripRepository(
         return trips;
     }
 
-    public IQueryable<Trip> GetActive()
+    public IQueryable<Trip> Get(bool active)
     {
         var trips = context.Trips
-            .Where(t => t.Truck != null);
+            .Where(t => (t.Truck != null) == active);
 
         return trips;
     }
@@ -298,5 +298,27 @@ public sealed class TripRepository(
         truck.Trip = null;
         
         return context.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task<int> CountAsync(bool claimed, CancellationToken cancellationToken)
+    {
+        return Get(claimed)
+            .Where(t => !t.Completed)
+            .CountAsync(cancellationToken);
+    }
+
+    public Task<int> CountAsync(WorkType workType, CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(t => t.Work != null &&
+                        t.Work.WorkType == workType)
+            .CountAsync(cancellationToken);
+    }
+
+    public Task<int> CountCompletedAsync(CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(t => t.Completed)
+            .CountAsync(cancellationToken);
     }
 }

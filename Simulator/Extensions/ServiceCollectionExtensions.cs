@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.Metrics;
 using Database;
-using Database.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Exporter;
@@ -9,14 +8,13 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Repositories;
 using Serilog;
-using Serilog.Events;
-using Serilog.Sinks.SystemConsole.Themes;
 using Services;
 using Services.Abstractions;
 using Services.AdminStaffServices;
 using Services.BayServices;
 using Services.BayStaffServices;
 using Services.HubServices;
+using Services.LoadServices;
 using Services.ModelServices;
 using Services.ParkingSpotServices;
 using Services.TripServices;
@@ -27,7 +25,10 @@ namespace Simulator.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddSimulator(this IServiceCollection services)
+    public static IServiceCollection AddSimulator(
+        this IServiceCollection services //,
+        //IMeterFactory meterFactory
+        )
     {
         services.AddLogging(configure =>
         {
@@ -42,11 +43,11 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<HubService>();
         services.AddScoped<IPriorityInitializationService,  HubInitialize>();
+        services.AddScoped<IStepperService,                 HubStepper>();
         services.AddScoped<HubRepository>();
 
         services.AddScoped<TruckCompanyService>();
         services.AddScoped<IPriorityInitializationService,  TruckCompanyInitialize>();
-        services.AddScoped<IStepperService,                 TruckCompanyStepper>();
         services.AddScoped<TruckCompanyRepository>();
 
         services.AddScoped<AdminStaffService>();
@@ -56,6 +57,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<BayService>();
         services.AddScoped<IInitializationService,          BayInitialize>();
+        services.AddScoped<IStepperService,                 BayStepper>();
         services.AddScoped<BayRepository>();
 
         services.AddScoped<BayStaffService>();
@@ -77,14 +79,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStepperService,                 TruckStepper>();
         services.AddScoped<TruckRepository>();
 
+        services.AddScoped<LoadService>();
+        services.AddScoped<IStepperService,                 LoadStepper>();
+        services.AddScoped<LoadRepository>();
+
         services.AddScoped<AdminShiftService>();
         services.AddScoped<AdminShiftRepository>();
 
         services.AddScoped<BayShiftService>();
         services.AddScoped<BayShiftRepository>();
-
-        services.AddScoped<LoadService>();
-        services.AddScoped<LoadRepository>();
 
         services.AddScoped<OperatingHourService>();
         services.AddScoped<OperatingHourRepository>();
@@ -98,41 +101,33 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ModelStepper>();
         services.AddScoped<ModelState>();
         services.AddScoped<ModelService>();
-
-        var meterName = "simulator";
-        var meter = new Meter(meterName);
-        services.AddSingleton(meter);
         
-        var serviceName = "Simulator";
+        var serviceName = "Simulator";  // Maybe Apps.ConsoleApp & Apps.DesktopApp?
         var serviceVersion = "1.0.0";
         var serviceEnvironment = "";
         
-        var resourceBuilder = ResourceBuilder.CreateEmpty()
-            .AddService(serviceName)
-            .AddAttributes(new Dictionary<string, object>
-            {
-                ["service.name"] = serviceName,
-                ["service.version"] = serviceVersion,
-                ["deployment.environment"] = serviceEnvironment,
-            });
-        
         services.AddOpenTelemetry()
+            .ConfigureResource(resource => resource.AddService(
+                serviceName: serviceName, 
+                serviceVersion: serviceVersion))
             .WithTracing(providerBuilder => providerBuilder
                 .AddSource(serviceName)
-                .SetResourceBuilder(resourceBuilder)
                 .AddOtlpExporter(exporter =>
                 {
-                    exporter.Endpoint = new Uri("http://collector:4317/");
+                    exporter.Endpoint = new Uri("http://grafana-collector:4317/");
                     exporter.Protocol = OtlpExportProtocol.Grpc;
-                }))
+                }))     // What is this for?
             .WithMetrics(providerBuilder => providerBuilder
-                .AddMeter(meterName)
-                .SetResourceBuilder(resourceBuilder)
+                .AddMeter(serviceName)
                 .AddOtlpExporter(exporter =>
                 {
-                    exporter.Endpoint = new Uri("http://collector:4317/");
+                    exporter.Endpoint = new Uri("http://grafana-collector:4317/");
                     exporter.Protocol = OtlpExportProtocol.Grpc;
-                }));
+                }));        // PrometheusExporter() ?
+        
+        var meter = new Meter(serviceName, serviceVersion);
+        // var meter = meterFactory.Create(serviceName, serviceVersion); ?
+        services.AddSingleton(meter);
         
         return services;
     }

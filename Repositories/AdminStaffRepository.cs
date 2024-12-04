@@ -44,4 +44,20 @@ public sealed class AdminStaffRepository(ModelDbContext context)
         
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public Task<int> CountAsync(TimeSpan time, CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(ads => ads.Shifts
+                .Any(sh => sh.StartTime <= time && 
+                           sh.StartTime + sh.Duration >= time))
+            .CountAsync(cancellationToken);
+    }
+
+    public Task<int> CountOccupiedAsync(CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(ads => ads.Work != null)
+            .CountAsync(cancellationToken);
+    }
 }
