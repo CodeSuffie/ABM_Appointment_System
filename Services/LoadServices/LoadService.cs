@@ -7,7 +7,7 @@ using Services.HubServices;
 using Services.ModelServices;
 using Services.TruckCompanyServices;
 
-namespace Services;
+namespace Services.LoadServices;
 
 public class LoadService
 {

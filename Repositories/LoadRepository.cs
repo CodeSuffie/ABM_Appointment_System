@@ -115,4 +115,18 @@ public sealed class LoadRepository(
         
         return context.SaveChangesAsync(cancellationToken);
     }
+
+    public Task<int> CountUnclaimedAsync(CancellationToken cancellationToken)
+    {
+        return context.Loads
+            .Where(l => l.DropOffTrip == null)
+            .CountAsync(cancellationToken);
+    }
+
+    public Task<int> CountDroppedOffAsync(CancellationToken cancellationToken)
+    {
+        return context.Loads
+            .Where(l => l.LoadType != LoadType.DropOff)
+            .CountAsync(cancellationToken);
+    }
 }

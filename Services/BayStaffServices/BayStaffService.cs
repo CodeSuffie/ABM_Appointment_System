@@ -21,6 +21,7 @@ public sealed class BayStaffService
     private readonly BayShiftService _bayShiftService;
     private readonly BayStaffRepository _bayStaffRepository;
     private readonly Counter<int> _pickUpMissCounter;
+    private readonly Counter<int> _fetchMissCounter;
     
     public BayStaffService(
         ILogger<BayStaffService> logger,
@@ -47,6 +48,7 @@ public sealed class BayStaffService
         _bayStaffRepository = bayStaffRepository;
 
         _pickUpMissCounter = meter.CreateCounter<int>("pick-up-miss", "PickUpMiss", "#PickUp Loads Missed.");
+        _fetchMissCounter = meter.CreateCounter<int>("fetch-miss", "FetchMiss", "#PickUp Load not fetched yet.");
     }
     
     public async Task<BayStaff?> GetNewObjectAsync(CancellationToken cancellationToken)
@@ -332,7 +334,7 @@ public sealed class BayStaffService
                         trip);
                     await _loadRepository.UnsetPickUpAsync(pickUpLoad, trip, cancellationToken);
                     
-                    _pickUpMissCounter.Add(1);
+                    _pickUpMissCounter.Add(1, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
                 }
                 else
                 {
@@ -365,6 +367,8 @@ public sealed class BayStaffService
                     bayStaff,
                     bay);
                 await _workService.AddAsync(bay, bayStaff, WorkType.Fetch, cancellationToken);
+                
+                _fetchMissCounter.Add(1, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
                 
                 return;
             }

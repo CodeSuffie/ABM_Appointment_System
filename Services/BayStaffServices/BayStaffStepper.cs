@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -7,116 +8,168 @@ using Services.ModelServices;
 
 namespace Services.BayStaffServices;
 
-public sealed class BayStaffStepper(
-    ILogger<BayStaffStepper> logger,
-    WorkRepository workRepository,
-    BayRepository bayRepository,
-    BayShiftService bayShiftService,
-    WorkService workService,
-    BayStaffService bayStaffService,
-    BayStaffRepository bayStaffRepository,
-    ModelState modelState) : IStepperService<BayStaff>
+public sealed class BayStaffStepper : IStepperService<BayStaff>
 {
+    private readonly ILogger<BayStaffStepper> _logger;
+    private readonly WorkRepository _workRepository;
+    private readonly BayRepository _bayRepository;
+    private readonly BayShiftService _bayShiftService;
+    private readonly WorkService _workService;
+    private readonly BayStaffService _bayStaffService;
+    private readonly BayStaffRepository _bayStaffRepository;
+    private readonly ModelState _modelState;
+    private readonly Histogram<int> _workingBayStaffHistogram;
+    private readonly Histogram<int> _dropOffBayStaffHistogram;
+    private readonly Histogram<int> _fetchBayStaffHistogram;
+    private readonly Histogram<int> _pickUpBayStaffHistogram;
+
+    public BayStaffStepper(
+        ILogger<BayStaffStepper> logger,
+        WorkRepository workRepository,
+        BayRepository bayRepository,
+        BayShiftService bayShiftService,
+        WorkService workService,
+        BayStaffService bayStaffService,
+        BayStaffRepository bayStaffRepository,
+        ModelState modelState,
+        Meter meter)
+    {
+        _logger = logger;
+        _workRepository = workRepository;
+        _bayRepository = bayRepository;
+        _bayShiftService = bayShiftService;
+        _workService = workService;
+        _bayStaffService = bayStaffService;
+        _bayStaffRepository = bayStaffRepository;
+        _modelState = modelState;
+
+        _workingBayStaffHistogram = meter.CreateHistogram<int>("working-bay-staff", "BayStaff", "#BayStaff Working.");
+        _dropOffBayStaffHistogram = meter.CreateHistogram<int>("drop-off-bay-staff", "BayStaff", "#BayStaff Working on a Drop-Off.");
+        _fetchBayStaffHistogram = meter.CreateHistogram<int>("fetch-bay-staff", "BayStaff", "#BayStaff Working on a Fetch.");
+        _pickUpBayStaffHistogram = meter.CreateHistogram<int>("pick-up-bay-staff", "BayStaff", "#BayStaff Working on a Pick-Up.");
+    }
+
+    public async Task DataCollectAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogDebug("Handling Data Collection for BayStaff in this Step \n({Step})",
+            _modelState.ModelTime);
+        
+        var working = await _bayStaffRepository.CountAsync(_modelState.ModelTime, cancellationToken);
+        _workingBayStaffHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        
+        var dropOff = await _bayStaffRepository.CountAsync(WorkType.DropOff, cancellationToken);
+        _dropOffBayStaffHistogram.Record(dropOff, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        
+        var fetch = await _bayStaffRepository.CountAsync(WorkType.Fetch, cancellationToken);
+        _fetchBayStaffHistogram.Record(fetch, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        
+        var pickUp = await _bayStaffRepository.CountAsync(WorkType.PickUp, cancellationToken);
+        _pickUpBayStaffHistogram.Record(pickUp, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        
+        _logger.LogDebug("Finished handling Data Collection for BayStaff in this Step \n({Step})",
+            _modelState.ModelTime);
+    }
+    
     public async Task StepAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        var work = await workRepository.GetAsync(bayStaff, cancellationToken);
+        var work = await _workRepository.GetAsync(bayStaff, cancellationToken);
         
         if (work == null)
         {
-            logger.LogInformation("BayStaff \n({@BayStaff})\n does not have active Work assigned in this Step \n({Step})",
+            _logger.LogInformation("BayStaff \n({@BayStaff})\n does not have active Work assigned in this Step \n({Step})",
                          bayStaff,
-                         modelState.ModelTime);
+                         _modelState.ModelTime);
             
-            var shift = await bayShiftService.GetCurrentAsync(bayStaff, cancellationToken);
+            var shift = await _bayShiftService.GetCurrentAsync(bayStaff, cancellationToken);
             if (shift == null)
             {
-                logger.LogInformation("BayStaff \n({@BayStaff})\n is not working in this Step \n({Step})",
+                _logger.LogInformation("BayStaff \n({@BayStaff})\n is not working in this Step \n({Step})",
                     bayStaff,
-                    modelState.ModelTime);
+                    _modelState.ModelTime);
                 
-                logger.LogDebug("BayStaff \n({@BayStaff})\n will remain idle in this Step \n({Step})",
+                _logger.LogDebug("BayStaff \n({@BayStaff})\n will remain idle in this Step \n({Step})",
                     bayStaff,
-                    modelState.ModelTime);
+                    _modelState.ModelTime);
                 
                 return;
             }
             
-            var bay = await bayRepository.GetAsync(shift, cancellationToken);
+            var bay = await _bayRepository.GetAsync(shift, cancellationToken);
             if (bay == null)
             {
-                logger.LogError("The current BayShift \n({@BayShift})\n for this BayStaff \n({@BayStaff})\n did not have a Bay assigned.",
+                _logger.LogError("The current BayShift \n({@BayShift})\n for this BayStaff \n({@BayStaff})\n did not have a Bay assigned.",
                     shift,
                     bayStaff);
                 
-                logger.LogDebug("BayStaff \n({@BayStaff})\n will remain idle in this Step \n({Step})",
+                _logger.LogDebug("BayStaff \n({@BayStaff})\n will remain idle in this Step \n({Step})",
                     bayStaff,
-                    modelState.ModelTime);
+                    _modelState.ModelTime);
                 
                 return;
             }
             
-            logger.LogDebug("Alerting Free for this BayStaff \n({@BayStaff})\n in this Step \n({Step})",
+            _logger.LogDebug("Alerting Free for this BayStaff \n({@BayStaff})\n in this Step \n({Step})",
                 bayStaff,
-                modelState.ModelTime);
-            await bayStaffService.AlertFreeAsync(bayStaff, bay, cancellationToken);
+                _modelState.ModelTime);
+            await _bayStaffService.AlertFreeAsync(bayStaff, bay, cancellationToken);
             
             return;
         }
         
-        if (workService.IsWorkCompleted(work))
+        if (_workService.IsWorkCompleted(work))
         {
-            logger.LogInformation("BayStaff \n({@BayStaff})\n just completed assigned Work \n({@Work})\n in this Step \n({Step})",
+            _logger.LogInformation("BayStaff \n({@BayStaff})\n just completed assigned Work \n({@Work})\n in this Step \n({Step})",
                 bayStaff,
                 work,
-                modelState.ModelTime);
+                _modelState.ModelTime);
             
-            var bay = await bayRepository.GetAsync(work, cancellationToken);
+            var bay = await _bayRepository.GetAsync(work, cancellationToken);
             if (bay == null)
             {
-                logger.LogError("The active assigned Work \n({@Work})\n for this BayStaff \n({@BayStaff})\n did not have a Bay assigned.",
+                _logger.LogError("The active assigned Work \n({@Work})\n for this BayStaff \n({@BayStaff})\n did not have a Bay assigned.",
                     work,
                     bayStaff);
 
-                logger.LogDebug("Removing invalid Work \n({@Work})\n for this BayStaff \n({@BayStaff})",
+                _logger.LogDebug("Removing invalid Work \n({@Work})\n for this BayStaff \n({@BayStaff})",
                     work,
                     bayStaff);
-                await workRepository.RemoveAsync(work, cancellationToken);
+                await _workRepository.RemoveAsync(work, cancellationToken);
                 
-                logger.LogDebug("BayStaff \n({@BayStaff})\n will remain idle in this Step \n({Step})",
+                _logger.LogDebug("BayStaff \n({@BayStaff})\n will remain idle in this Step \n({Step})",
                     bayStaff,
-                    modelState.ModelTime);
+                    _modelState.ModelTime);
 
                 return;
             }
 
-            logger.LogDebug("Alerting Work Completed for this BayStaff \n({@BayStaff})\n in this Step \n({Step})",
+            _logger.LogDebug("Alerting Work Completed for this BayStaff \n({@BayStaff})\n in this Step \n({Step})",
                 bayStaff,
-                modelState.ModelTime);
-            await bayStaffService.AlertWorkCompleteAsync(work.WorkType, bay, cancellationToken);
+                _modelState.ModelTime);
+            await _bayStaffService.AlertWorkCompleteAsync(work.WorkType, bay, cancellationToken);
             
-            logger.LogDebug("Removing old Work \n({@Work})\n for this BayStaff \n({@BayStaff})",
+            _logger.LogDebug("Removing old Work \n({@Work})\n for this BayStaff \n({@BayStaff})",
                 work,
                 bayStaff);
-            await workRepository.RemoveAsync(work, cancellationToken);
+            await _workRepository.RemoveAsync(work, cancellationToken);
         }
     }
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        var bayStaffs = bayStaffRepository.Get()
+        var bayStaffs = _bayStaffRepository.Get()
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
         
         await foreach (var bayStaff in bayStaffs)
         {
-            logger.LogDebug("Handling Step \n({Step})\n for this BayStaff \n({@BayStaff})",
-                modelState.ModelTime,
+            _logger.LogDebug("Handling Step \n({Step})\n for this BayStaff \n({@BayStaff})",
+                _modelState.ModelTime,
                 bayStaff);
             
             await StepAsync(bayStaff, cancellationToken);
             
-            logger.LogDebug("Completed handling Step \n({Step})\n for this BayStaff \n({@BayStaff})",
-                modelState.ModelTime,
+            _logger.LogDebug("Completed handling Step \n({Step})\n for this BayStaff \n({@BayStaff})",
+                _modelState.ModelTime,
                 bayStaff);
         }
     }

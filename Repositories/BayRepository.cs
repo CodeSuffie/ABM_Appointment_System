@@ -6,9 +6,16 @@ namespace Repositories;
 
 public sealed class BayRepository(ModelDbContext context)
 {
+    public IQueryable<Bay> Get()
+    {
+        var bays = context.Bays;
+        
+        return bays;
+    }
+    
     public IQueryable<Bay> Get(Hub hub)
     {
-        var bays = context.Bays
+        var bays = Get()
             .Where(b => b.HubId == hub.Id);
         
         return bays;
@@ -16,7 +23,7 @@ public sealed class BayRepository(ModelDbContext context)
     
     public async Task<Bay?> GetAsync(BayShift bayShift, CancellationToken cancellationToken)
     {
-        var bay = await context.Bays
+        var bay = await Get()
             .FirstOrDefaultAsync(b => b.Id == bayShift.BayId, cancellationToken);
         
         return bay;
@@ -24,7 +31,7 @@ public sealed class BayRepository(ModelDbContext context)
     
     public async Task<Bay?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var bay = await context.Bays
+        var bay = await Get()
             .FirstOrDefaultAsync(b => b.TripId == trip.Id, cancellationToken);
         
         return bay;
@@ -34,7 +41,7 @@ public sealed class BayRepository(ModelDbContext context)
     {
         if (work.BayId == null) return null;
         
-        var bay = await context.Bays
+        var bay = await Get()
             .FirstOrDefaultAsync(b => b.Id == work.BayId, cancellationToken);
 
         return bay;
@@ -44,15 +51,15 @@ public sealed class BayRepository(ModelDbContext context)
     {
         if (load.BayId == null) return null;
         
-        var bay = await context.Bays
+        var bay = await Get()
             .FirstOrDefaultAsync(b => b.Id == load.BayId, cancellationToken);
 
         return bay;
     }
 
-    public async Task<int> GetCountAsync(Hub hub, CancellationToken cancellationToken)
+    public async Task<int> CountAsync(Hub hub, CancellationToken cancellationToken)
     {
-        var bayCount = await context.Bays
+        var bayCount = await Get()
             .CountAsync(b => b.HubId == hub.Id, cancellationToken);
 
         return bayCount;
@@ -71,5 +78,12 @@ public sealed class BayRepository(ModelDbContext context)
         bay.BayStatus = status;
         
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task<int> CountAsync(BayStatus bayStatus, CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(b => b.BayStatus == bayStatus)
+            .CountAsync(cancellationToken);
     }
 }

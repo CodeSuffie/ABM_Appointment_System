@@ -1,12 +1,12 @@
 using Database;
-using Microsoft.Extensions.Hosting;
 
 namespace Services.ModelServices;
 
 public sealed class ModelService(
     ModelDbContext context,
     ModelInitialize modelInitialize,
-    ModelStepper modelStepper)
+    ModelStepper modelStepper,
+    ModelState modelState)
 {
     private CancellationTokenSource _cancellationTokenSource = new();
     private CancellationToken CancellationToken => _cancellationTokenSource.Token;
@@ -19,10 +19,18 @@ public sealed class ModelService(
         await modelInitialize.InitializeModelAsync(CancellationToken);
     }
 
-    public Task RunFrameAsync()
+    public async Task RunFrameAsync()
     {
         // await using var transaction = await context.Database.BeginTransactionAsync(CancellationToken);
-        return modelStepper.StepAsync(CancellationToken);
+        if (modelState.ModelTime > modelState.ModelConfig.ModelTime)
+        {
+            return;
+        }
+        
+        await modelStepper.StepAsync(CancellationToken);
+        await modelStepper.DataCollectAsync(CancellationToken);
+
+        await modelState.StepAsync(CancellationToken);
     }
     
     public async Task RunAsync()

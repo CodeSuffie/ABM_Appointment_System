@@ -2,6 +2,7 @@ namespace Services.Abstractions;
 
 public interface IStepperService
 {
+    Task DataCollectAsync(CancellationToken cancellationToken);
     Task StepAsync(CancellationToken cancellationToken);
 }
 

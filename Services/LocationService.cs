@@ -16,7 +16,7 @@ public sealed class LocationService(
 {
     public async Task InitializeObjectAsync(Hub hub, CancellationToken cancellationToken)
     {
-        var hubCount = await hubRepository.GetCountAsync(cancellationToken);
+        var hubCount = await hubRepository.CountAsync(cancellationToken);
 
         if (hubCount > modelState.AgentConfig.HubLocations.GetLength(0))
         {
@@ -36,7 +36,7 @@ public sealed class LocationService(
     
     public async Task InitializeObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {
-        var truckCompanyCount = await truckCompanyRepository.GetCountAsync(cancellationToken);
+        var truckCompanyCount = await truckCompanyRepository.CountAsync(cancellationToken);
         
         if (truckCompanyCount > modelState.AgentConfig.TruckCompanyLocations.GetLength(0))
         {
@@ -65,7 +65,7 @@ public sealed class LocationService(
             return;
         }
         
-        var bayCount = await bayRepository.GetCountAsync(hub, cancellationToken);
+        var bayCount = await bayRepository.CountAsync(hub, cancellationToken);
         
         if (bayCount > modelState.AgentConfig.BayLocations.GetLength(0))
         {
@@ -91,7 +91,7 @@ public sealed class LocationService(
             return;
         }
         
-        var parkingSpotCount = await parkingSpotRepository.GetCountAsync(hub, cancellationToken);
+        var parkingSpotCount = await parkingSpotRepository.CountAsync(hub, cancellationToken);
         
         if (parkingSpotCount > modelState.AgentConfig.ParkingSpotLocations.GetLength(0))
         {

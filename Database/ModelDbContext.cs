@@ -1,7 +1,6 @@
 using Database.Models;
 using Database.Models.EntityConfiguration;
 using Microsoft.EntityFrameworkCore;
-using Settings;
 
 namespace Database;
 

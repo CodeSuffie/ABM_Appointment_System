@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.Metrics;
 using Database;
-using Database.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Exporter;
@@ -9,14 +8,13 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Repositories;
 using Serilog;
-using Serilog.Events;
-using Serilog.Sinks.SystemConsole.Themes;
 using Services;
 using Services.Abstractions;
 using Services.AdminStaffServices;
 using Services.BayServices;
 using Services.BayStaffServices;
 using Services.HubServices;
+using Services.LoadServices;
 using Services.ModelServices;
 using Services.ParkingSpotServices;
 using Services.TripServices;
@@ -45,11 +43,11 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<HubService>();
         services.AddScoped<IPriorityInitializationService,  HubInitialize>();
+        services.AddScoped<IStepperService,                 HubStepper>();
         services.AddScoped<HubRepository>();
 
         services.AddScoped<TruckCompanyService>();
         services.AddScoped<IPriorityInitializationService,  TruckCompanyInitialize>();
-        services.AddScoped<IStepperService,                 TruckCompanyStepper>();
         services.AddScoped<TruckCompanyRepository>();
 
         services.AddScoped<AdminStaffService>();
@@ -59,6 +57,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<BayService>();
         services.AddScoped<IInitializationService,          BayInitialize>();
+        services.AddScoped<IStepperService,                 BayStepper>();
         services.AddScoped<BayRepository>();
 
         services.AddScoped<BayStaffService>();
@@ -80,14 +79,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStepperService,                 TruckStepper>();
         services.AddScoped<TruckRepository>();
 
+        services.AddScoped<LoadService>();
+        services.AddScoped<IStepperService,                 LoadStepper>();
+        services.AddScoped<LoadRepository>();
+
         services.AddScoped<AdminShiftService>();
         services.AddScoped<AdminShiftRepository>();
 
         services.AddScoped<BayShiftService>();
         services.AddScoped<BayShiftRepository>();
-
-        services.AddScoped<LoadService>();
-        services.AddScoped<LoadRepository>();
 
         services.AddScoped<OperatingHourService>();
         services.AddScoped<OperatingHourRepository>();

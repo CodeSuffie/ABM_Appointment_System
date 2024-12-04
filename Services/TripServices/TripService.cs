@@ -1,9 +1,8 @@
-using System.Diagnostics.Metrics;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
-using Services.ModelServices;
+using Services.LoadServices;
 
 namespace Services.TripServices;
 
@@ -22,8 +21,6 @@ public sealed class TripService
     private readonly TruckCompanyRepository _truckCompanyRepository;
     private readonly WorkService _workService;
     private readonly LoadRepository _loadRepository;
-    private readonly UpDownCounter<int> _claimedTrips;
-    private readonly UpDownCounter<int> _completedTrips;
 
     public TripService(ILogger<TripService> logger,
         LoadService loadService,
@@ -37,8 +34,7 @@ public sealed class TripService
         LocationService locationService,
         TruckCompanyRepository truckCompanyRepository,
         WorkService workService,
-        LoadRepository loadRepository,
-        Meter meter)
+        LoadRepository loadRepository)
     {
         _logger = logger;
         _loadService = loadService;
@@ -53,9 +49,6 @@ public sealed class TripService
         _truckCompanyRepository = truckCompanyRepository;
         _workService = workService;
         _loadRepository = loadRepository;
-
-        _claimedTrips = meter.CreateUpDownCounter<int>("trip-claimed", "Trip", "#Trips Claimed (excl. completed).");
-        _completedTrips = meter.CreateUpDownCounter<int>("trip-completed", "Trip", "#Trips Completed.");
     }
 
     public async Task<Trip?> GetNewObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
@@ -63,7 +56,7 @@ public sealed class TripService
         while (true)
         {
             var dropOff = await _loadService.SelectUnclaimedDropOffAsync(truckCompany, cancellationToken);
-            Load? pickUp = null;
+            Load? pickUp;
             Trip? trip = null;
     
             if (dropOff != null)
@@ -230,8 +223,6 @@ public sealed class TripService
         _logger.LogInformation("Truck \n({@Truck})\n successfully linked to this Trip \n({@Trip})",
             truck,
             trip);
-        
-        _claimedTrips.Add(1);
     }
     
     public async Task AlertFreeAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
@@ -529,9 +520,6 @@ public sealed class TripService
         await _tripRepository.SetAsync(trip, true, cancellationToken);
         _logger.LogInformation("Trip ({@Trip})\n successfully COMPLETED!!!",
             trip);
-        
-        _claimedTrips.Add(-1);
-        _completedTrips.Add(1);
     }
     
     public async Task TravelAsync(Trip trip, Truck truck, long xDestination, long yDestination, CancellationToken cancellationToken)

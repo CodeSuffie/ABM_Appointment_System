@@ -41,7 +41,7 @@ public sealed class HubRepository(ModelDbContext context)
         return context.Hubs.FirstOrDefaultAsync(h => h.Id == trip.HubId, cancellationToken);
     }
 
-    public Task<int> GetCountAsync(CancellationToken cancellationToken)
+    public Task<int> CountAsync(CancellationToken cancellationToken)
     {
         return context.Hubs.CountAsync(cancellationToken);
     }
@@ -58,5 +58,14 @@ public sealed class HubRepository(ModelDbContext context)
         operatingHour.Hub = hub;
         
         return context.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task<int> CountOperatingAsync(TimeSpan time, CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(h => h.OperatingHours
+                .Any(oh => oh.StartTime <= time && 
+                           oh.StartTime + oh.Duration >= time))
+            .CountAsync(cancellationToken);
     }
 }
