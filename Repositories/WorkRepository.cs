@@ -9,7 +9,8 @@ public sealed class WorkRepository(
     TripRepository tripRepository,
     AdminStaffRepository adminStaffRepository,
     BayStaffRepository bayStaffRepository,
-    BayRepository bayRepository)
+    BayRepository bayRepository,
+    PelletRepository pelletRepository)
 {
     public async Task<Work?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
@@ -96,7 +97,7 @@ public sealed class WorkRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task AddAsync(Work work, Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
+    public async Task AddAsync(Work work, Bay bay, BayStaff bayStaff, Pellet pellet, CancellationToken cancellationToken)
     {
         await context.Works
             .AddAsync(work, cancellationToken);
@@ -106,6 +107,9 @@ public sealed class WorkRepository(
 
         work.BayStaff = bayStaff;
         bayStaff.Work = work;
+
+        work.Pellet = pellet;
+        pellet.Work = work;
 
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -128,6 +132,12 @@ public sealed class WorkRepository(
         if (bayStaff != null)
         {
             bayStaff.Work = null;
+        }
+        
+        var pellet = await pelletRepository.GetAsync(work, cancellationToken);
+        if (pellet != null)
+        {
+            pellet.Work = null;
         }
         
         var bay = await bayRepository.GetAsync(work, cancellationToken);

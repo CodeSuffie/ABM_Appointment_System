@@ -12,6 +12,7 @@ public class Bay : ILocation
     public long YLocation { get; set; }
     
     public BayStatus BayStatus { get; set; }
+    public BayFlags BayFlags { get; set; } = 0;
     
     public Hub Hub { get; set; } = new();
     public long HubId { get; set; }

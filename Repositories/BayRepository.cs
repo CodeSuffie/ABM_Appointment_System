@@ -56,6 +56,13 @@ public sealed class BayRepository(ModelDbContext context)
 
         return bay;
     }
+    
+    public async Task AddAsync(Bay bay, BayFlags flag, CancellationToken cancellationToken)
+    {
+        bay.BayFlags |= flag;
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
 
     public async Task<int> CountAsync(Hub hub, CancellationToken cancellationToken)
     {
@@ -79,11 +86,25 @@ public sealed class BayRepository(ModelDbContext context)
         
         await context.SaveChangesAsync(cancellationToken);
     }
+    
+    public async Task SetAsync(Bay bay, BayFlags flags, CancellationToken cancellationToken)
+    {
+        bay.BayFlags = flags;
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
 
     public Task<int> CountAsync(BayStatus bayStatus, CancellationToken cancellationToken)
     {
         return Get()
             .Where(b => b.BayStatus == bayStatus)
+            .CountAsync(cancellationToken);
+    }
+
+    public Task<int> CountAsync(BayFlags bayFlag, CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(b => b.BayFlags.HasFlag(bayFlag))
             .CountAsync(cancellationToken);
     }
 }

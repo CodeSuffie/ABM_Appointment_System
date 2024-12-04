@@ -15,5 +15,9 @@ public class PelletConfiguration : IEntityTypeConfiguration<Pellet>
         
         builder.HasOne(x => x.Bay)
             .WithMany();
+        
+        builder.HasOne(x => x.Work)
+            .WithOne(x => x.Pellet)
+            .HasForeignKey<Work>(x => x.PelletId);
     }
 }

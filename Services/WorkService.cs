@@ -26,63 +26,6 @@ public sealed class WorkService(
         return endTime <= modelState.ModelTime;
     }
     
-    public async Task AdaptWorkLoadAsync(Bay bay, CancellationToken cancellationToken)
-    {
-        WorkType? workType = bay.BayStatus switch
-        {
-            BayStatus.DroppingOffStarted or BayStatus.FetchStarted or BayStatus.FetchFinished => WorkType.DropOff,
-            BayStatus.PickUpStarted => WorkType.PickUp,
-            _ => null
-        };
-
-        if (workType == null)
-        {
-            logger.LogError("Bay \n({@Bay})\n with BayStatus {@BayStatus} does not have a valid BayStatus to adapt the workload for.",
-                bay,
-                bay.BayStatus);
-            
-            return;
-        }
-        
-        logger.LogDebug("Adapting workload for Work at this Bay \n({@Bay})\n with WorkType {@WorkType}...",
-            bay,
-            workType);
-
-        var works = workRepository.Get(bay, (WorkType) workType)
-                .AsAsyncEnumerable()
-                .WithCancellation(cancellationToken);
-
-        var totalDuration = new TimeSpan(0, 0, 0);
-        var count = 0;
-        await foreach (var work in works)
-        {
-            if (work.Duration != null)
-            {
-                totalDuration += (TimeSpan) work.Duration;
-            }
-            count += 1;
-        }
-        
-        var newDuration = (totalDuration / count);
-        
-        logger.LogInformation("Total Duration for Work at this Bay \n({@Bay})\n with WorkType {@WorkType} is " +
-                              "{TimeSpan} spread over {Count} works. The new duration will be set to {TimeSpan}",
-            bay,
-            workType,
-            totalDuration,
-            count,
-            newDuration);
-
-        await foreach (var work in works)
-        {
-            logger.LogDebug("Setting Duration of this Work \n({@Work})\n for this Bay \n({@Bay})\n to {TimeSpan}...",
-                work,
-                bay,
-                newDuration);
-            await workRepository.SetDurationAsync(work, (totalDuration / count), cancellationToken);
-        }
-    }
-    
     public TimeSpan? GetTime(WorkType workType)
     {
         return workType switch
@@ -130,7 +73,7 @@ public sealed class WorkService(
         await workRepository.AddAsync(work, trip, bay, cancellationToken);
     }
     
-    public async Task AddAsync(Bay bay, BayStaff bayStaff, WorkType workType, CancellationToken cancellationToken)
+    public async Task AddAsync(Bay bay, BayStaff bayStaff, Pellet pellet, WorkType workType, CancellationToken cancellationToken)
     {
         var work = GetNew(workType);
         work.BayStaff = bayStaff;
@@ -139,6 +82,6 @@ public sealed class WorkService(
         bayStaff.Work = work;
         bay.Works.Add(work);
 
-        await workRepository.AddAsync(work, bay, bayStaff, cancellationToken);
+        await workRepository.AddAsync(work, bay, bayStaff, pellet, cancellationToken);
     }
 }

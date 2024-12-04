@@ -145,7 +145,7 @@ public sealed class BayStaffStepper : IStepperService<BayStaff>
             _logger.LogDebug("Alerting Work Completed for this BayStaff \n({@BayStaff})\n in this Step \n({Step})",
                 bayStaff,
                 _modelState.ModelTime);
-            await _bayStaffService.AlertWorkCompleteAsync(work.WorkType, bay, cancellationToken);
+            await _bayStaffService.AlertWorkCompleteAsync(work, bay, cancellationToken);
             
             _logger.LogDebug("Removing old Work \n({@Work})\n for this BayStaff \n({@BayStaff})",
                 work,

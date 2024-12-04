@@ -176,4 +176,34 @@ public sealed class PelletService
             await _pelletRepository.SetAsync(pellet, load, cancellationToken);
         }
     }
+
+    public async Task AlertDroppedOffAsync(Pellet pellet, Bay bay, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task AlertFetchedAsync(Pellet pellet, Bay bay, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task AlertPickedUpAsync(Pellet pellet, Trip trip, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<Pellet?> GetNextDropOffAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<Pellet?> GetNextFetchAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<Pellet?> GetNextPickUpAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
 }

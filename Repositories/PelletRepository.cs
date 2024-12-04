@@ -1,5 +1,6 @@
 using Database;
 using Database.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Repositories;
 
@@ -28,6 +29,14 @@ public sealed class PelletRepository(ModelDbContext context)
                         hub.Bays.Any(b => p.BayId == b.Id));
 
         return pellets;
+    }
+
+    public async Task<Pellet?> GetAsync(Work work, CancellationToken cancellationToken)
+    {
+        var pellet = await Get()
+            .FirstOrDefaultAsync(p => p.Id == work.PelletId, cancellationToken);
+
+        return pellet;
     }
     
     public IQueryable<Pellet> GetUnclaimed(TruckCompany truckCompany)

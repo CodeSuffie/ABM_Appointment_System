@@ -20,4 +20,7 @@ public class Work
     
     public Bay? Bay { get; set; }
     public long? BayId { get; set; }
+    
+    public Pellet? Pellet { get; set; }
+    public long? PelletId { get; set; }
 }

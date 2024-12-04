@@ -17,6 +17,7 @@ using Services.HubServices;
 using Services.LoadServices;
 using Services.ModelServices;
 using Services.ParkingSpotServices;
+using Services.PelletServices;
 using Services.TripServices;
 using Services.TruckCompanyServices;
 using Services.TruckServices;
@@ -69,6 +70,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IInitializationService,          ParkingSpotInitialize>();
         services.AddScoped<IStepperService,                 ParkingSpotStepper>();
         services.AddScoped<ParkingSpotRepository>();
+        
+        services.AddScoped<PelletService>();
+        services.AddScoped<IInitializationService,          PelletInitialize>();
+        services.AddScoped<IStepperService,                 PelletStepper>();
+        services.AddScoped<PelletRepository>();
 
         services.AddScoped<TripService>();
         services.AddScoped<IStepperService,                 TripStepper>();
