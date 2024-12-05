@@ -72,9 +72,10 @@ async function initializeTextures() {
     window.simulationView.textures.road[0].displacement = await loadTexture('road/01/displacement', 'jpg');
 }
 
-export async function initialize() {
+export async function initialize(dotNetObjectRef) {
     // setup state
     window.simulationView = {
+        dotNetObjectRef: dotNetObjectRef,
         domContainer: null,
         scene: null,
         light: null,
@@ -397,8 +398,8 @@ function addWall(locationX, locationY, sizeX, sizeY, onXAxis) {
 
     plane.position.y = -0.49;
     if (onXAxis) {
-        plane.position.x = (locationX * scaleX) + scaleX;
-        plane.position.z = (locationY * scaleY) - ((sizeX * scaleY) / 2);
+        plane.position.x = ((locationX * scaleX) + ((sizeX * scaleX) / 2)) - (scaleX / 2);
+        plane.position.z = ((locationY - 1) * scaleY) - (scaleY / 2);
     } else {
         plane.position.x = (locationX * scaleX) - (scaleX / 2);
         plane.position.z = (locationY * scaleY) - (sizeX * scaleY);
@@ -411,7 +412,7 @@ function addWall(locationX, locationY, sizeX, sizeY, onXAxis) {
 function addRoof(locationX, locationY, sizeX, sizeY) {
     const plane = createMetalPlane(sizeX, sizeY);
 
-    plane.position.x = (locationX * scaleX) + scaleX;
+    plane.position.x = ((locationX * scaleX) + ((sizeX * scaleX) / 2)) - (scaleX / 2);
     plane.position.y = 1.76;
     plane.position.z = (locationY * scaleY) - scaleY;
 
@@ -487,8 +488,13 @@ export function addTruck(id, locationX, locationY) {
         model.scale.set(truckScale, truckScale, truckScale);
         model.cursor = 'pointer';
         model.on('click', function(event) {
-            console.log(`Truck ${id} clicked!`);
-            console.log(event);
+            if (window.simulationView === null ||
+                window.simulationView === undefined || 
+                window.simulationView.dotNetObjectRef === null || 
+                window.simulationView.dotNetObjectRef === undefined) {
+                return;
+            }
+            window.simulationView.dotNetObjectRef.invokeMethodAsync("ShowTruckInformationAsync", id);
         });
         window.simulationView.scene.add(model);
 
@@ -633,6 +639,10 @@ async function loadTexture(textureName, extension) {
 /*
     EVENTS
  */
+export function resizeRenderer() {
+    onWindowResize();
+}
+
 function onWindowResize() {
     const camera = window.simulationView.camera;
     const renderer = window.simulationView.renderer;
@@ -669,5 +679,6 @@ export function dispose() {
     window.simulationView.renderer.dispose();
 
     // remove all stored data
+    window.simulationView.dotNetObjectRef = undefined;
     window.simulationView = undefined;
 }
