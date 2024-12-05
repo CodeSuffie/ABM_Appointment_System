@@ -8,13 +8,74 @@ public sealed partial class Simulation
 {
     private const string JavaScriptFilePath = "./Components/Pages/Simulation.razor.js";
     private IJSObjectReference? _javaScriptModule;
-    private Timer? _timer;
+    private DotNetObjectReference<Simulation>? _javaScriptObjRef;
     
+    private Timer? _timer;
     private SemaphoreSlim _semaphore = new(1, 1);
-
     private List<Truck> _currentTrucks = [];
+
+    private bool _isRunning = false;
+    private bool _sidebarVisible = false;
+    private Truck? _selectedTruck = null;
     
     private bool Disposed { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _javaScriptObjRef = DotNetObjectReference.Create(this);
+        
+        base.OnInitialized();
+    }
+
+    private string GetPlayPauseButtonClass()
+    {
+        return _isRunning
+            ? "btn btn-warning"
+            : "btn btn-success";
+    }
+
+    private string GetPlayPauseButtonIconClass()
+    {
+        return _isRunning
+            ? "bi bi-pause-fill"
+            : "bi bi-play-fill";
+    }
+
+    private void OnPlayPauseButtonClicked()
+    { 
+        _isRunning = !_isRunning;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task ShowTruckInformationAsync(long truckId)
+    {
+        // attempt to find truck by truck id
+        var truck = _currentTrucks.FirstOrDefault(x => x.Id == truckId);
+        if (truck == null)
+        {
+            return;
+        }
+        
+        // show truck information
+        _sidebarVisible = true;
+        _selectedTruck = truck;
+        
+        // update state
+        await InvokeAsync(StateHasChanged);
+        await ResizeRendererAsync();
+    }
+
+    public async Task CloseSidebarAsync()
+    {
+        // hide sidebar
+        _sidebarVisible = false;
+        _selectedTruck = null;
+        
+        // update state
+        await InvokeAsync(StateHasChanged);
+        await ResizeRendererAsync();
+    }
     
     private async ValueTask LoadJavaScriptModuleAsync()
     {
@@ -24,7 +85,7 @@ public sealed partial class Simulation
         }
         
         _javaScriptModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", JavaScriptFilePath);
-        await _javaScriptModule.InvokeVoidAsync("initialize");
+        await _javaScriptModule.InvokeVoidAsync("initialize", _javaScriptObjRef);
     }
 
     private async ValueTask InitializeModelServiceAsync()
@@ -66,7 +127,9 @@ public sealed partial class Simulation
         }
         
         // create new timer
+        _isRunning = true;
         _timer = new Timer(TimerCallback, null, 0, 100);
+        StateHasChanged();
     }
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -80,6 +143,16 @@ public sealed partial class Simulation
         await base.OnAfterRenderAsync(firstRender);
     }
 
+    private async ValueTask ResizeRendererAsync()
+    {
+        if (_javaScriptModule == null)
+        {
+            return;
+        }
+        
+        await _javaScriptModule.InvokeVoidAsync("resizeRenderer");
+    }
+    
     private async ValueTask AddBayAsync(Bay bay)
     {
         if (_javaScriptModule == null)
@@ -205,8 +278,21 @@ public sealed partial class Simulation
     
     private async void TimerCallback(object? state)
     {
+        // exit early if we should not do anything
+        if (!_isRunning)
+        {
+            return;
+        }
+        
         // lock semaphore
         await _semaphore.WaitAsync();
+        
+        // exit early if we should not do anything
+        if (!_isRunning)
+        {
+            _semaphore.Release();
+            return;
+        }
         
         // run model frame
         await ModelService.RunFrameAsync();
@@ -222,6 +308,9 @@ public sealed partial class Simulation
         
         // unlock semaphore
         _semaphore.Release();
+        
+        // update state
+        await InvokeAsync(StateHasChanged);
     }
     
     private async ValueTask DisposeRendererAsync()
@@ -242,8 +331,7 @@ public sealed partial class Simulation
             return;
         }
 
-        Disposed = true;
-
+        _isRunning = false;
         if (_timer != null)
         {
             await _timer.DisposeAsync();
@@ -252,5 +340,10 @@ public sealed partial class Simulation
         
         // dispose ThreeJS renderer
         await DisposeRendererAsync();
+        
+        // dispose JS object reference
+        _javaScriptObjRef?.Dispose();
+        
+        Disposed = true;
     }
 }

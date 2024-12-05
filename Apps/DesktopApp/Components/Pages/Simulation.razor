@@ -6,4 +6,40 @@
 
 @inject ModelDbContext ModelDbContext;
 
-<div class="w-100 h-100" id="container"></div>
+<div class="d-flex flex-column h-100">
+    <nav class="navbar d-flex flex-row bg-body-tertiary">
+        <form class="container-fluid justify-content-start">
+            <button class="@GetPlayPauseButtonClass()" type="button" @onclick="OnPlayPauseButtonClicked">
+                <i class="@GetPlayPauseButtonIconClass()"></i>
+            </button>
+        </form>
+    </nav>
+    
+    <div class="d-flex flex-fill" style="flex-direction: row-reverse;">
+        @if (_sidebarVisible)
+        {
+            <div class="d-flex flex-column p-1" style="width: 250px">
+                <div class="d-flex flex-row">
+                    <div class="ms-auto">
+                        <button type="button" class="btn-close" aria-label="Close" @onclick="CloseSidebarAsync"></button>
+                    </div>
+                </div>
+                <div class="d-flex flex-row flex-fill">
+                    @if (_selectedTruck != null)
+                    {
+                        <div class="d-flex flex-column flex-fill">
+                            <h1>Truck #@_selectedTruck.Id</h1>
+                            
+                            @if (_selectedTruck.Trip != null)
+                            {
+                                <h2>X: @_selectedTruck.Trip.XLocation, Y: @_selectedTruck.Trip.YLocation</h2>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="d-flex flex-column flex-fill" id="container" style="width: 0"></div>
+    </div>
+</div>
