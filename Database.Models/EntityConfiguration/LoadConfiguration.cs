@@ -31,8 +31,8 @@ public class LoadConfiguration : IEntityTypeConfiguration<Load>
         //     .HasForeignKey<Load>(x => x.PickUpTripId);
 
         builder.HasOne(x => x.Trip)
-            .WithOne()
-            .HasForeignKey<Load>(x => x.TripId);
+            .WithMany(x => x.Loads)
+            .HasForeignKey(x => x.TripId);
 
         builder.HasMany(x => x.Pellets)
             .WithOne(x => x.Load)

@@ -32,13 +32,13 @@ public class AgentConfig : AgentConfigBase
     public override double AdminStaffAverageWorkDays { get; } = 1;
     public override TimeSpan AdminShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
-    public override int BayStaffCount { get; } = 5;
+    public override int BayStaffCount { get; } = 25;
     public override double BayStaffAverageWorkDays { get; } = 1;
     public override TimeSpan BayShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
-    public override int TruckCount { get; } = 20;
+    public override int TruckCount { get; } = 10;
     public override int TruckAverageCapacity { get; } = 10;
-    public override int TruckAverageSpeed { get; } = 10;
+    public override int TruckAverageSpeed { get; } = 5;
     
     public override double HubAverageOperatingDays { get; } = 1;
     public override TimeSpan OperatingHourAverageLength { get; } = TimeSpan.FromHours(24);

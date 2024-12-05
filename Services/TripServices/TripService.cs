@@ -76,9 +76,9 @@ public sealed class TripService
                         dropOff,
                         truck);
     
-                    _logger.LogDebug("Removing invalid Drop-Off Load \n({@Load})",
-                        dropOff);
-                    await _loadRepository.RemoveAsync(dropOff, cancellationToken);
+                    //_logger.LogDebug("Removing invalid Drop-Off Load \n({@Load})",
+                    //    dropOff);
+                    //await _loadRepository.RemoveAsync(dropOff, cancellationToken);
     
                     continue;
                 }

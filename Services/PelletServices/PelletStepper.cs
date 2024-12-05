@@ -1,4 +1,5 @@
 using System.Diagnostics.Metrics;
+using Database.Models;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
@@ -9,20 +10,17 @@ namespace Services.PelletServices;
 public sealed class PelletStepper : IStepperService
 {
     private readonly ILogger<PelletStepper> _logger;
-    private readonly PelletService _pelletService;
-    private readonly PelletRepository _pelletRepository;
+    private readonly PelletCreation _pelletCreation;
     private readonly ModelState _modelState;
     
     public PelletStepper(
         ILogger<PelletStepper> logger,
-        PelletRepository pelletRepository,
-        PelletService pelletService,
+        PelletCreation pelletCreation,
         ModelState modelState,
         Meter meter)
     {
         _logger = logger;
-        _pelletRepository = pelletRepository;
-        _pelletService = pelletService;
+        _pelletCreation = pelletCreation;
         _modelState = modelState;
     }
     
@@ -33,6 +31,6 @@ public sealed class PelletStepper : IStepperService
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        await _pelletService.AddNewTruckCompanyPelletsAsync(_modelState.ModelConfig.LoadsPerStep, cancellationToken);
+        await _pelletCreation.AddNewTruckCompanyPelletsAsync(_modelState.ModelConfig.LoadsPerStep, cancellationToken);
     }
 }

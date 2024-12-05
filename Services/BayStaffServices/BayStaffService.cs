@@ -112,12 +112,12 @@ public sealed class BayStaffService
         if (pellet == null)
         {
             _logger.LogError("Work \n({@Work})\n did not have a Pellet assigned to complete Work for.",
-                bay);
+                work);
 
-            _logger.LogDebug("Removing invalid Work {@Work} for this Bay \n({@Bay})",
-                work,
-                bay);
-            await _workRepository.RemoveAsync(work, cancellationToken);
+            //_logger.LogDebug("Removing invalid Work {@Work} for this Bay \n({@Bay})",
+            //    work,
+            //    bay);
+            //await _workRepository.RemoveAsync(work, cancellationToken);
 
             return;
         }
@@ -126,57 +126,15 @@ public sealed class BayStaffService
         {
             case WorkType.DropOff:
                 await _pelletService.AlertDroppedOffAsync(pellet, bay, cancellationToken);
-                
-                if (!bay.BayFlags.HasFlag(BayFlags.DroppedOff) &&
-                    await _pelletService.GetNextDropOffAsync(trip, cancellationToken) == null)
-                {
-                    _logger.LogInformation("Bay \n({@Bay})\n just completed Work of type {WorkType} in this Step \n({Step})",
-                        bay,
-                        WorkType.DropOff,
-                        _modelState.ModelTime);
-                    
-                    _logger.LogDebug("Setting BayFlag {@BayFlag} for this Bay \n({@Bay})",
-                        BayFlags.DroppedOff,
-                        bay);
-                    await _bayRepository.AddAsync(bay, BayFlags.DroppedOff, cancellationToken);
-                }
                 break;
+                
                 
             case WorkType.Fetch:
                 await _pelletService.AlertFetchedAsync(pellet, bay, cancellationToken);
-                
-                if (!bay.BayFlags.HasFlag(BayFlags.Fetched) &&
-                    await _pelletService.GetNextFetchAsync(trip, cancellationToken) == null)
-                {
-                    _logger.LogInformation("Bay \n({@Bay})\n just completed Work of type {WorkType} in this Step \n({Step})",
-                        bay,
-                        WorkType.DropOff,
-                        _modelState.ModelTime);
-                    
-                    _logger.LogDebug("Setting BayFlag {@BayFlag} for this Bay \n({@Bay})",
-                        BayFlags.Fetched,
-                        bay);
-                    await _bayRepository.AddAsync(bay, BayFlags.Fetched, cancellationToken);
-                }
                 break;
             
             case WorkType.PickUp:
                 await _pelletService.AlertPickedUpAsync(pellet, trip, cancellationToken);
-                
-                if (bay.BayFlags.HasFlag(BayFlags.Fetched) &&
-                    !bay.BayFlags.HasFlag(BayFlags.PickedUp) &&
-                    await _pelletService.GetNextPickUpAsync(trip, cancellationToken) == null )
-                {
-                    _logger.LogInformation("Bay \n({@Bay})\n just completed Work of type {WorkType} in this Step \n({Step})",
-                        bay,
-                        WorkType.DropOff,
-                        _modelState.ModelTime);
-                    
-                    _logger.LogDebug("Setting BayFlag {@BayFlag} for this Bay \n({@Bay})",
-                        BayFlags.PickedUp,
-                        bay);
-                    await _bayRepository.AddAsync(bay, BayFlags.PickedUp, cancellationToken);
-                }
                 break;
         }
     }
@@ -345,7 +303,7 @@ public sealed class BayStaffService
             _logger.LogInformation("Trip \n({@Trip})\n did not have any more Pellets assigned to Pick-Up.",
                 trip);
             
-            _logger.LogInformation("Fetch Work could not be started for this Trip \n({@Trip}).",
+            _logger.LogInformation("Pick-Up Work could not be started for this Trip \n({@Trip}).",
                 trip);
                 
             return false;

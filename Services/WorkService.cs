@@ -76,11 +76,6 @@ public sealed class WorkService(
     public async Task AddAsync(Bay bay, BayStaff bayStaff, Pellet pellet, WorkType workType, CancellationToken cancellationToken)
     {
         var work = GetNew(workType);
-        work.BayStaff = bayStaff;
-        work.Bay = bay;
-        
-        bayStaff.Work = work;
-        bay.Works.Add(work);
 
         await workRepository.AddAsync(work, bay, bayStaff, pellet, cancellationToken);
     }

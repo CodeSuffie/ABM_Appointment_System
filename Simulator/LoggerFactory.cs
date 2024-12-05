@@ -2,6 +2,8 @@
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using Serilog.Sinks.SystemConsole.Themes;
+
 // ReSharper disable All
 
 namespace Simulator;
@@ -122,8 +124,7 @@ internal static class LoggerFactory
                         Id = tp.Id,
                         XLocation = tp.XLocation,
                         YLocation = tp.YLocation,
-                        DropOff = tp.DropOff,
-                        PickUp = tp.PickUp,
+                        LoadIds = tp.Loads.Select(l => l.Id),
                         Truck = tp.Truck,
                         Hub = tp.Hub,
                         ParkingSpot = tp.ParkingSpot,
@@ -160,11 +161,12 @@ internal static class LoggerFactory
                         TripId = w.TripId,
                         AdminStaffId = w.AdminStaffId,
                         BayId = w.BayId,
-                        BayStaffId = w.BayStaffId
+                        BayStaffId = w.BayStaffId,
+                        PelletId = w.PelletId
                     })
-                .MinimumLevel.Fatal()
+                .MinimumLevel.Error()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
-                // .WriteTo.Console(theme: AnsiConsoleTheme.Code)
+                .WriteTo.Console(theme: AnsiConsoleTheme.Code)
                 .CreateLogger();
     }
 }

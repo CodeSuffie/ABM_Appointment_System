@@ -12,19 +12,26 @@ public sealed class WorkRepository(
     BayRepository bayRepository,
     PelletRepository pelletRepository)
 {
-    public async Task<Work?> GetAsync(Trip trip, CancellationToken cancellationToken)
+    public IQueryable<Work> Get()
     {
-        var work = await context.Works
-            .FirstOrDefaultAsync(x => x.TripId == trip.Id, cancellationToken);
+        var works = context.Works;
         
-        return work;
+        return works;
     }
     
     public IQueryable<Work> Get(Bay bay, WorkType workType)
     {
-        var work = context.Works
+        var works = context.Works
             .Where(x => x.BayId == bay.Id && 
-                                      x.WorkType == workType);
+                        x.WorkType == workType);
+        
+        return works;
+    }
+    
+    public async Task<Work?> GetAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        var work = await context.Works
+            .FirstOrDefaultAsync(x => x.TripId == trip.Id, cancellationToken);
         
         return work;
     }
@@ -99,9 +106,6 @@ public sealed class WorkRepository(
     
     public async Task AddAsync(Work work, Bay bay, BayStaff bayStaff, Pellet pellet, CancellationToken cancellationToken)
     {
-        await context.Works
-            .AddAsync(work, cancellationToken);
-        
         work.Bay = bay;
         bay.Works.Add(work);
 
@@ -110,12 +114,23 @@ public sealed class WorkRepository(
 
         work.Pellet = pellet;
         pellet.Work = work;
+        
+        await context.Works
+            .AddAsync(work, cancellationToken);
 
         await context.SaveChangesAsync(cancellationToken);
     }
     
     public async Task RemoveAsync(Work work, CancellationToken cancellationToken)
     {
+        // var dbWork = await Get()
+        //     .FirstOrDefaultAsync(w => w.Id == work.Id,
+        //         cancellationToken);
+        // if (dbWork == null)
+        // {
+        //     return;
+        // }
+        
         var trip = await tripRepository.GetAsync(work, cancellationToken);
         if (trip != null)
         {

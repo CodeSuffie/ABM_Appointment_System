@@ -63,6 +63,13 @@ public sealed class BayRepository(ModelDbContext context)
         
         await context.SaveChangesAsync(cancellationToken);
     }
+    
+    public async Task RemoveAsync(Bay bay, BayFlags flag, CancellationToken cancellationToken)
+    {
+        bay.BayFlags &= ~flag;
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
 
     public async Task<int> CountAsync(Hub hub, CancellationToken cancellationToken)
     {

@@ -8,12 +8,8 @@ public class Trip
     public long YLocation { get; set; }
     
     public bool Completed { get; set; }
-    
-    public Load? DropOff { get; set; }
-    public long? DropOffId { get; set; }
 
-    public Load? PickUp { get; set; }
-    public long? PickUpId { get; set; }
+    public List<Load> Loads { get; set; } = [];
 
     public Truck? Truck { get; set; }
     public long? TruckId { get; set; }

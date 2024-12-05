@@ -13,7 +13,6 @@ namespace Services.LoadServices;
 public sealed class LoadService
 {
     private readonly ILogger<LoadService> _logger;
-    private readonly TruckCompanyService _truckCompanyService;
     private readonly TruckCompanyRepository _truckCompanyRepository;
     private readonly HubService _hubService;
     private readonly PelletService _pelletService;
@@ -22,7 +21,6 @@ public sealed class LoadService
     private readonly UpDownCounter<int> _unclaimedLoads;
 
     public LoadService(ILogger<LoadService> logger,
-        TruckCompanyService truckCompanyService,
         TruckCompanyRepository truckCompanyRepository,
         HubService hubService,
         PelletService pelletService,
@@ -31,7 +29,6 @@ public sealed class LoadService
         Meter meter)
     {
         _logger = logger;
-        _truckCompanyService = truckCompanyService;
         _truckCompanyRepository = truckCompanyRepository;
         _hubService = hubService;
         _pelletService = pelletService;
@@ -67,7 +64,8 @@ public sealed class LoadService
             TruckCompany = truckCompany,
             Hub = hub
         };
-        
+
+        await _loadRepository.AddAsync(load, cancellationToken);
         
         _logger.LogDebug("Setting Pallets for this Load \n({@Load})\n for this Truck \n({@Truck})",
             load,

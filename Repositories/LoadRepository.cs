@@ -39,10 +39,18 @@ public sealed class LoadRepository(
         return load;
     }
     
+    public async Task<Load?> GetAsync(Pellet pellet, CancellationToken cancellationToken)
+    {
+        var load = await Get()
+            .FirstOrDefaultAsync(l => pellet.LoadId == l.Id, cancellationToken);
+            
+        return load;
+    }
+    
     public async Task<Load?> GetPickUpAsync(Trip trip, CancellationToken cancellationToken)
     {
         var load = await Get(trip)
-            .FirstOrDefaultAsync(l => trip.PickUpId == l.Id,
+            .FirstOrDefaultAsync(l => l.LoadType == LoadType.PickUp,
                 cancellationToken);
 
         return load;
@@ -51,7 +59,7 @@ public sealed class LoadRepository(
     public async Task<Load?> GetDropOffAsync(Trip trip, CancellationToken cancellationToken)
     {
         var load = await Get(trip)
-            .FirstOrDefaultAsync(l => trip.DropOffId == l.Id,
+            .FirstOrDefaultAsync(l => l.LoadType == LoadType.DropOff,
                 cancellationToken);
 
         return load;

@@ -71,6 +71,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStepperService,                 ParkingSpotStepper>();
         services.AddScoped<ParkingSpotRepository>();
         
+        services.AddScoped<PelletCreation>();
         services.AddScoped<PelletService>();
         services.AddScoped<IInitializationService,          PelletInitialize>();
         services.AddScoped<IStepperService,                 PelletStepper>();

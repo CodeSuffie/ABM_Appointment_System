@@ -1,13 +1,8 @@
-using System.Diagnostics.Metrics;
-using System.Reflection.Metadata.Ecma335;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
-using Services.BayServices;
-using Services.HubServices;
 using Services.ModelServices;
-using Services.TruckCompanyServices;
 
 namespace Services.PelletServices;
 
@@ -16,97 +11,33 @@ public sealed class PelletService
     private readonly ILogger<PelletService> _logger;
     private readonly ModelState _modelState;
     private readonly PelletRepository _pelletRepository;
-    private readonly TruckCompanyService _truckCompanyService;
     private readonly TruckCompanyRepository _truckCompanyRepository;
-    private readonly HubService _hubService;
     private readonly HubRepository _hubRepository;
-    private readonly BayService _bayService;
-    private readonly UpDownCounter<int> _unclaimedPellets;
+    private readonly BayRepository _bayRepository;
+    private readonly TripRepository _tripRepository;
+    private readonly LoadRepository _loadRepository;
 
     public PelletService(
         ILogger<PelletService> logger,
         ModelState modelState,
         PelletRepository pelletRepository,
-        TruckCompanyService truckCompanyService,
         TruckCompanyRepository truckCompanyRepository,
-        HubService hubService,
         HubRepository hubRepository,
-        BayService bayService,
-        Meter meter)
+        BayRepository bayRepository,
+        TripRepository tripRepository,
+        LoadRepository loadRepository)
     {
         _logger = logger;
         _pelletRepository = pelletRepository;
         _truckCompanyRepository = truckCompanyRepository;
-        _truckCompanyService = truckCompanyService;
-        _hubService = hubService;
         _hubRepository = hubRepository;
-        _bayService = bayService;
+        _bayRepository = bayRepository;
+        _tripRepository = tripRepository;
+        _loadRepository = loadRepository;
         _modelState = modelState;
-        
-        _unclaimedPellets =
-            meter.CreateUpDownCounter<int>("pellet-unclaimed", "Pellet", "#Pellets unclaimed (excl. completed).");
     }
     
-    public async Task AddNewTruckCompanyPelletsAsync(int count, CancellationToken cancellationToken)
-    {
-        for (var i = 0; i < count; i++)
-        {
-            var pellet = new Pellet();
-            await _pelletRepository.AddAsync(pellet, cancellationToken);
-
-            var truckCompany = await _truckCompanyService.SelectTruckCompanyAsync(cancellationToken);
-            if (truckCompany == null)
-            {
-                _logger.LogError("Could not select a TruckCompany for this new Pellet.");
-
-                continue;
-            }
-            
-            _logger.LogDebug("Setting TruckCompany \n({@TruckCompany})\n for this Pellet \n({@Pellet})",
-                truckCompany,
-                pellet);
-            await _pelletRepository.SetAsync(pellet, truckCompany, cancellationToken);
-            
-            _logger.LogInformation("New Pellet created: Pellet={@Pellet}", pellet);
     
-            _unclaimedPellets.Add(1);
-        }
-    }
-    
-    public async Task AddNewBayPelletsAsync(int count, CancellationToken cancellationToken)
-    {
-        for (var i = 0; i < count; i++)
-        {
-            var pellet = new Pellet();
-            await _pelletRepository.AddAsync(pellet, cancellationToken);
-
-            var hub = await _hubService.SelectHubAsync(cancellationToken);
-            if (hub == null)
-            {
-                _logger.LogError("Could not select a Hub for this new Pellet.");
-
-                continue;
-            }
-            
-            var bay = await _bayService.SelectBayAsync(hub, cancellationToken);
-            if (bay == null)
-            {
-                _logger.LogError("Could not select a Bay for this Hub ({@Hub}) for this new Pellet.",
-                    hub);
-
-                continue;
-            }
-            
-            _logger.LogDebug("Setting Bay \n({@Bay})\n for this Pellet \n({@Pellet})",
-                bay,
-                pellet);
-            await _pelletRepository.SetAsync(pellet, bay, cancellationToken);
-            
-            _logger.LogInformation("New Pellet created: Pellet={@Pellet}", pellet);
-    
-            _unclaimedPellets.Add(1);
-        }
-    }
 
     public async Task SetPelletsAsync(Load load, long count, CancellationToken cancellationToken)
     {
@@ -137,7 +68,7 @@ public sealed class PelletService
             
             if (allPellets.Count <= 0)
             {
-                _logger.LogError("TruckCompany ({@TruckCompany}) did not have any unclaimed pellets assigned.",
+                _logger.LogInformation("TruckCompany ({@TruckCompany}) did not have any unclaimed pellets assigned.",
                     truckCompany);
 
                 return;
@@ -145,12 +76,20 @@ public sealed class PelletService
         }
         else
         {
-            allPellets = await (_pelletRepository.GetUnclaimed(hub))
-                .ToListAsync(cancellationToken);
+            var bays = _bayRepository.Get(hub)
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken);
+
+            allPellets = [];
+
+            await foreach (var bay in bays)
+            {
+                allPellets.AddRange(await (_pelletRepository.GetUnclaimed(bay).ToListAsync(cancellationToken)));
+            }
             
             if (allPellets.Count <= 0)
             {
-                _logger.LogError("Hub ({@Hub}) did not have any unclaimed pellets assigned.",
+                _logger.LogInformation("Hub ({@Hub}) did not have any unclaimed pellets assigned.",
                     hub);
 
                 return;
@@ -159,7 +98,8 @@ public sealed class PelletService
         
         if (allPellets.Count <= count)
         {
-            _logger.LogError("Location to fetch Pellets from had less than or an equal number of unclaimed pellets assigned as the given count ({@Count}).",
+            _logger.LogInformation("Location to fetch Pellets from had less than or an equal number ({@Count}) of unclaimed pellets assigned as the given count ({@Count}).",
+                allPellets.Count,
                 count);
 
             count = allPellets.Count;
@@ -177,33 +117,229 @@ public sealed class PelletService
         }
     }
 
-    public async Task AlertDroppedOffAsync(Pellet pellet, Bay bay, CancellationToken cancellationToken)
+    private async Task DropOff(Pellet pellet, Load load, Bay bay, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await _pelletRepository.UnsetAsync(pellet, load, cancellationToken);
+        await _pelletRepository.SetAsync(pellet, bay, cancellationToken);
+        await _pelletRepository.UnsetWorkAsync(pellet, cancellationToken);
+    }
+    
+    private async Task Fetch(Pellet pellet, Bay bayStart, Bay bayEnd, CancellationToken cancellationToken)
+    {
+        await _pelletRepository.UnsetAsync(pellet, bayStart, cancellationToken);
+        await _pelletRepository.SetAsync(pellet, bayEnd, cancellationToken);
+        await _pelletRepository.UnsetWorkAsync(pellet, cancellationToken);
+    }
+    
+    private async Task PickUp(Pellet pellet, Bay bay, Load load, CancellationToken cancellationToken)
+    {
+        await _pelletRepository.UnsetAsync(pellet, bay, cancellationToken);
+        await _pelletRepository.SetAsync(pellet, load, cancellationToken);
+        await _pelletRepository.UnsetWorkAsync(pellet, cancellationToken);
     }
 
-    public async Task AlertFetchedAsync(Pellet pellet, Bay bay, CancellationToken cancellationToken)
+    public async Task AlertDroppedOffAsync(Pellet pellet, Bay bay, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var pelletLoad = await _loadRepository.GetAsync(pellet, cancellationToken);
+        if (pelletLoad == null)
+        {
+            _logger.LogError("Pellet ({@Pellet}) did not have a Load assigned to Drop-Off for.",
+                pellet);
+            
+            return;
+        }
+
+        if (pelletLoad.LoadType != LoadType.DropOff)
+        {
+            _logger.LogError("Load ({@Load}) is not a Drop-Off Load.",
+                pelletLoad);
+            
+            return;
+        }
+        
+        var trip = await _tripRepository.GetAsync(pelletLoad, cancellationToken);
+        if (trip == null)
+        {
+            _logger.LogError("Load ({@Load}) did not have a Trip assigned.",
+                pelletLoad);
+            
+            return;
+        }
+        
+        var tripAtBay = await _tripRepository.GetAsync(bay, cancellationToken);
+        if (tripAtBay == null)
+        {
+            _logger.LogError("Bay ({@Bay}) did not have a Trip assigned.",
+                bay);
+            
+            return;
+        }
+
+        if (trip.Id != tripAtBay.Id)
+        {
+            _logger.LogError("Cannot unload Pellet ({@Pellet}) for this Trip ({@Trip}) at this Bay ({@Bay}) since it has a different Trip ({@Trip}) assigned.",
+                pellet,
+                trip,
+                bay,
+                tripAtBay);
+            
+            return;
+        }
+
+        await DropOff(pellet, pelletLoad, bay, cancellationToken);
+    }
+
+    public async Task AlertFetchedAsync(Pellet pellet, Bay bayEnd, CancellationToken cancellationToken)
+    {
+        var bayStart = await _bayRepository.GetAsync(pellet, cancellationToken);
+        if (bayStart == null)
+        {
+            _logger.LogError("Pellet ({@Pellet}) did not have a bay assigned to Fetch from.",
+                pellet);
+            
+            return;
+        }
+
+        // if (load.LoadType != LoadType.DropOff)
+        // {
+        //     _logger.LogError("Load ({@Load}) is not a Drop-Off Load.",
+        //         load);
+        //     
+        //     return;
+        // }
+        // TODO: Maybe validate if the load actually needed to be fetched?
+
+        if (bayStart.Id == bayEnd.Id)
+        {
+            _logger.LogError("Cannot fetch Pellet ({@Pellet}) for Bay ({@Bay}) since it was already there.",
+                pellet,
+                bayEnd);
+            
+            return;
+        }
+
+        await Fetch(pellet, bayStart, bayEnd, cancellationToken);
     }
 
     public async Task AlertPickedUpAsync(Pellet pellet, Trip trip, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var pelletLoad = await _loadRepository.GetAsync(pellet, cancellationToken);
+        if (pelletLoad == null)
+        {
+            _logger.LogError("Pellet ({@Pellet}) did not have a Load assigned to Pick-Up for.",
+                pellet);
+            
+            return;
+        }
+
+        if (pelletLoad.LoadType != LoadType.PickUp)
+        {
+            _logger.LogError("Load ({@Load}) is not a Pick-Up Load.",
+                pelletLoad);
+            
+            return;
+        }
+        
+        var tripLoad = await _loadRepository.GetPickUpAsync(trip, cancellationToken);
+        if (tripLoad == null)
+        {
+            _logger.LogError("Trip ({@Trip}) did not have a Pick-Up load assigned.",
+                tripLoad);
+            
+            return;
+        }
+        
+        if (pelletLoad.Id != tripLoad.Id)
+        {
+            _logger.LogError("Cannot unload Pellet ({@Pellet}) with Load ({@Load}) for this Trip ({@Trip}) since it has a different Load ({@Load}) assigned.",
+                pellet,
+                pelletLoad,
+                trip,
+                tripLoad);
+            
+            return;
+        }
+        
+        var bay = await _bayRepository.GetAsync(trip, cancellationToken);
+        if (bay == null)
+        {
+            _logger.LogError("Trip ({@Trip}) did not have a Bay assigned.",
+                trip);
+            
+            return;
+        }
+        
+        await PickUp(pellet, bay, pelletLoad, cancellationToken);
     }
 
     public async Task<Pellet?> GetNextDropOffAsync(Trip trip, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var load = await _loadRepository.GetDropOffAsync(trip, cancellationToken);
+        if (load == null)
+        {
+            _logger.LogInformation("Trip ({@Trip}) did not have a Load assigned to Drop-Off.",
+                trip);
+            
+            return null;
+        }
+
+        var pellets = await _pelletRepository.GetUnclaimed(load)
+            .ToListAsync(cancellationToken);
+
+        return pellets.Count <= 0 ? null : pellets[0];
     }
 
     public async Task<Pellet?> GetNextFetchAsync(Trip trip, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var load = await _loadRepository.GetPickUpAsync(trip, cancellationToken);
+        if (load == null)
+        {
+            _logger.LogInformation("Trip ({@Trip}) did not have a Load assigned to Pick-Up.",
+                trip);
+            
+            return null;
+        }
+
+        var bay = await _bayRepository.GetAsync(trip, cancellationToken);
+        if (bay == null)
+        {
+            _logger.LogInformation("Trip ({@Trip}) did not have a Bay assigned.",
+                trip);
+            
+            return null;
+        }
+
+        var pellets = await _pelletRepository.GetUnclaimed(load)
+            .Where(p => p.BayId != bay.Id)
+            .ToListAsync(cancellationToken);
+
+        return pellets.Count <= 0 ? null : pellets[0];
     }
 
     public async Task<Pellet?> GetNextPickUpAsync(Trip trip, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var load = await _loadRepository.GetPickUpAsync(trip, cancellationToken);
+        if (load == null)
+        {
+            _logger.LogInformation("Trip ({@Trip}) did not have a Load assigned to Pick-Up.",
+                trip);
+            
+            return null;
+        }
+
+        var bay = await _bayRepository.GetAsync(trip, cancellationToken);
+        if (bay == null)
+        {
+            _logger.LogInformation("Trip ({@Trip}) did not have a Bay assigned.",
+                trip);
+            
+            return null;
+        }
+
+        var pellets = await _pelletRepository.GetUnclaimed(load)
+            .Where(p => p.BayId == bay.Id)
+            .ToListAsync(cancellationToken);
+
+        return pellets.Count <= 0 ? null : pellets[0];
     }
 }

@@ -8,7 +8,6 @@ namespace Services.ModelServices;
 public sealed class ModelInitialize(
     ILogger<ModelInitialize> logger,
     ModelState modelState,
-    LoadService loadService,
     IEnumerable<IPriorityInitializationService> priorityInitializationServices,
     IEnumerable<IInitializationService> initializationServices)
 {

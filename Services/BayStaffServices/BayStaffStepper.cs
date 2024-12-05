@@ -130,10 +130,10 @@ public sealed class BayStaffStepper : IStepperService<BayStaff>
                     work,
                     bayStaff);
 
-                _logger.LogDebug("Removing invalid Work \n({@Work})\n for this BayStaff \n({@BayStaff})",
-                    work,
-                    bayStaff);
-                await _workRepository.RemoveAsync(work, cancellationToken);
+                //_logger.LogDebug("Removing invalid Work \n({@Work})\n for this BayStaff \n({@BayStaff})",
+                //    work,
+                //    bayStaff);
+                //await _workRepository.RemoveAsync(work, cancellationToken);
                 
                 _logger.LogDebug("BayStaff \n({@BayStaff})\n will remain idle in this Step \n({Step})",
                     bayStaff,

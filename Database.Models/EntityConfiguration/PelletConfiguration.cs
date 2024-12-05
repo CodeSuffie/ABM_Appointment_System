@@ -8,7 +8,8 @@ public class PelletConfiguration : IEntityTypeConfiguration<Pellet>
     public void Configure(EntityTypeBuilder<Pellet> builder)
     {
         builder.HasOne(x => x.TruckCompany)
-            .WithMany();
+            .WithMany(x => x.Pellets)
+            .HasForeignKey(x => x.TruckCompanyId);
         
         builder.HasOne(x => x.Load)
             .WithMany();

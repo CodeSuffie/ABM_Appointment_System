@@ -22,11 +22,18 @@ public sealed class PelletRepository(ModelDbContext context)
         return pellets;
     }
     
-    public IQueryable<Pellet> Get(Hub hub)
+    public IQueryable<Pellet> Get(Bay bay)
     {
         var pellets = Get()
-            .Where(p => p.Bay != null &&
-                        hub.Bays.Any(b => p.BayId == b.Id));
+            .Where(p => p.BayId == bay.Id);
+
+        return pellets;
+    }
+    
+    public IQueryable<Pellet> Get(Load load)
+    {
+        var pellets = Get()
+            .Where(p => p.LoadId == load.Id);
 
         return pellets;
     }
@@ -47,10 +54,18 @@ public sealed class PelletRepository(ModelDbContext context)
         return pellets;
     }
 
-    public IQueryable<Pellet> GetUnclaimed(Hub hub)
+    public IQueryable<Pellet> GetUnclaimed(Bay bay)
     {
-        var pellets = Get(hub)
+        var pellets = Get(bay)
             .Where(p => p.Load == null);
+
+        return pellets;
+    }
+    
+    public IQueryable<Pellet> GetUnclaimed(Load load)
+    {
+        var pellets = Get(load)
+            .Where(p => p.Work == null);
 
         return pellets;
     }
@@ -105,6 +120,13 @@ public sealed class PelletRepository(ModelDbContext context)
     {
         pellet.Bay = bay;
         bay.Pellets.Remove(pellet);
+        
+        return context.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task UnsetWorkAsync(Pellet pellet, CancellationToken cancellationToken)
+    {
+        pellet.Work = null;
         
         return context.SaveChangesAsync(cancellationToken);
     }

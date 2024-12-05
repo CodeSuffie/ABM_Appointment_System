@@ -10,7 +10,6 @@ namespace Services.TruckServices;
 public sealed class TruckService(
     ILogger<TruckService> logger,
     TruckCompanyService truckCompanyService,
-    TruckCompanyRepository truckCompanyRepository,
     TruckRepository truckRepository,
     TripService tripService,
     ModelState modelState)

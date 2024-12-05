@@ -35,16 +35,6 @@ public sealed class TripRepository(
         return Get().Where(t => t.HubId == hub.Id);
     }
     
-    public IQueryable<Trip> Get(TruckCompany truckCompany)
-    {
-        return Get().Where(t => t.DropOff != null ||
-                                t.PickUp != null)
-            .Where(t => t.DropOff == null ||
-                        t.DropOff.TruckCompanyId == truckCompany.Id)
-            .Where(t => t.PickUp == null ||
-                        t.PickUp.TruckCompanyId == truckCompany.Id);
-    }
-    
     public Task<Trip?> GetAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
         return Get()
@@ -73,6 +63,12 @@ public sealed class TripRepository(
     {
         return context.Trips
             .FirstOrDefaultAsync(t=> t.Id == truck.TripId, cancellationToken);
+    }
+
+    public Task<Trip?> GetAsync(Load load, CancellationToken cancellationToken)
+    {
+        return context.Trips
+            .FirstOrDefaultAsync(t=> t.Id == load.TripId, cancellationToken);
     }
     
     public IQueryable<Trip> GetCurrent(Hub hub, WorkType workType, CancellationToken cancellationToken)
@@ -194,10 +190,10 @@ public sealed class TripRepository(
                 dropOff,
                 trip);
             
-            logger.LogDebug("Removing invalid Drop-Off Load ({@Load}) for this Trip ({@Trip}).",
-                dropOff,
-                trip);
-            await loadRepository.RemoveAsync(dropOff, cancellationToken);
+            //logger.LogDebug("Removing invalid Drop-Off Load ({@Load}) for this Trip ({@Trip}).",
+            //    dropOff,
+            //    trip);
+            //await loadRepository.RemoveAsync(dropOff, cancellationToken);
             
             return;
         }
@@ -219,8 +215,10 @@ public sealed class TripRepository(
 
             return;
         }
+
+        trip.Loads.RemoveAll(l => l.LoadType == LoadType.DropOff);
         
-        trip.DropOff = dropOff;
+        trip.Loads.Add(dropOff);
         dropOff.Trip = trip;
 
         await context.SaveChangesAsync(cancellationToken);
@@ -235,10 +233,10 @@ public sealed class TripRepository(
                 pickUp,
                 trip);
             
-            logger.LogDebug("Removing invalid Pick-Up Load ({@Load}) for this Trip ({@Trip}).",
-                pickUp,
-                trip);
-            await loadRepository.RemoveAsync(pickUp, cancellationToken);
+            //logger.LogDebug("Removing invalid Pick-Up Load ({@Load}) for this Trip ({@Trip}).",
+            //    pickUp,
+            //    trip);
+            //await loadRepository.RemoveAsync(pickUp, cancellationToken);
             
             return;
         }
@@ -261,7 +259,9 @@ public sealed class TripRepository(
             return;
         }
         
-        trip.PickUp = pickUp;
+        trip.Loads.RemoveAll(l => l.LoadType == LoadType.PickUp);
+        
+        trip.Loads.Add(pickUp);
         pickUp.Trip = trip;
 
         await context.SaveChangesAsync(cancellationToken);

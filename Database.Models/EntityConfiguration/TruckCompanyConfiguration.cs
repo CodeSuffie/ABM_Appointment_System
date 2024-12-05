@@ -11,6 +11,7 @@ public class TruckCompanyConfiguration : IEntityTypeConfiguration<TruckCompany>
             .WithOne();
         
         builder.HasMany(x => x.Pellets)
-            .WithOne();
+            .WithOne(x => x.TruckCompany)
+            .HasForeignKey(x => x.TruckCompanyId);
     }
 }
