@@ -17,6 +17,7 @@ public sealed class LoadService
     private readonly HubService _hubService;
     private readonly PelletService _pelletService;
     private readonly LoadRepository _loadRepository;
+    private readonly PelletRepository _pelletRepository;
     private readonly ModelState _modelState;
     private readonly UpDownCounter<int> _unclaimedLoads;
 
@@ -25,6 +26,7 @@ public sealed class LoadService
         HubService hubService,
         PelletService pelletService,
         LoadRepository loadRepository,
+        PelletRepository pelletRepository,
         ModelState modelState,
         Meter meter)
     {
@@ -33,6 +35,7 @@ public sealed class LoadService
         _hubService = hubService;
         _pelletService = pelletService;
         _loadRepository = loadRepository;
+        _pelletRepository = pelletRepository;
         _modelState = modelState;
 
         _unclaimedLoads =
@@ -115,6 +118,31 @@ public sealed class LoadService
         }
 
         return await GetNewPickUpAsync(truck, hub, cancellationToken);
+    }
+    
+    public async Task<Load> GetNewInventoryAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        var inventory = new Load
+        {
+            LoadType = LoadType.Inventory,
+            Trip = trip,
+        };
+
+        await _loadRepository.AddAsync(inventory, cancellationToken);
+
+        return inventory;
+    }
+    
+    public async Task<Load> GetNewInventoryAsync(Trip trip, Load load, CancellationToken cancellationToken)
+    {
+        var inventory = await GetNewInventoryAsync(trip, cancellationToken);
+
+        foreach (var pellet in load.Pellets)
+        {
+            await _pelletRepository.AddAsync(pellet, inventory, cancellationToken);
+        }
+
+        return inventory;
     }
     
     // public async Task AddNewLoadsAsync(int count, CancellationToken cancellationToken)

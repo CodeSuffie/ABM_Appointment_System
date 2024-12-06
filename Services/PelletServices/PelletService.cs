@@ -96,7 +96,7 @@ public sealed class PelletService
 
             foreach (var pellet in pellets)
             {
-                await _pelletRepository.SetAsync(pellet, load, cancellationToken);
+                await _pelletRepository.AddAsync(pellet, load, cancellationToken);
                 await _pelletRepository.UnsetAsync(pellet, truckCompany, cancellationToken);
                     // Removing pellets from truckCompany since they will leave for the hub now
             }
@@ -140,18 +140,9 @@ public sealed class PelletService
 
             foreach (var pellet in pellets)
             {
-                await _pelletRepository.SetAsync(pellet, load, cancellationToken);
+                await _pelletRepository.AddAsync(pellet, load, cancellationToken);
             }
         }
-    }
-
-    private async Task<bool> HasPelletAsync(Load load, Pellet pellet, CancellationToken cancellationToken)
-    {
-        return (await _pelletRepository
-                   .Get(load)
-                   .FirstOrDefaultAsync(p => p.Id == pellet.Id,
-                       cancellationToken))
-               != null;
     }
 
     private async Task<bool> HasPelletAsync(Bay bay, Pellet pellet, CancellationToken cancellationToken)
@@ -189,7 +180,7 @@ public sealed class PelletService
     private async Task PickUp(Pellet pellet, Bay bay, Load load, CancellationToken cancellationToken)
     {
         await _pelletRepository.UnsetAsync(pellet, bay, cancellationToken);
-        await _pelletRepository.SetAsync(pellet, load, cancellationToken);
+        await _pelletRepository.AddAsync(pellet, load, cancellationToken);
         
         await _pelletRepository.UnsetWorkAsync(pellet, cancellationToken);
     }
@@ -214,7 +205,7 @@ public sealed class PelletService
             return;
         }
 
-        if (! await HasPelletAsync(inventoryLoad, pellet, cancellationToken))
+        if (inventoryLoad.Pellets.FirstOrDefault(p => p.Id == pellet.Id) == null)
         {
             _logger.LogError("Cannot unload Pellet \n({@Pellet})\n for this Trip \n({@Trip})\n at this Bay \n({@Bay})\n since its Inventory Load \n({@Load})\n does not have the Pellet assigned.",
                 pellet,
@@ -271,7 +262,7 @@ public sealed class PelletService
             return;
         }
         
-        if (await HasPelletAsync(inventoryLoad, pellet, cancellationToken))
+        if (inventoryLoad.Pellets.FirstOrDefault(p => p.Id == pellet.Id) != null)
         {
             _logger.LogError("Cannot load Pellet ({@Pellet}) for this Trip ({@Trip}) at this Bay ({@Bay}) since its Inventory Load ({@Load}) already has the Pellet assigned.",
                 pellet,
@@ -305,14 +296,11 @@ public sealed class PelletService
             return [];
         }
 
-        var dropOffPellets = _pelletRepository.Get(dropOffLoad)
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken);
         var pellets = new List<Pellet>();
 
-        await foreach (var dropOffPellet in dropOffPellets)
+        foreach (var dropOffPellet in dropOffLoad.Pellets)
         {
-            if (await HasPelletAsync(inventoryLoad, dropOffPellet, cancellationToken) &&
+            if (inventoryLoad.Pellets.FirstOrDefault(p => p.Id == dropOffPellet.Id) != null &&
                 !await HasWorkAsync(dropOffPellet, cancellationToken))
             {
                 pellets.Add(dropOffPellet);
@@ -351,14 +339,11 @@ public sealed class PelletService
             return [];
         }
         
-        var pickUpPellets = _pelletRepository.Get(pickUpLoad)
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken);
         var pellets = new List<Pellet>();
 
-        await foreach (var pickUpPellet in pickUpPellets)
+        foreach (var pickUpPellet in pickUpLoad.Pellets)
         {
-            if (!await HasPelletAsync(inventoryLoad, pickUpPellet, cancellationToken) &&
+            if (inventoryLoad.Pellets.FirstOrDefault(p => p.Id == pickUpPellet.Id) == null &&
                 !await HasPelletAsync(bay, pickUpPellet, cancellationToken) &&
                 !await HasWorkAsync(pickUpPellet, cancellationToken))
             {
@@ -398,14 +383,11 @@ public sealed class PelletService
             return [];
         }
         
-        var pickUpPellets = _pelletRepository.Get(pickUpLoad)
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken);
         var pellets = new List<Pellet>();
 
-        await foreach (var pickUpPellet in pickUpPellets)
+        foreach (var pickUpPellet in pickUpLoad.Pellets)
         {
-            if (!await HasPelletAsync(inventoryLoad, pickUpPellet, cancellationToken) &&
+            if (inventoryLoad.Pellets.FirstOrDefault(p => p.Id == pickUpPellet.Id) == null &&
                 !await HasWorkAsync(pickUpPellet, cancellationToken))
             {
                 pellets.Add(pickUpPellet);
@@ -437,17 +419,17 @@ public sealed class PelletService
 
     public async Task<bool> HasDropOffPelletsAsync(Trip trip, CancellationToken cancellationToken)
     {
-        return (await GetDropOffPelletsAsync(trip, cancellationToken)).Count <= 0;
+        return (await GetDropOffPelletsAsync(trip, cancellationToken)).Count > 0;
     }
 
     public async Task<bool> HasFetchPelletsAsync(Trip trip, CancellationToken cancellationToken)
     {
-        return (await GetFetchPelletsAsync(trip, cancellationToken)).Count <= 0;
+        return (await GetFetchPelletsAsync(trip, cancellationToken)).Count > 0;
     }
 
     public async Task<bool> HasPickUpPelletsAsync(Trip trip, CancellationToken cancellationToken)
     {
-        return (await GetPickUpPelletsAsync(trip, cancellationToken)).Count <= 0;
+        return (await GetPickUpPelletsAsync(trip, cancellationToken)).Count > 0;
     }
 
     public async Task CompleteAsync(Trip trip, CancellationToken cancellationToken)
@@ -480,11 +462,7 @@ public sealed class PelletService
             return;
         }
 
-        var pellets = _pelletRepository.Get(inventoryLoad)
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken);
-
-        await foreach (var pellet in pellets)
+        foreach (var pellet in inventoryLoad.Pellets)
         {
             await _pelletRepository.SetAsync(pellet, truckCompany, cancellationToken);
         }

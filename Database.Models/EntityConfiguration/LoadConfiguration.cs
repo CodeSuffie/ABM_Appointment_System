@@ -35,7 +35,6 @@ public class LoadConfiguration : IEntityTypeConfiguration<Load>
             .HasForeignKey(x => x.TripId);
 
         builder.HasMany(x => x.Pellets)
-            .WithOne(x => x.Load)
-            .HasForeignKey(x => x.LoadId);
+            .WithMany(x => x.Loads);
     }
 }

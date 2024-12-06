@@ -115,7 +115,7 @@ internal static class LoggerFactory
                     {
                         Id = p.Id,
                         TruckCompanyId = p.TruckCompanyId,
-                        LoadId = p.LoadId,
+                        LoadIds = p.Loads.Select(l => l.Id),
                         BayId = p.BayId,
                     })
                 .Destructure.ByTransforming<Trip>(

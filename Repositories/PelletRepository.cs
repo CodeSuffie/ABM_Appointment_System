@@ -29,14 +29,6 @@ public sealed class PelletRepository(ModelDbContext context)
 
         return pellets;
     }
-    
-    public IQueryable<Pellet> Get(Load load)
-    {
-        var pellets = Get()
-            .Where(p => p.LoadId == load.Id);
-
-        return pellets;
-    }
 
     public async Task<Pellet?> GetAsync(Work work, CancellationToken cancellationToken)
     {
@@ -49,7 +41,7 @@ public sealed class PelletRepository(ModelDbContext context)
     public IQueryable<Pellet> GetUnclaimed(TruckCompany truckCompany)
     {
         var pellets = Get(truckCompany)
-            .Where(p => p.Load == null);
+            .Where(p => p.Loads.Count == 0);
 
         return pellets;
     }
@@ -57,18 +49,18 @@ public sealed class PelletRepository(ModelDbContext context)
     public IQueryable<Pellet> GetUnclaimed(Bay bay)
     {
         var pellets = Get(bay)
-            .Where(p => p.Load == null);
+            .Where(p => p.Loads.Count == 0);
 
         return pellets;
     }
     
-    public IQueryable<Pellet> GetUnclaimed(Load load)
-    {
-        var pellets = Get(load)
-            .Where(p => p.Work == null);
-
-        return pellets;
-    }
+    // public IQueryable<Pellet> GetUnclaimed(Load load)
+    // {
+    //     var pellets = Get(load)
+    //         .Where(p => p.Work == null);
+    //
+    //     return pellets;
+    // }
 
     public async Task AddAsync(Pellet pellet, CancellationToken cancellationToken)
     {
@@ -84,9 +76,9 @@ public sealed class PelletRepository(ModelDbContext context)
         return context.SaveChangesAsync(cancellationToken);
     }
 
-    public Task SetAsync(Pellet pellet, Load load, CancellationToken cancellationToken)
+    public Task AddAsync(Pellet pellet, Load load, CancellationToken cancellationToken)
     {
-        pellet.Load = load;
+        pellet.Loads.Add(load);
         load.Pellets.Add(pellet);
         
         return context.SaveChangesAsync(cancellationToken);
@@ -110,7 +102,7 @@ public sealed class PelletRepository(ModelDbContext context)
 
     public Task UnsetAsync(Pellet pellet, Load load, CancellationToken cancellationToken)
     {
-        pellet.Load = load;
+        pellet.Loads.Remove(load);
         load.Pellets.Remove(pellet);
         
         return context.SaveChangesAsync(cancellationToken);

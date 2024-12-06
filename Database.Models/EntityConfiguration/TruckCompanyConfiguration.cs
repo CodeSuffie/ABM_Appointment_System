@@ -8,7 +8,7 @@ public class TruckCompanyConfiguration : IEntityTypeConfiguration<TruckCompany>
     public void Configure(EntityTypeBuilder<TruckCompany> builder)
     {
         builder.HasMany(x => x.Trucks)
-            .WithOne();
+            .WithOne(); 
         
         builder.HasMany(x => x.Pellets)
             .WithOne(x => x.TruckCompany)

@@ -72,7 +72,9 @@ public sealed class TripService
                 
                 await _tripRepository.AddAsync(trip, cancellationToken);
                 await _tripRepository.SetDropOffAsync(trip, dropOff, cancellationToken);
-                await _tripRepository.SetInventoryAsync(trip, dropOff, cancellationToken);
+                
+                var inventory = await _loadService.GetNewInventoryAsync(trip, dropOff, cancellationToken);
+                await _tripRepository.SetInventoryAsync(trip, inventory, cancellationToken);
     
                 var dropOffHub = await _hubRepository.GetAsync(dropOff, cancellationToken);
                 if (dropOffHub == null)
@@ -104,8 +106,12 @@ public sealed class TripService
                     {
                         Completed = false
                     };
+                    
                     await _tripRepository.AddAsync(trip, cancellationToken);
                     await _tripRepository.SetPickUpAsync(trip, pickUp, cancellationToken);
+                    
+                    var inventory = await _loadService.GetNewInventoryAsync(trip, cancellationToken);
+                    await _tripRepository.SetInventoryAsync(trip, inventory, cancellationToken);
                 }
             }
 

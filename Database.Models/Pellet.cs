@@ -6,9 +6,8 @@ public class Pellet
     
     public TruckCompany? TruckCompany { get; set; }
     public long? TruckCompanyId { get; set; }
-    
-    public Load? Load { get; set; }
-    public long? LoadId { get; set; }
+
+    public List<Load> Loads { get; set; } = [];
     
     public Bay? Bay { get; set; }
     public long? BayId { get; set; }

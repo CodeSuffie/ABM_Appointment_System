@@ -147,11 +147,11 @@ public sealed class BayService(
         
         if (! await pelletService.HasPickUpPelletsAsync(trip, cancellationToken))
         {
-            await bayRepository.AddAsync(bay, BayFlags.Fetched, cancellationToken);
+            await bayRepository.AddAsync(bay, BayFlags.PickedUp, cancellationToken);
         }
         else
         {
-            await bayRepository.RemoveAsync(bay, BayFlags.Fetched, cancellationToken);
+            await bayRepository.RemoveAsync(bay, BayFlags.PickedUp, cancellationToken);
         }
     }
 }

@@ -10,7 +10,7 @@ public sealed class LoadRepository(
 {
     public IQueryable<Load> Get()
     {
-        var loads = context.Loads;
+        var loads = context.Loads.Include(l => l.Pellets);
 
         return loads;
     }
@@ -36,14 +36,6 @@ public sealed class LoadRepository(
         var load = Get()
             .Where(l => l.TripId == trip.Id);
 
-        return load;
-    }
-    
-    public async Task<Load?> GetAsync(Pellet pellet, CancellationToken cancellationToken)
-    {
-        var load = await Get()
-            .FirstOrDefaultAsync(l => pellet.LoadId == l.Id, cancellationToken);
-            
         return load;
     }
     

@@ -11,8 +11,8 @@ public class PelletConfiguration : IEntityTypeConfiguration<Pellet>
             .WithMany(x => x.Pellets)
             .HasForeignKey(x => x.TruckCompanyId);
         
-        builder.HasOne(x => x.Load)
-            .WithMany();
+        builder.HasMany(x => x.Loads)
+            .WithMany(x => x.Pellets);
         
         builder.HasOne(x => x.Bay)
             .WithMany();
