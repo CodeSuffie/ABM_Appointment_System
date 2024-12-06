@@ -19,8 +19,12 @@ public abstract class AgentConfigBase
     
     public abstract int HubXSize { get; }
     public abstract int HubYSize { get; }
+    
+    public abstract int WarehouseXSize { get; }
+    public abstract int WarehouseYSize { get; }
 
     public abstract int[,] HubLocations { get; }
+    public abstract int[] WarehouseLocation { get; }
     public abstract int[,] TruckCompanyLocations  { get; }
     public abstract int[,] ParkingSpotLocations  { get; }
     public abstract int[,] BayLocations  { get; }
@@ -43,11 +47,19 @@ public class AgentConfig : AgentConfigBase
     public override double HubAverageOperatingDays { get; } = 1;
     public override TimeSpan OperatingHourAverageLength { get; } = TimeSpan.FromHours(24);
     public override int HubXSize { get; } = 9;
-    public override int HubYSize { get; } = 4;
+    public override int HubYSize { get; } = 5;
+    
+    public override int WarehouseXSize { get; } = 8;
+    public override int WarehouseYSize { get; } = 1;
     
     public override int[,] HubLocations { get; } =
     {
         {100, 100}
+    };
+
+    public override int[] WarehouseLocation { get; } =
+    {
+        1, 0
     };
     
     public override int[,] TruckCompanyLocations { get; } =
@@ -64,27 +76,26 @@ public class AgentConfig : AgentConfigBase
     
     public override int[,] ParkingSpotLocations { get; } =
     {
-        {0, 2},
         {0, 3},
-        {1, 2},
+        {0, 4},
         {1, 3},
-        {2, 2},
-        //{2, 3},
-        //{3, 2},
+        {1, 4},
+        {2, 3},
+        //{2, 4},
         //{3, 3},
-        //{4, 2}
+        //{3, 4},
+        //{4, 3}
     };
     
     public override int[,] BayLocations { get; } =
     {
-        //{0, 0}, 
-        {1, 0},
-        {2, 0},
-        {3, 0},
-        {4, 0},
-        {5, 0},
-        {6, 0},
-        {7, 0},
-        {8, 0}
+        {1, 1},
+        {2, 1},
+        {3, 1},
+        {4, 1},
+        {5, 1},
+        {6, 1},
+        {7, 1},
+        {8, 1}
     };
 }

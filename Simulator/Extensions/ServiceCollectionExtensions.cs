@@ -21,6 +21,7 @@ using Services.PelletServices;
 using Services.TripServices;
 using Services.TruckCompanyServices;
 using Services.TruckServices;
+using Services.WarehouseServices;
 
 namespace Simulator.Extensions;
 
@@ -85,6 +86,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IInitializationService,          TruckInitialize>();
         services.AddScoped<IStepperService,                 TruckStepper>();
         services.AddScoped<TruckRepository>();
+        
+        services.AddScoped<WarehouseService>();
+        services.AddScoped<IInitializationService,          WarehouseInitialize>();
+        services.AddScoped<WarehouseRepository>();
 
         services.AddScoped<LoadService>();
         services.AddScoped<IStepperService,                 LoadStepper>();

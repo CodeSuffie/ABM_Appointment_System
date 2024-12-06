@@ -21,6 +21,9 @@ public class Work
     public Bay? Bay { get; set; }
     public long? BayId { get; set; }
     
+    public Warehouse? Warehouse { get; set; }
+    public long? WarehouseId { get; set; }
+    
     public Pellet? Pellet { get; set; }
     public long? PelletId { get; set; }
 }

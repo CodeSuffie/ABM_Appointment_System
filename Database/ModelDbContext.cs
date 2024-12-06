@@ -15,6 +15,7 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
     public DbSet<Trip> Trips { get; set; }
     
     public DbSet<Hub> Hubs { get; set; }
+    public DbSet<Warehouse> Warehouses { get; set; }
     public DbSet<ParkingSpot> ParkingSpots { get; set; }
     public DbSet<Bay> Bays { get; set; }
     
@@ -45,6 +46,7 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
         modelBuilder.ApplyConfiguration(new TripConfiguration());
         
         modelBuilder.ApplyConfiguration(new HubConfiguration());
+        modelBuilder.ApplyConfiguration(new WarehouseConfiguration());
         modelBuilder.ApplyConfiguration(new ParkingSpotConfiguration());
         modelBuilder.ApplyConfiguration(new BayConfiguration());
         

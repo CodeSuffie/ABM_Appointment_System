@@ -33,6 +33,15 @@ public sealed class LocationService(
         logger.LogInformation("Location successfully initialized for this Hub \n({@Hub})",
             hub);
     }
+
+    public void InitializeObject(Warehouse warehouse, CancellationToken cancellationToken)
+    {
+        warehouse.XLocation = modelState.AgentConfig.WarehouseLocation[0];
+        warehouse.YLocation = modelState.AgentConfig.WarehouseLocation[1];
+        
+        logger.LogInformation("Location successfully initialized for this Warehouse \n({@Warehouse})",
+            warehouse);
+    }
     
     public async Task InitializeObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
     {

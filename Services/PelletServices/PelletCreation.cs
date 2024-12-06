@@ -15,7 +15,7 @@ public sealed class PelletCreation
     private readonly PelletRepository _pelletRepository;
     private readonly TruckCompanyService _truckCompanyService;
     private readonly HubService _hubService;
-    private readonly BayService _bayService;
+    private readonly WarehouseRepository _warehouseRepository;
     private readonly ModelState _modelState;
     private readonly UpDownCounter<int> _unclaimedPellets;
     
@@ -24,7 +24,7 @@ public sealed class PelletCreation
         PelletRepository pelletRepository,
         TruckCompanyService truckCompanyService,
         HubService hubService,
-        BayService bayService,
+        WarehouseRepository warehouseRepository,
         ModelState modelState,
         Meter meter)
     {
@@ -32,7 +32,7 @@ public sealed class PelletCreation
         _pelletRepository = pelletRepository;
         _truckCompanyService = truckCompanyService;
         _hubService = hubService;
-        _bayService = bayService;
+        _warehouseRepository = warehouseRepository;
         _modelState = modelState;    
         
         _unclaimedPellets =
@@ -65,7 +65,7 @@ public sealed class PelletCreation
         }
     }
 
-    public async Task AddNewBayPelletsAsync(int count, CancellationToken cancellationToken)
+    public async Task AddNewWarehousePelletsAsync(int count, CancellationToken cancellationToken)
     {
         for (var i = 0; i < count; i++)
         {
@@ -80,19 +80,19 @@ public sealed class PelletCreation
                 continue;
             }
 
-            var bay = await _bayService.SelectBayAsync(hub, cancellationToken);
-            if (bay == null)
+            var warehouse = await _warehouseRepository.GetAsync(hub, cancellationToken);
+            if (warehouse == null)
             {
-                _logger.LogError("Could not select a Bay for this Hub ({@Hub}) for this new Pellet.",
+                _logger.LogError("Hub ({@Hub}) did not have a Warehouse assigned for this new Pellet.",
                     hub);
 
                 continue;
             }
 
-            _logger.LogDebug("Setting Bay \n({@Bay})\n for this Pellet \n({@Pellet})",
-                bay,
+            _logger.LogDebug("Setting Warehouse \n({@Warehouse})\n for this Pellet \n({@Pellet})",
+                warehouse,
                 pellet);
-            await _pelletRepository.SetAsync(pellet, bay, cancellationToken);
+            await _pelletRepository.SetAsync(pellet, warehouse, cancellationToken);
 
             _logger.LogInformation("New Pellet created: Pellet={@Pellet}", pellet);
 

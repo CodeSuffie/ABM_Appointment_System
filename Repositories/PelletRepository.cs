@@ -29,6 +29,14 @@ public sealed class PelletRepository(ModelDbContext context)
 
         return pellets;
     }
+    
+    public IQueryable<Pellet> Get(Warehouse warehouse)
+    {
+        var pellets = Get()
+            .Where(p => p.WarehouseId == warehouse.Id);
+
+        return pellets;
+    }
 
     public async Task<Pellet?> GetAsync(Work work, CancellationToken cancellationToken)
     {
@@ -53,6 +61,14 @@ public sealed class PelletRepository(ModelDbContext context)
 
         return pellets;
     }
+
+    public IQueryable<Pellet> GetUnclaimed(Warehouse warehouse)
+    {
+        var pellets = Get(warehouse)
+            .Where(p => p.Loads.Count == 0);
+
+        return pellets;
+    }
     
     // public IQueryable<Pellet> GetUnclaimed(Load load)
     // {
@@ -68,14 +84,6 @@ public sealed class PelletRepository(ModelDbContext context)
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public Task SetAsync(Pellet pellet, TruckCompany truckCompany, CancellationToken cancellationToken)
-    {
-        pellet.TruckCompany = truckCompany;
-        truckCompany.Pellets.Add(pellet);
-        
-        return context.SaveChangesAsync(cancellationToken);
-    }
-
     public Task AddAsync(Pellet pellet, Load load, CancellationToken cancellationToken)
     {
         pellet.Loads.Add(load);
@@ -84,10 +92,26 @@ public sealed class PelletRepository(ModelDbContext context)
         return context.SaveChangesAsync(cancellationToken);
     }
 
+    public Task SetAsync(Pellet pellet, TruckCompany truckCompany, CancellationToken cancellationToken)
+    {
+        pellet.TruckCompany = truckCompany;
+        truckCompany.Pellets.Add(pellet);
+        
+        return context.SaveChangesAsync(cancellationToken);
+    }
+
     public Task SetAsync(Pellet pellet, Bay bay, CancellationToken cancellationToken)
     {
         pellet.Bay = bay;
         bay.Pellets.Add(pellet);
+        
+        return context.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task SetAsync(Pellet pellet, Warehouse warehouse, CancellationToken cancellationToken)
+    {
+        pellet.Warehouse = warehouse;
+        warehouse.Pellets.Add(pellet);
         
         return context.SaveChangesAsync(cancellationToken);
     }
@@ -110,8 +134,16 @@ public sealed class PelletRepository(ModelDbContext context)
 
     public Task UnsetAsync(Pellet pellet, Bay bay, CancellationToken cancellationToken)
     {
-        pellet.Bay = bay;
+        pellet.Bay = null;
         bay.Pellets.Remove(pellet);
+        
+        return context.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task UnsetAsync(Pellet pellet, Warehouse warehouse, CancellationToken cancellationToken)
+    {
+        pellet.Warehouse = null;
+        warehouse.Pellets.Remove(pellet);
         
         return context.SaveChangesAsync(cancellationToken);
     }

@@ -30,6 +30,6 @@ public sealed class PelletInitialize : IInitializationService
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
         await _pelletCreation.AddNewTruckCompanyPelletsAsync(_modelState.ModelConfig.InitialTruckCompanyPellets, cancellationToken);
-        await _pelletCreation.AddNewBayPelletsAsync(_modelState.ModelConfig.InitialBayPellets, cancellationToken);
+        await _pelletCreation.AddNewWarehousePelletsAsync(_modelState.ModelConfig.InitialBayPellets, cancellationToken);
     }
 }

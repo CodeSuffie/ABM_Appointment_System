@@ -22,6 +22,10 @@ public class WorkConfiguration : IEntityTypeConfiguration<Work>
         builder.HasOne(x => x.Bay)
             .WithMany(x => x.Works)
             .HasForeignKey(x => x.BayId);
+
+        builder.HasOne(x => x.Warehouse)
+            .WithMany(x => x.Works)
+            .HasForeignKey(x => x.WarehouseId);
         
         builder.HasOne(x => x.Pellet)
             .WithOne(x => x.Work)
