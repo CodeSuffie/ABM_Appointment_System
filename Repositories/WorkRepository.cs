@@ -61,6 +61,15 @@ public sealed class WorkRepository(
         
         return work;
     }
+
+    public async Task<Work?> GetAsync(Pellet pellet, CancellationToken cancellationToken)
+    {
+        var work = await context.Works
+            .FirstOrDefaultAsync(x => x.Pellet != null &&
+                                      x.PelletId == pellet.Id, cancellationToken);
+        
+        return work;
+    }
     
     public async Task AddAsync(Work work, Trip trip, CancellationToken cancellationToken)
     {

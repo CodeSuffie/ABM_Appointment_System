@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.LoadServices;
+using Services.PelletServices;
 
 namespace Services.TripServices;
 
@@ -21,6 +22,7 @@ public sealed class TripService
     private readonly TruckCompanyRepository _truckCompanyRepository;
     private readonly WorkService _workService;
     private readonly LoadRepository _loadRepository;
+    private readonly PelletService _pelletService;
 
     public TripService(ILogger<TripService> logger,
         LoadService loadService,
@@ -34,7 +36,8 @@ public sealed class TripService
         LocationService locationService,
         TruckCompanyRepository truckCompanyRepository,
         WorkService workService,
-        LoadRepository loadRepository)
+        LoadRepository loadRepository,
+        PelletService pelletService)
     {
         _logger = logger;
         _loadService = loadService;
@@ -49,6 +52,7 @@ public sealed class TripService
         _truckCompanyRepository = truckCompanyRepository;
         _workService = workService;
         _loadRepository = loadRepository;
+        _pelletService = pelletService;
     }
 
     public async Task<Trip?> GetNextAsync(Truck truck, CancellationToken cancellationToken)
@@ -68,6 +72,7 @@ public sealed class TripService
                 
                 await _tripRepository.AddAsync(trip, cancellationToken);
                 await _tripRepository.SetDropOffAsync(trip, dropOff, cancellationToken);
+                await _tripRepository.SetInventoryAsync(trip, dropOff, cancellationToken);
     
                 var dropOffHub = await _hubRepository.GetAsync(dropOff, cancellationToken);
                 if (dropOffHub == null)
@@ -477,12 +482,30 @@ public sealed class TripService
                 truck,
                 trip);
         }
+        
+        await CompleteTripAsync(trip, cancellationToken);
+    }
 
+    private async Task CompleteTripAsync(Trip trip, CancellationToken cancellationToken)
+    {
         await _tripRepository.SetAsync(trip, true, cancellationToken);
+        await _pelletService.CompleteAsync(trip, cancellationToken);
+        
+        var inventoryLoad = await _loadRepository.GetAsync(trip, LoadType.Inventory, cancellationToken);
+        if (inventoryLoad == null)
+        {
+            _logger.LogError("Trip \n({@Trip})\n did not have a Load assigned as Inventory.",
+                trip);
+            
+            return;
+        }
+
+        await _tripRepository.UnsetAsync(trip, inventoryLoad, cancellationToken);
+        
         _logger.LogInformation("Trip ({@Trip})\n successfully COMPLETED!!!",
             trip);
     }
-    
+
     public async Task TravelAsync(Trip trip, Truck truck, long xDestination, long yDestination, CancellationToken cancellationToken)
     {
         var xDiff = xDestination - trip.XLocation;

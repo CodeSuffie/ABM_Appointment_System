@@ -190,11 +190,6 @@ public sealed class TripRepository(
                 dropOff,
                 trip);
             
-            //logger.LogDebug("Removing invalid Drop-Off Load ({@Load}) for this Trip ({@Trip}).",
-            //    dropOff,
-            //    trip);
-            //await loadRepository.RemoveAsync(dropOff, cancellationToken);
-            
             return;
         }
 
@@ -223,6 +218,16 @@ public sealed class TripRepository(
 
         await context.SaveChangesAsync(cancellationToken);
     }
+    
+    public async Task SetInventoryAsync(Trip trip, Load inventory, CancellationToken cancellationToken)
+    {
+        trip.Loads.RemoveAll(l => l.LoadType == LoadType.Inventory);
+        
+        trip.Loads.Add(inventory);
+        inventory.Trip = trip;
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
 
     public async Task SetPickUpAsync(Trip trip, Load pickUp, CancellationToken cancellationToken)
     {
@@ -232,11 +237,6 @@ public sealed class TripRepository(
             logger.LogError("Load ({@Load}) to set as Pick-Up for this Trip ({@Trip}) has no Hub assigned.",
                 pickUp,
                 trip);
-            
-            //logger.LogDebug("Removing invalid Pick-Up Load ({@Load}) for this Trip ({@Trip}).",
-            //    pickUp,
-            //    trip);
-            //await loadRepository.RemoveAsync(pickUp, cancellationToken);
             
             return;
         }
@@ -296,6 +296,14 @@ public sealed class TripRepository(
     {
         trip.Truck = null;
         truck.Trip = null;
+        
+        return context.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task UnsetAsync(Trip trip, Load load, CancellationToken cancellationToken)
+    {
+        load.Trip = null;
+        trip.Loads.Remove(load);
         
         return context.SaveChangesAsync(cancellationToken);
     }

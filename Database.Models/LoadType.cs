@@ -4,4 +4,5 @@ public enum LoadType
 {
     PickUp,
     DropOff,
+    Inventory,
 }

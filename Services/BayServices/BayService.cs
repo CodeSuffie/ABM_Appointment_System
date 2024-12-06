@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.ModelServices;
+using Services.PelletServices;
 using Services.TripServices;
 
 namespace Services.BayServices;
@@ -11,6 +12,7 @@ public sealed class BayService(
     ILogger<BayService> logger,
     HubRepository hubRepository,
     PelletRepository pelletRepository,
+    PelletService pelletService,
     LoadRepository loadRepository,
     TripService tripService,
     BayRepository bayRepository,
@@ -125,74 +127,31 @@ public sealed class BayService(
             return;
         }
 
-        var dropOffLoad = await loadRepository.GetDropOffAsync(trip, cancellationToken);
-        if (dropOffLoad == null || !pelletRepository.Get(dropOffLoad).Any())
+        if (! await pelletService.HasDropOffPelletsAsync(trip, cancellationToken))
         {
-            if (dropOffLoad == null)
-            {
-                logger.LogInformation("Trip ({@Trip}) did not have a Load assigned to Drop-Off.",
-                    trip);
-            }
-            else
-            {
-                logger.LogInformation("Load ({@Load}) did not have any more Pellets assigned to Drop-Off.",
-                    dropOffLoad);
-            }
-
             await bayRepository.AddAsync(bay, BayFlags.DroppedOff, cancellationToken);
         }
         else
         {
-            logger.LogInformation("Load ({@Load}) still has more Pellets assigned to Drop-Off.",
-                dropOffLoad);
-            
             await bayRepository.RemoveAsync(bay, BayFlags.DroppedOff, cancellationToken);
-            return;
         }
         
-        var pickUpLoad = await loadRepository.GetDropOffAsync(trip, cancellationToken);
-        if (pickUpLoad == null)
+        if (! await pelletService.HasFetchPelletsAsync(trip, cancellationToken))
         {
-            logger.LogInformation("Trip ({@Trip}) did not have a Load assigned to Pick-Up.",
-                    trip);
-
             await bayRepository.AddAsync(bay, BayFlags.Fetched, cancellationToken);
-            await bayRepository.AddAsync(bay, BayFlags.PickedUp, cancellationToken);
         }
         else
         {
-            var pickUpPellets = pelletRepository.Get(pickUpLoad);
-            if (!pickUpPellets.Any())
-            {
-                logger.LogInformation("Load ({@Load}) did not have any more Pellets assigned to Pick-Up.",
-                    pickUpLoad);
-
-                await bayRepository.AddAsync(bay, BayFlags.Fetched, cancellationToken);
-                await bayRepository.AddAsync(bay, BayFlags.PickedUp, cancellationToken);
-            }
-            else
-            {
-                logger.LogInformation("Load ({@Load}) still has more Pellets assigned to Pick-Up.",
-                    dropOffLoad);
-                
-                await bayRepository.RemoveAsync(bay, BayFlags.PickedUp, cancellationToken);
-                
-                var fetchPellets = pickUpPellets.Where(p => p.BayId != bay.Id);
-                if (!fetchPellets.Any())
-                {
-                    logger.LogInformation("Load ({@Load}) did not have any more Pellets assigned to Fetch.",
-                        pickUpLoad);
-
-                    await bayRepository.AddAsync(bay, BayFlags.Fetched, cancellationToken);
-                }
-                else
-                {
-                    logger.LogInformation("Load ({@Load}) still has more Pellets assigned to Fetch.",
-                        dropOffLoad);
-                    
-                    await bayRepository.RemoveAsync(bay, BayFlags.Fetched, cancellationToken);
-                }
-            }
+            await bayRepository.RemoveAsync(bay, BayFlags.Fetched, cancellationToken);
+        }
+        
+        if (! await pelletService.HasPickUpPelletsAsync(trip, cancellationToken))
+        {
+            await bayRepository.AddAsync(bay, BayFlags.Fetched, cancellationToken);
+        }
+        else
+        {
+            await bayRepository.RemoveAsync(bay, BayFlags.Fetched, cancellationToken);
         }
     }
 }
