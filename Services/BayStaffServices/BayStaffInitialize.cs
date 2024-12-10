@@ -7,8 +7,10 @@ namespace Services.BayStaffServices;
 public sealed class BayStaffInitialize(
     ILogger<BayStaffInitialize> logger,
     BayStaffService bayStaffService,
-    ModelState modelState) : IInitializationService
+    ModelState modelState) : IPriorityInitializationService
 {
+    public Priority Priority { get; set; } = Priority.Low;
+    
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var bayStaff = await bayStaffService.GetNewObjectAsync(cancellationToken);

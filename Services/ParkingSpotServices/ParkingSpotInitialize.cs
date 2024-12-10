@@ -10,8 +10,10 @@ public sealed class ParkingSpotInitialize(
     ILogger<ParkingSpotInitialize> logger,
     ParkingSpotService parkingSpotService,
     HubRepository hubRepository,
-    ModelState modelState) : IInitializationService
+    ModelState modelState)  : IPriorityInitializationService
 {
+    public Priority Priority { get; set; } = Priority.Low;
+
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var hubs = hubRepository.Get()

@@ -59,6 +59,21 @@ public sealed class LoadRepository(
     public Task SetAsync(Load load, LoadType loadType, CancellationToken cancellationToken)
     {
         load.LoadType = loadType;
+        
+        return context.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task SetAsync(Load load, TruckCompany truckCompany, CancellationToken cancellationToken)
+    {
+        load.TruckCompany = truckCompany;
+        
+        return context.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task SetAsync(Load load, Hub hub, CancellationToken cancellationToken)
+    {
+        load.Hub = hub;
+        
         return context.SaveChangesAsync(cancellationToken);
     }
 

@@ -11,8 +11,10 @@ public sealed class WarehouseInitialize(
     ILogger<WarehouseInitialize> logger,
     WarehouseService warehouseService,
     HubRepository hubRepository,
-    ModelState modelState) : IInitializationService
+    ModelState modelState) : IPriorityInitializationService
 {
+    public Priority Priority { get; set; } = Priority.Normal;
+
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var hubs = hubRepository.Get()

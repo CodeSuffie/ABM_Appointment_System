@@ -10,8 +10,10 @@ using Services.TruckCompanyServices;
 
 namespace Services.PelletServices;
 
-public sealed class PelletInitialize : IInitializationService
+public sealed class PelletInitialize  : IPriorityInitializationService
 {
+    public Priority Priority { get; set; } = Priority.Low;
+
     private readonly ILogger<PelletInitialize> _logger;
     private readonly PelletCreation _pelletCreation;
     private readonly ModelState _modelState;
@@ -30,6 +32,6 @@ public sealed class PelletInitialize : IInitializationService
     public async Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
         await _pelletCreation.AddNewTruckCompanyPelletsAsync(_modelState.ModelConfig.InitialTruckCompanyPellets, cancellationToken);
-        await _pelletCreation.AddNewWarehousePelletsAsync(_modelState.ModelConfig.InitialBayPellets, cancellationToken);
+        await _pelletCreation.AddNewWarehousePelletsAsync(_modelState.ModelConfig.InitialWarehousePellets, cancellationToken);
     }
 }

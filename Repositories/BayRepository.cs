@@ -101,6 +101,13 @@ public sealed class BayRepository(ModelDbContext context)
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public Task<int> CountAsync(bool hasTrip, CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(b => (b.Trip != null) == hasTrip)
+            .CountAsync(cancellationToken);
+    }
+
     public Task<int> CountAsync(BayStatus bayStatus, CancellationToken cancellationToken)
     {
         return Get()

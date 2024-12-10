@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using Database
+@using Database.Models
 @using Services.ModelServices
 @inject IJSRuntime JSRuntime;
 @inject ModelService ModelService;
@@ -57,6 +58,11 @@
                                     <th scope="row" style="width: 150px">Capacity</th>
                                     <td>@_selectedTruck.Capacity</td>
                                 </tr>
+
+                                <tr>
+                                    <th scope="row" style="width: 150px">Inventory</th>
+                                    <td>@(string.Join(", ", _selectedTruck.Inventory.Select(x => x.Id)))</td>
+                                </tr>
                         
                                 </tbody>
                             </table>
@@ -66,18 +72,35 @@
                                 @foreach (var load in trip.Loads)
                                 {
                                     <table class="table">
-                                        <tbody>
-
+                                        <thead>
                                         <tr>
                                             <th scope="row" style="width: 150px">Load</th>
                                             <td>@load.Id</td>
+                                        </tr>
+                                        </thead>
+                                        
+                                        <tbody>
+                                        <tr>
+                                            <th scope="row" style="width: 150px">LoadType</th>
+                                            @switch (load.LoadType)
+                                            {
+                                                case LoadType.DropOff:
+                                                    <td>LoadType.DropOff</td>
+                                                    break;
+                                                case LoadType.PickUp:
+                                                    <td>LoadType.PickUp</td>
+                                                    break;
+                                                default:
+                                                    <td>Invalid!</td>
+                                                    break;
+                                            }
                                         </tr>
 
                                         <tr>
                                             <th scope="row" style="width: 150px">Pellets</th>
                                             <td>@(string.Join(", ", load.Pellets.Select(x => x.Id)))</td>
                                         </tr>
-                        
+
                                         </tbody>
                                     </table>
                                 }

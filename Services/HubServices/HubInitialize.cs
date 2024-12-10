@@ -9,6 +9,7 @@ public sealed class HubInitialize(
     HubService hubService,
     ModelState modelState) : IPriorityInitializationService
 {
+    public Priority Priority { get; set; } = Priority.High;
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var hub = await hubService.GetNewObjectAsync(cancellationToken);

@@ -7,8 +7,10 @@ namespace Services.AdminStaffServices;
 public sealed class AdminStaffInitialize(
     ILogger<AdminStaffInitialize> logger,
     AdminStaffService adminStaffService,
-    ModelState modelState) : IInitializationService
+    ModelState modelState) : IPriorityInitializationService
 {
+    public Priority Priority { get; set; } = Priority.Low;
+
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var adminStaff = await adminStaffService.GetNewObjectAsync(cancellationToken);

@@ -8,8 +8,7 @@ namespace Services.ModelServices;
 public sealed class ModelInitialize(
     ILogger<ModelInitialize> logger,
     ModelState modelState,
-    IEnumerable<IPriorityInitializationService> priorityInitializationServices,
-    IEnumerable<IInitializationService> initializationServices)
+    IEnumerable<IPriorityInitializationService> initializationServices)
 {
     public void InitializeObject()
     {
@@ -19,23 +18,33 @@ public sealed class ModelInitialize(
             
         logger.LogInformation("New ModelState created: ModelState={@ModelState}", modelState);
     }
+
+    private async Task InitializeByPriorityAsync(Priority priority, CancellationToken cancellationToken)
+    {
+        logger.LogInformation("Starting Initialization for Priority: {@Priority}...",
+            priority);
+        
+        foreach (var initializationService in initializationServices
+                     .Where(service => 
+                         service.Priority == priority))
+        {
+            await initializationService.InitializeObjectsAsync(cancellationToken);
+        }
+        
+        logger.LogInformation("Initialization Completed for Priority: {@Priority}...",
+            priority);
+    }
     
     public async Task InitializeModelAsync(CancellationToken cancellationToken)
     {
         InitializeObject();
         
-        logger.LogInformation("Starting Priority Initialization...");
-        foreach (var priorityInitializationService in priorityInitializationServices)
-        {
-            await priorityInitializationService.InitializeObjectsAsync(cancellationToken);
-        }
-        logger.LogInformation("Priority Initialization Completed.");
-        
         logger.LogInformation("Starting Initialization...");
-        foreach (var initializationService in initializationServices)
-        {
-            await initializationService.InitializeObjectsAsync(cancellationToken);
-        }
+
+        await InitializeByPriorityAsync(Priority.High, cancellationToken);
+        await InitializeByPriorityAsync(Priority.Normal, cancellationToken);
+        await InitializeByPriorityAsync(Priority.Low, cancellationToken);
+        
         logger.LogInformation("Initialization Completed.");
     }
 }

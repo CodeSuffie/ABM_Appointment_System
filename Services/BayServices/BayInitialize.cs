@@ -10,8 +10,9 @@ public sealed class BayInitialize(
     ILogger<BayInitialize> logger,
     BayService bayService,
     HubRepository hubRepository,
-    ModelState modelState) : IInitializationService
+    ModelState modelState) : IPriorityInitializationService
 {
+    public Priority Priority { get; set; } = Priority.Normal;
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var hubs = hubRepository.Get()

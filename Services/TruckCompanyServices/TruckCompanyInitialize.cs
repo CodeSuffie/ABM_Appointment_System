@@ -9,6 +9,7 @@ public sealed class TruckCompanyInitialize(
     TruckCompanyService truckCompanyService,
     ModelState modelState) : IPriorityInitializationService
 {
+    public Priority Priority { get; set; } = Priority.High;
     private async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var truckCompany = await truckCompanyService.GetNewObjectAsync(cancellationToken);

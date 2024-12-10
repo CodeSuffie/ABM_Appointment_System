@@ -7,8 +7,10 @@ namespace Services.TruckServices;
 public sealed class TruckInitialize(
     ILogger<TruckInitialize> logger,
     TruckService truckService,
-    ModelState modelState) : IInitializationService
+    ModelState modelState)  : IPriorityInitializationService
 {
+    public Priority Priority { get; set; } = Priority.Low;
+
     public async Task InitializeObjectAsync(CancellationToken cancellationToken)
     {
         var truck = await truckService.GetNewObjectAsync(cancellationToken);

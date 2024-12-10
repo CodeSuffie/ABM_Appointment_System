@@ -61,13 +61,14 @@ public sealed class LoadService
         var load = new Load
         {
             LoadType = LoadType.DropOff,
-            TruckCompany = truckCompany,
-            Hub = hub
         };
 
         await _loadRepository.AddAsync(load, cancellationToken);
         
-        _logger.LogDebug("Setting Pallets for this Load \n({@Load})\n for this Truck \n({@Truck})",
+        await _loadRepository.SetAsync(load, truckCompany, cancellationToken);
+        await _loadRepository.SetAsync(load, hub, cancellationToken);
+        
+        _logger.LogDebug("Setting Pellets for this Load \n({@Load})\n for this Truck \n({@Truck})",
             load,
             truck);
         await _pelletService.SetPelletsAsync(load, truck.Capacity, cancellationToken);

@@ -31,6 +31,6 @@ public sealed class PelletStepper : IStepperService
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        await _pelletCreation.AddNewTruckCompanyPelletsAsync(_modelState.ModelConfig.LoadsPerStep, cancellationToken);
+        await _pelletCreation.AddNewTruckCompanyPelletsAsync(_modelState.ModelConfig.PelletsPerStep, cancellationToken);
     }
 }

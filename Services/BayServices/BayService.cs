@@ -119,9 +119,11 @@ public sealed class BayService(
         var trip = await tripRepository.GetAsync(bay, cancellationToken);
         if (trip == null)
         {
-            logger.LogError("Bay ({@Bay}) did not have a Trip assigned.",
+            logger.LogInformation("Bay ({@Bay}) did not have a Trip assigned.",
                 bay);
             
+            logger.LogDebug("Removing all BayFlags from thisBay ({@Bay}).",
+                bay);
             await bayRepository.RemoveAsync(bay, BayFlags.DroppedOff | BayFlags.Fetched | BayFlags.PickedUp, cancellationToken);
             return;
         }

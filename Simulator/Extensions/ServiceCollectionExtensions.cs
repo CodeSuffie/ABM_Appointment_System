@@ -53,28 +53,28 @@ public static class ServiceCollectionExtensions
         services.AddScoped<TruckCompanyRepository>();
 
         services.AddScoped<AdminStaffService>();
-        services.AddScoped<IInitializationService,          AdminStaffInitialize>();
+        services.AddScoped<IPriorityInitializationService,  AdminStaffInitialize>();
         services.AddScoped<IStepperService,                 AdminStaffStepper>();
         services.AddScoped<AdminStaffRepository>();
 
         services.AddScoped<BayService>();
-        services.AddScoped<IInitializationService,          BayInitialize>();
+        services.AddScoped<IPriorityInitializationService,  BayInitialize>();
         services.AddScoped<IStepperService,                 BayStepper>();
         services.AddScoped<BayRepository>();
 
         services.AddScoped<BayStaffService>();
-        services.AddScoped<IInitializationService,          BayStaffInitialize>();
+        services.AddScoped<IPriorityInitializationService,  BayStaffInitialize>();
         services.AddScoped<IStepperService,                 BayStaffStepper>();
         services.AddScoped<BayStaffRepository>();
 
         services.AddScoped<ParkingSpotService>();
-        services.AddScoped<IInitializationService,          ParkingSpotInitialize>();
+        services.AddScoped<IPriorityInitializationService,  ParkingSpotInitialize>();
         services.AddScoped<IStepperService,                 ParkingSpotStepper>();
         services.AddScoped<ParkingSpotRepository>();
         
         services.AddScoped<PelletCreation>();
         services.AddScoped<PelletService>();
-        services.AddScoped<IInitializationService,          PelletInitialize>();
+        services.AddScoped<IPriorityInitializationService,  PelletInitialize>();
         services.AddScoped<IStepperService,                 PelletStepper>();
         services.AddScoped<PelletRepository>();
 
@@ -83,12 +83,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<TripRepository>();
 
         services.AddScoped<TruckService>();
-        services.AddScoped<IInitializationService,          TruckInitialize>();
+        services.AddScoped<IPriorityInitializationService,  TruckInitialize>();
         services.AddScoped<IStepperService,                 TruckStepper>();
         services.AddScoped<TruckRepository>();
         
         services.AddScoped<WarehouseService>();
-        services.AddScoped<IInitializationService,          WarehouseInitialize>();
+        services.AddScoped<IPriorityInitializationService,  WarehouseInitialize>();
         services.AddScoped<WarehouseRepository>();
 
         services.AddScoped<LoadService>();

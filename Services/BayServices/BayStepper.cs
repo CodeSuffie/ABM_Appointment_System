@@ -14,6 +14,7 @@ public sealed class BayStepper : IStepperService<Bay>
     private readonly ILogger<BayStepper> _logger;
     private readonly BayService _bayService;
     private readonly BayRepository _bayRepository;
+    private readonly TripRepository _tripRepository;
     private readonly ModelState _modelState;
     private readonly Histogram<int> _closedBaysHistogram;
     private readonly Histogram<int> _freeBaysHistogram;
@@ -26,12 +27,14 @@ public sealed class BayStepper : IStepperService<Bay>
         ILogger<BayStepper> logger,
         BayService bayService,
         BayRepository bayRepository,
+        TripRepository tripRepository,
         ModelState modelState,
         Meter meter)
     {
         _logger = logger;
         _bayService = bayService;
         _bayRepository = bayRepository;
+        _tripRepository = tripRepository;
         _modelState = modelState;
 
         _closedBaysHistogram = meter.CreateHistogram<int>("closed-bay", "Bay", "#Bays Closed.");
@@ -50,10 +53,10 @@ public sealed class BayStepper : IStepperService<Bay>
         var closed = await _bayRepository.CountAsync(BayStatus.Closed, cancellationToken);
         _closedBaysHistogram.Record(closed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
-        var free = await _bayRepository.CountAsync(BayStatus.Free, cancellationToken);
+        var free = await _bayRepository.CountAsync(false, cancellationToken);
         _freeBaysHistogram.Record(free, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
-        var claimed = await _bayRepository.CountAsync(BayStatus.Claimed, cancellationToken);
+        var claimed = await _bayRepository.CountAsync(true, cancellationToken);
         _claimedBaysHistogram.Record(claimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
         var droppedOff = await _bayRepository.CountAsync(BayFlags.DroppedOff, cancellationToken);
@@ -68,10 +71,16 @@ public sealed class BayStepper : IStepperService<Bay>
     
     public async Task StepAsync(Bay bay, CancellationToken cancellationToken)
     {
-        if (bay.BayStatus == BayStatus.Claimed)
+        if (bay.BayStatus == BayStatus.Closed) return;
+        
+        var trip = await _tripRepository.GetAsync(bay, cancellationToken);
+        if (trip == null)
         {
-            await _bayService.UpdateFlagsAsync(bay, cancellationToken);
+            await _bayService.AlertFreeAsync(bay, cancellationToken);
+            return;
         }
+        
+        await _bayService.UpdateFlagsAsync(bay, cancellationToken);
         
         if (bay.BayFlags.HasFlag(BayFlags.DroppedOff) && 
             bay.BayFlags.HasFlag(BayFlags.Fetched) &&

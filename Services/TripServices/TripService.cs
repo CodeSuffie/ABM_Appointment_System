@@ -72,15 +72,7 @@ public sealed class TripService
                 
                 await _tripRepository.AddAsync(trip, cancellationToken);
                 await _tripRepository.SetDropOffAsync(trip, dropOff, cancellationToken);
-                
-                var pellets = _pelletRepository.Get(dropOff)
-                    .AsAsyncEnumerable()
-                    .WithCancellation(cancellationToken);
-
-                await foreach (var pellet in pellets)
-                {
-                    await _truckRepository.AddAsync(truck, pellet, cancellationToken);
-                }
+                await _pelletService.LoadPelletsAsync(truck, dropOff, cancellationToken);
     
                 var dropOffHub = await _hubRepository.GetAsync(dropOff, cancellationToken);
                 if (dropOffHub == null)
@@ -88,10 +80,6 @@ public sealed class TripService
                     _logger.LogError("Drop-Off Load \n({@Load})\n for this Truck \n({@Truck})\n did not have a Hub assigned.",
                         dropOff,
                         truck);
-    
-                    //_logger.LogDebug("Removing invalid Drop-Off Load \n({@Load})",
-                    //    dropOff);
-                    //await _loadRepository.RemoveAsync(dropOff, cancellationToken);
     
                     continue;
                 }
@@ -115,15 +103,6 @@ public sealed class TripService
                     
                     await _tripRepository.AddAsync(trip, cancellationToken);
                     await _tripRepository.SetPickUpAsync(trip, pickUp, cancellationToken);
-                    
-                    var pellets = _pelletRepository.Get(truck)
-                        .AsAsyncEnumerable()
-                        .WithCancellation(cancellationToken);
-
-                    await foreach (var pellet in pellets)
-                    {
-                        await _truckRepository.RemoveAsync(truck, pellet, cancellationToken);
-                    }
                 }
             }
 
@@ -331,11 +310,6 @@ public sealed class TripService
             trip);
         await _locationService.SetAsync(trip, bay, cancellationToken);
         
-        _logger.LogDebug("Setting the BayStatus of this Bay \n({@Bay})\n to {BayStatus}...",
-            bay,
-            BayStatus.Claimed);
-        await _bayRepository.SetAsync(bay, BayStatus.Claimed, cancellationToken);
-        
         _logger.LogDebug("Adding Work for this Bay \n({@Bay})\n to this Trip \n({@Trip})",
             bay,
             trip);
@@ -482,11 +456,19 @@ public sealed class TripService
             work,
             trip);
         await _workRepository.RemoveAsync(work, cancellationToken);
+        
+        await CompleteTripAsync(trip, cancellationToken);
+    }
+
+    private async Task CompleteTripAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        await _tripRepository.SetAsync(trip, true, cancellationToken);
+        await _pelletService.CompleteAsync(trip, cancellationToken);
 
         var truck = await _truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
         {
-            _logger.LogError("Trip ({@Trip})\n has no Truck assigned to complete its Travel Home with...",
+            _logger.LogError("Trip ({@Trip})\n has no Truck assigned to complete with...",
                 trip);
         }
         else
@@ -499,14 +481,6 @@ public sealed class TripService
                 truck,
                 trip);
         }
-        
-        await CompleteTripAsync(trip, cancellationToken);
-    }
-
-    private async Task CompleteTripAsync(Trip trip, CancellationToken cancellationToken)
-    {
-        await _tripRepository.SetAsync(trip, true, cancellationToken);
-        await _pelletService.CompleteAsync(trip, cancellationToken);
         
         _logger.LogInformation("Trip ({@Trip})\n successfully COMPLETED!!!",
             trip);
