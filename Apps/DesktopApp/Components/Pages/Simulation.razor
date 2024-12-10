@@ -18,7 +18,7 @@
     <div class="d-flex flex-fill" style="flex-direction: row-reverse;">
         @if (_sidebarVisible)
         {
-            <div class="d-flex flex-column p-1" style="width: 250px">
+            <div class="d-flex flex-column p-1" style="width: 350px">
                 <div class="d-flex flex-row">
                     <div class="ms-auto">
                         <button type="button" class="btn-close" aria-label="Close" @onclick="CloseSidebarAsync"></button>
@@ -27,12 +27,60 @@
                 <div class="d-flex flex-row flex-fill">
                     @if (_selectedTruck != null)
                     {
+                        var trip = _selectedTruck.Trip;
+                        
                         <div class="d-flex flex-column flex-fill">
                             <h1>Truck #@_selectedTruck.Id</h1>
-                            
-                            @if (_selectedTruck.Trip != null)
+
+                            <table class="table">
+                                <tbody>
+
+                                <tr>
+                                    <th scope="row" style="width: 150px">#</th>
+                                    <td>@_selectedTruck.Id</td>
+                                </tr>
+                                
+                                @if (trip != null)
+                                {
+                                    <tr>
+                                        <th scope="row" style="width: 150px">Location</th>
+                                        <td>X: @trip.XLocation, Y: @trip.YLocation</td>
+                                    </tr>
+                                }
+
+                                <tr>
+                                    <th scope="row" style="width: 150px">Speed</th>
+                                    <td>@_selectedTruck.Speed</td>
+                                </tr>
+
+                                <tr>
+                                    <th scope="row" style="width: 150px">Capacity</th>
+                                    <td>@_selectedTruck.Capacity</td>
+                                </tr>
+                        
+                                </tbody>
+                            </table>
+
+                            @if (trip != null)
                             {
-                                <h2>X: @_selectedTruck.Trip.XLocation, Y: @_selectedTruck.Trip.YLocation</h2>
+                                @foreach (var load in trip.Loads)
+                                {
+                                    <table class="table">
+                                        <tbody>
+
+                                        <tr>
+                                            <th scope="row" style="width: 150px">Load</th>
+                                            <td>@load.Id</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th scope="row" style="width: 150px">Pellets</th>
+                                            <td>@(string.Join(", ", load.Pellets.Select(x => x.Id)))</td>
+                                        </tr>
+                        
+                                        </tbody>
+                                    </table>
+                                }
                             }
                         </div>
                     }
