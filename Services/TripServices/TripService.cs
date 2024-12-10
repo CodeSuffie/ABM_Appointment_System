@@ -21,8 +21,8 @@ public sealed class TripService
     private readonly LocationService _locationService;
     private readonly TruckCompanyRepository _truckCompanyRepository;
     private readonly WorkService _workService;
-    private readonly LoadRepository _loadRepository;
     private readonly PelletService _pelletService;
+    private readonly PelletRepository _pelletRepository;
 
     public TripService(ILogger<TripService> logger,
         LoadService loadService,
@@ -36,8 +36,8 @@ public sealed class TripService
         LocationService locationService,
         TruckCompanyRepository truckCompanyRepository,
         WorkService workService,
-        LoadRepository loadRepository,
-        PelletService pelletService)
+        PelletService pelletService,
+        PelletRepository pelletRepository)
     {
         _logger = logger;
         _loadService = loadService;
@@ -51,8 +51,8 @@ public sealed class TripService
         _locationService = locationService;
         _truckCompanyRepository = truckCompanyRepository;
         _workService = workService;
-        _loadRepository = loadRepository;
         _pelletService = pelletService;
+        _pelletRepository = pelletRepository;
     }
 
     public async Task<Trip?> GetNextAsync(Truck truck, CancellationToken cancellationToken)
@@ -73,8 +73,14 @@ public sealed class TripService
                 await _tripRepository.AddAsync(trip, cancellationToken);
                 await _tripRepository.SetDropOffAsync(trip, dropOff, cancellationToken);
                 
-                var inventory = await _loadService.GetNewInventoryAsync(trip, dropOff, cancellationToken);
-                await _tripRepository.SetInventoryAsync(trip, inventory, cancellationToken);
+                var pellets = _pelletRepository.Get(dropOff)
+                    .AsAsyncEnumerable()
+                    .WithCancellation(cancellationToken);
+
+                await foreach (var pellet in pellets)
+                {
+                    await _truckRepository.AddAsync(truck, pellet, cancellationToken);
+                }
     
                 var dropOffHub = await _hubRepository.GetAsync(dropOff, cancellationToken);
                 if (dropOffHub == null)
@@ -110,27 +116,32 @@ public sealed class TripService
                     await _tripRepository.AddAsync(trip, cancellationToken);
                     await _tripRepository.SetPickUpAsync(trip, pickUp, cancellationToken);
                     
-                    var inventory = await _loadService.GetNewInventoryAsync(trip, cancellationToken);
-                    await _tripRepository.SetInventoryAsync(trip, inventory, cancellationToken);
+                    var pellets = _pelletRepository.Get(truck)
+                        .AsAsyncEnumerable()
+                        .WithCancellation(cancellationToken);
+
+                    await foreach (var pellet in pellets)
+                    {
+                        await _truckRepository.RemoveAsync(truck, pellet, cancellationToken);
+                    }
                 }
             }
 
-            if (trip != null)
+            if (trip == null) return trip;
+            
+            var truckCompany = await _truckCompanyRepository.GetAsync(truck, cancellationToken);
+            if (truckCompany == null)
             {
-                var truckCompany = await _truckCompanyRepository.GetAsync(truck, cancellationToken);
-                if (truckCompany == null)
-                {
-                    _logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) to create the new Trip for.",
-                        truck);
+                _logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) to create the new Trip for.",
+                    truck);
 
-                    return null;
-                }
-                
-                _logger.LogDebug("Setting TruckCompany \n({@TruckCompany})\n location to this Trip \n({@Trip})",
-                                truckCompany,
-                                trip);
-                await _locationService.SetAsync(trip, truckCompany, cancellationToken);
+                return null;
             }
+                
+            _logger.LogDebug("Setting TruckCompany \n({@TruckCompany})\n location to this Trip \n({@Trip})",
+                truckCompany,
+                trip);
+            await _locationService.SetAsync(trip, truckCompany, cancellationToken);
 
             return trip;
         }
@@ -496,17 +507,6 @@ public sealed class TripService
     {
         await _tripRepository.SetAsync(trip, true, cancellationToken);
         await _pelletService.CompleteAsync(trip, cancellationToken);
-        
-        var inventoryLoad = await _loadRepository.GetAsync(trip, LoadType.Inventory, cancellationToken);
-        if (inventoryLoad == null)
-        {
-            _logger.LogError("Trip \n({@Trip})\n did not have a Load assigned as Inventory.",
-                trip);
-            
-            return;
-        }
-
-        await _tripRepository.UnsetAsync(trip, inventoryLoad, cancellationToken);
         
         _logger.LogInformation("Trip ({@Trip})\n successfully COMPLETED!!!",
             trip);

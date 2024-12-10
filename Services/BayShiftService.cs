@@ -44,7 +44,7 @@ public sealed class BayShiftService(
     {
         var hub = await hubRepository.GetAsync(bayStaff, cancellationToken);
         
-        if (hub != null) return bayStaff.WorkChance / hub.OperatingChance;
+        if (hub != null) return bayStaff.WorkChance / hub.WorkChance;
         
         logger.LogError("BayStaff \n({@BayStaff})\n did not have a Hub assigned to get the OperatingHourChance for.",
             bayStaff);

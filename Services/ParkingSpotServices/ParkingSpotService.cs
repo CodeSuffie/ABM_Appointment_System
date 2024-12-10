@@ -16,8 +16,6 @@ public sealed class ParkingSpotService(
     {
         var parkingSpot = new ParkingSpot
         {
-            XSize = 1,
-            YSize = 1,
             Hub = hub,
         };
 

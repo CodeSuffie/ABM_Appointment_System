@@ -20,13 +20,28 @@ public sealed class TruckRepository(ModelDbContext context)
 
         return truck;
     }
-
     
     public async Task AddAsync(Truck truck, CancellationToken cancellationToken)
     {
         await context.Trucks
             .AddAsync(truck, cancellationToken);
         
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task AddAsync(Truck truck, Pellet pellet, CancellationToken cancellationToken)
+    {
+        truck.Inventory.Add(pellet);
+        pellet.Truck = truck;
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task RemoveAsync(Truck truck, Pellet pellet, CancellationToken cancellationToken)
+    {
+        truck.Inventory.Remove(pellet);
+        pellet.Truck = null;
+
         await context.SaveChangesAsync(cancellationToken);
     }
 

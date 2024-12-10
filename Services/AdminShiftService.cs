@@ -41,7 +41,7 @@ public sealed class AdminShiftService(
     {
         var hub = await hubRepository.GetAsync(adminStaff, cancellationToken);
         
-        if (hub != null) return adminStaff.WorkChance / hub.OperatingChance;
+        if (hub != null) return adminStaff.WorkChance / hub.WorkChance;
         
         logger.LogError("AdminStaff \n({@AdminStaff})\n did not have a Hub assigned to get the OperatingHourChance for.",
             adminStaff);

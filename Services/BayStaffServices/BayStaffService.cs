@@ -21,7 +21,6 @@ public sealed class BayStaffService
     private readonly BayService _bayService;
     private readonly WorkService _workService;
     private readonly TripRepository _tripRepository;
-    private readonly WorkRepository _workRepository;
     private readonly BayShiftService _bayShiftService;
     private readonly BayStaffRepository _bayStaffRepository;
     private readonly Counter<int> _pickUpMissCounter;
@@ -37,7 +36,6 @@ public sealed class BayStaffService
         BayService bayService,
         WorkService workService,
         TripRepository tripRepository,
-        WorkRepository workRepository,
         BayShiftService bayShiftService,
         BayStaffRepository bayStaffRepository,
         Meter meter)
@@ -51,7 +49,6 @@ public sealed class BayStaffService
         _bayService = bayService;
         _workService = workService;
         _tripRepository = tripRepository;
-        _workRepository = workRepository;
         _bayShiftService = bayShiftService;
         _bayStaffRepository = bayStaffRepository;
 

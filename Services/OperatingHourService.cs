@@ -13,13 +13,13 @@ public sealed class OperatingHourService(
     private TimeSpan? GetStartTime(Hub hub, TimeSpan day)
     {
         var maxShiftStart = TimeSpan.FromDays(1) - 
-                            hub.AverageOperatingHourLength;
+                            hub.AverageShiftLength;
 
         if (maxShiftStart < TimeSpan.Zero)
         {
             logger.LogError("Hub \n({@Hub})\n its OperatingHourLength \n({TimeSpan})\n is longer than a full day.",
                 hub,
-                hub.AverageOperatingHourLength);
+                hub.AverageShiftLength);
 
             return null;
             // Hub Operating Hours can be longer than 1 day?
@@ -47,7 +47,7 @@ public sealed class OperatingHourService(
         var operatingHour = new OperatingHour {
             Hub = hub,
             StartTime = (TimeSpan) startTime,
-            Duration = hub.AverageOperatingHourLength,
+            Duration = hub.AverageShiftLength,
         };
 
         return operatingHour;
@@ -59,7 +59,7 @@ public sealed class OperatingHourService(
         {
             var day = TimeSpan.FromDays(i);
             
-            if (modelState.RandomDouble() > hub.OperatingChance)
+            if (modelState.RandomDouble() > hub.WorkChance)
             {
                 logger.LogInformation("Hub \n({@Hub})\n will not have an OperatingHour during this day \n({TimeSpan})",
                     hub,

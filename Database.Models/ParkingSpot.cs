@@ -6,11 +6,11 @@ public class ParkingSpot : ILocation
 {
     public long Id { get; set; }
     
-    public long XSize { get; set; }
-    public long YSize { get; set; }
+    // ILocation
     public long XLocation { get; set; }
     public long YLocation { get; set; }
     
+    // ParkingSpot
     public Hub Hub { get; set; } = new();
     public long HubId { get; set; }
     

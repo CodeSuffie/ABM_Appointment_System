@@ -217,8 +217,8 @@ public sealed partial class Simulation
             parkingSpot.Id,
             parkingSpot.XLocation,
             parkingSpot.YLocation,
-            parkingSpot.XSize,
-            parkingSpot.YSize);
+            1,
+            1);
     }
 
     private async ValueTask AddParkingSpotsAsync(ParkingSpot[] parkingSpots)

@@ -17,7 +17,6 @@ public sealed class LoadService
     private readonly HubService _hubService;
     private readonly PelletService _pelletService;
     private readonly LoadRepository _loadRepository;
-    private readonly PelletRepository _pelletRepository;
     private readonly ModelState _modelState;
     private readonly UpDownCounter<int> _unclaimedLoads;
 
@@ -26,7 +25,6 @@ public sealed class LoadService
         HubService hubService,
         PelletService pelletService,
         LoadRepository loadRepository,
-        PelletRepository pelletRepository,
         ModelState modelState,
         Meter meter)
     {
@@ -35,7 +33,6 @@ public sealed class LoadService
         _hubService = hubService;
         _pelletService = pelletService;
         _loadRepository = loadRepository;
-        _pelletRepository = pelletRepository;
         _modelState = modelState;
 
         _unclaimedLoads =
@@ -119,103 +116,4 @@ public sealed class LoadService
 
         return await GetNewPickUpAsync(truck, hub, cancellationToken);
     }
-    
-    public async Task<Load> GetNewInventoryAsync(Trip trip, CancellationToken cancellationToken)
-    {
-        var inventory = new Load
-        {
-            LoadType = LoadType.Inventory,
-            Trip = trip,
-        };
-
-        await _loadRepository.AddAsync(inventory, cancellationToken);
-
-        return inventory;
-    }
-    
-    public async Task<Load> GetNewInventoryAsync(Trip trip, Load load, CancellationToken cancellationToken)
-    {
-        var inventory = await GetNewInventoryAsync(trip, cancellationToken);
-
-        foreach (var pellet in load.Pellets)
-        {
-            await _pelletRepository.AddAsync(pellet, inventory, cancellationToken);
-        }
-
-        return inventory;
-    }
-    
-    // public async Task AddNewLoadsAsync(int count, CancellationToken cancellationToken)
-    // {
-    //     for (var i = 0; i < count; i++)
-    //     {
-    //         var load = await GetNewObjectAsync(cancellationToken);
-    //         if (load == null)
-    //         {
-    //             _logger.LogError("Could not construct a new Load...");
-    //         
-    //             return;
-    //         }
-    //         
-    //         await _loadRepository.AddAsync(load, cancellationToken);
-    //         _logger.LogInformation("New Load created: Load={@Load}", load);
-    //
-    //         _unclaimedLoads.Add(1);
-    //     }
-    // }
-    
-    // public async Task<Load?> SelectUnclaimedDropOffAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
-    // {
-    //     var dropOffs = await (_loadRepository.GetUnclaimedDropOff(truckCompany))
-    //         .ToListAsync(cancellationToken);
-    //
-    //     if (dropOffs.Count <= 0)
-    //     {
-    //         _logger.LogInformation("TruckCompany \n({@TruckCompany})\n did not have an unclaimed Drop-Off Load assigned.",
-    //             truckCompany);
-    //
-    //         return null;
-    //     }
-    //     
-    //     var dropOff = dropOffs[_modelState.Random(dropOffs.Count)];
-    //     _unclaimedLoads.Add(-1);
-    //     return dropOff;
-    // }
-    //
-    // public async Task<Load?> SelectUnclaimedPickUpAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
-    // {
-    //     var pickUps = await (_loadRepository.GetUnclaimedPickUp(truckCompany))
-    //         .ToListAsync(cancellationToken);
-    //
-    //     if (pickUps.Count <= 0)
-    //     {
-    //         _logger.LogInformation("TruckCompany \n({@TruckCompany})\n did not have an unclaimed Pick-Up Load assigned.",
-    //             truckCompany);
-    //
-    //         return null;
-    //     }
-    //     
-    //     var pickUp = pickUps[_modelState.Random(pickUps.Count)];
-    //     _unclaimedLoads.Add(-1);
-    //     return pickUp;
-    // }
-    //
-    // public async Task<Load?> SelectUnclaimedPickUpAsync(Hub hub, TruckCompany truckCompany, CancellationToken cancellationToken)
-    // {
-    //     var pickUps = await (_loadRepository.GetUnclaimedPickUp(hub, truckCompany))
-    //         .ToListAsync(cancellationToken);
-    //
-    //     if (pickUps.Count <= 0)
-    //     {
-    //         _logger.LogInformation("TruckCompany \n({@TruckCompany})\n did not have an unclaimed Pick-Up Load assigned for Hub \n({@Hub})",
-    //             truckCompany,
-    //             hub);
-    //
-    //         return null;
-    //     }
-    //     
-    //     var pickUp = pickUps[_modelState.Random(pickUps.Count)];
-    //     _unclaimedLoads.Add(-1);
-    //     return pickUp;
-    // }
 }

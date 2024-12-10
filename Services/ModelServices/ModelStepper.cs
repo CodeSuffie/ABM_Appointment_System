@@ -9,20 +9,17 @@ public sealed class ModelStepper
 {
     private readonly ILogger<ModelStepper> _logger;
     private readonly ModelState _modelState;
-    private readonly LoadService _loadService;
     private readonly IEnumerable<IStepperService> _stepperServices;
     private readonly Counter<int> _stepCounter;
     
     public ModelStepper(
         ILogger<ModelStepper> logger,
         ModelState modelState,
-        LoadService loadService,
         IEnumerable<IStepperService> stepperServices,
         Meter meter)
     {
         _logger = logger;
         _modelState = modelState;
-        _loadService = loadService;
         _stepperServices = stepperServices;
 
         _stepCounter = meter.CreateCounter<int>("steps", "Steps", "Number of steps executed.");

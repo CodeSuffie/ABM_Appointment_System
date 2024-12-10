@@ -1,9 +1,12 @@
+using Database.Abstractions;
+
 namespace Database.Models;
 
-public class AdminStaff
+public class AdminStaff : IStaff<AdminShift>
 {
-    // Staff
     public long Id { get; set; }
+    
+    // IStaff<AdminShift>
     public double WorkChance { get; set; }
     public TimeSpan AverageShiftLength { get; set; }
 

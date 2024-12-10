@@ -60,7 +60,7 @@ public sealed class HubRepository(ModelDbContext context)
 
     public Task AddAsync(Hub hub, OperatingHour operatingHour, CancellationToken cancellationToken)
     {
-        hub.OperatingHours.Add(operatingHour);
+        hub.Shifts.Add(operatingHour);
         operatingHour.Hub = hub;
         
         return context.SaveChangesAsync(cancellationToken);
@@ -69,7 +69,7 @@ public sealed class HubRepository(ModelDbContext context)
     public Task<int> CountOperatingAsync(TimeSpan time, CancellationToken cancellationToken)
     {
         return Get()
-            .Where(h => h.OperatingHours
+            .Where(h => h.Shifts
                 .Any(oh => oh.StartTime <= time && 
                            oh.StartTime + oh.Duration >= time))
             .CountAsync(cancellationToken);

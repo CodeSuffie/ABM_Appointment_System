@@ -2,15 +2,23 @@ using Database.Abstractions;
 
 namespace Database.Models;
 
-public class Bay : ILocation
+public class Bay : IArea, IStorage<Pellet>
 {
     public long Id { get; set; }
     
-    public long XSize { get; set; }
-    public long YSize { get; set; }
+    // ILocation
     public long XLocation { get; set; }
     public long YLocation { get; set; }
     
+    // IArea
+    public long XSize { get; set; }
+    public long YSize { get; set; }
+    
+    // IStorage<Pellet>
+    public long Capacity { get; set; }
+    public List<Pellet> Inventory { get; set; } = [];
+    
+    // Bay
     public BayStatus BayStatus { get; set; }
     public BayFlags BayFlags { get; set; } = 0;
     
@@ -20,6 +28,5 @@ public class Bay : ILocation
     public Trip? Trip { get; set; }
     public long? TripId { get; set; }
     
-    public List<Pellet> Pellets { get; set; } = [];
     public List<Work> Works { get; set; } = [];
 }

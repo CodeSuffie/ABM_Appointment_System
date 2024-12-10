@@ -2,18 +2,24 @@ using Database.Abstractions;
 
 namespace Database.Models;
 
-public class Hub : ILocation
+public class Hub : IArea, IStaff<OperatingHour>
 {
     public long Id { get; set; }
     
-    public long XSize { get; set; }
-    public long YSize { get; set; }
+    // ILocation
     public long XLocation { get; set; }
     public long YLocation { get; set; }
-    public double OperatingChance { get; set; }
-    public TimeSpan AverageOperatingHourLength { get; set; }
-    public List<OperatingHour> OperatingHours { get; set; } = [];
     
+    // IArea
+    public long XSize { get; set; }
+    public long YSize { get; set; }
+    
+    // IStaff
+    public double WorkChance { get; set; }
+    public TimeSpan AverageShiftLength { get; set; }
+    public List<OperatingHour> Shifts { get; set; } = [];
+    
+    // Hub
     public List<AdminStaff> AdminStaffs { get; set; } = [];
     public List<BayStaff> BayStaffs { get; set; } = [];
     

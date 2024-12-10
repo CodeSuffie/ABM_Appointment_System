@@ -7,11 +7,7 @@ public class HubConfiguration : IEntityTypeConfiguration<Hub>
 {
     public void Configure(EntityTypeBuilder<Hub> builder)
     {
-        builder.HasOne(x => x.Warehouse)
-            .WithOne(x => x.Hub)
-            .HasForeignKey<Warehouse>(x => x.HubId);
-        
-        builder.HasMany(x => x.OperatingHours)
+        builder.HasMany(x => x.Shifts)
             .WithOne(x => x.Hub)
             .HasForeignKey(x => x.HubId);
         
@@ -22,6 +18,10 @@ public class HubConfiguration : IEntityTypeConfiguration<Hub>
         builder.HasMany(x => x.BayStaffs)
             .WithOne(x => x.Hub)
             .HasForeignKey(x => x.HubId);
+        
+        builder.HasOne(x => x.Warehouse)
+            .WithOne(x => x.Hub)
+            .HasForeignKey<Warehouse>(x => x.HubId);
         
         builder.HasMany(x => x.ParkingSpots)
             .WithOne(x => x.Hub)

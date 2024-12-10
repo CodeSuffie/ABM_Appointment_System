@@ -14,11 +14,7 @@ public sealed class TruckCompanyService(
 {
     public async Task<TruckCompany> GetNewObjectAsync(CancellationToken cancellationToken)
     {
-        var truckCompany = new TruckCompany
-        {
-            XSize = 1,
-            YSize = 1
-        };
+        var truckCompany = new TruckCompany();
 
         await truckCompanyRepository.AddAsync(truckCompany, cancellationToken);
         

@@ -8,7 +8,7 @@ public class OperatingHourConfiguration : IEntityTypeConfiguration<OperatingHour
     public void Configure(EntityTypeBuilder<OperatingHour> builder)
     {
         builder.HasOne(x => x.Hub)
-            .WithMany(x => x.OperatingHours)
+            .WithMany(x => x.Shifts)
             .HasForeignKey(x => x.HubId);
     }
 }

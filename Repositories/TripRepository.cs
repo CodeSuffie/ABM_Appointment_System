@@ -218,16 +218,6 @@ public sealed class TripRepository(
 
         await context.SaveChangesAsync(cancellationToken);
     }
-    
-    public async Task SetInventoryAsync(Trip trip, Load inventory, CancellationToken cancellationToken)
-    {
-        trip.Loads.RemoveAll(l => l.LoadType == LoadType.Inventory);
-        
-        trip.Loads.Add(inventory);
-        inventory.Trip = trip;
-
-        await context.SaveChangesAsync(cancellationToken);
-    }
 
     public async Task SetPickUpAsync(Trip trip, Load pickUp, CancellationToken cancellationToken)
     {

@@ -11,9 +11,7 @@ namespace Services.BayServices;
 public sealed class BayService(
     ILogger<BayService> logger,
     HubRepository hubRepository,
-    PelletRepository pelletRepository,
     PelletService pelletService,
-    LoadRepository loadRepository,
     TripService tripService,
     BayRepository bayRepository,
     TripRepository tripRepository,
@@ -27,6 +25,7 @@ public sealed class BayService(
         {
             XSize = 1,
             YSize = 1,
+            Capacity = modelState.AgentConfig.BayAverageCapacity,
             BayStatus = BayStatus.Closed,
             Hub = hub,
         };

@@ -1,9 +1,12 @@
+using Database.Abstractions;
+
 namespace Database.Models;
 
-public class BayStaff
+public class BayStaff : IStaff<BayShift>
 {
-    // Staff
     public long Id { get; set; }
+    
+    // IStaff<BayShift>
     public double WorkChance { get; set; }
     public TimeSpan AverageShiftLength { get; set; }
 

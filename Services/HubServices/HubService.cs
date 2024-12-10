@@ -19,8 +19,8 @@ public sealed class HubService(
         {
             XSize = modelState.AgentConfig.HubXSize,
             YSize = modelState.AgentConfig.HubYSize,
-            OperatingChance = modelState.AgentConfig.HubAverageOperatingDays,
-            AverageOperatingHourLength = modelState.AgentConfig.OperatingHourAverageLength
+            WorkChance = modelState.AgentConfig.HubAverageWorkDays,
+            AverageShiftLength = modelState.AgentConfig.OperatingHourAverageLength
         };
 
         await hubRepository.AddAsync(hub, cancellationToken);

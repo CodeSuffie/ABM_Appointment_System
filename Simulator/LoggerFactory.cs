@@ -40,12 +40,8 @@ internal static class LoggerFactory
                         BayFlags = b.BayFlags,
                         HubId = b.HubId,
                         TripId = b.TripId,
-                        PelletIds = b.Pellets.Select(l => l.Id),
+                        InventoryIds = b.Inventory.Select(l => l.Id),
                         WorkIds = b.Works.Select(w => w.Id),
-                        // XSize = b.XSize,
-                        // YSize = b.YSize,
-                        // XLocation = b.XLocation,
-                        // YLocation = b.YLocation,
                     })
                 .Destructure.ByTransforming<BayShift>(
                     bsh => new 
@@ -70,15 +66,15 @@ internal static class LoggerFactory
                     h => new
                     {
                         Id = h.Id,
-                        OperatingChance = h.OperatingChance,
-                        AverageOperatingHourLength = h.AverageOperatingHourLength,
+                        OperatingChance = h.WorkChance,
+                        AverageOperatingHourLength = h.AverageShiftLength,
                         AdminStaffIds = h.AdminStaffs.Select(ads => ads.Id),
                         BayStaffIds = h.BayStaffs.Select(bs => bs.Id),
                         WarehouseId = h.WarehouseId,
                         ParkingSpotIds = h.ParkingSpots.Select(ps => ps.Id),
                         BayIds = h.Bays.Select(b => b.Id),
                         TripIds = h.Trips.Select(tp => tp.Id),
-                        OperatingHourIds = h.OperatingHours.Select(oh => oh.Id),
+                        OperatingHourIds = h.Shifts.Select(oh => oh.Id),
                         // XSize = h.XSize,
                         // YSize = h.YSize,
                         // XLocation = h.XLocation,
@@ -107,17 +103,13 @@ internal static class LoggerFactory
                         Id = ps.Id,
                         HubId = ps.HubId,
                         TripId = ps.TripId,
-                        // XSize = ps.XSize,
-                        // YSize = ps.YSize,
-                        // XLocation = ps.XLocation,
-                        // YLocation = ps.YLocation
                     })
                 .Destructure.ByTransforming<Pellet>(
                     p => new
                     {
                         Id = p.Id,
                         TruckCompanyId = p.TruckCompanyId,
-                        LoadIds = p.Loads.Select(l => l.Id),
+                        LoadId = p.LoadId,
                         BayId = p.BayId,
                         WarehouseId = p.WarehouseId,
                         WorkId = p.WorkId
@@ -151,23 +143,15 @@ internal static class LoggerFactory
                     {
                         Id = tc.Id,
                         TruckIds = tc.Trucks.Select(tk => tk.Id),
-                        PelletIds = tc.Pellets.Select(p => p.Id),
-                        // XSize = tc.XSize,
-                        // YSize = tc.YSize,
-                        // XLocation = tc.XLocation,
-                        // YLocation = tc.YLocation
+                        InventoryIds = tc.Inventory.Select(p => p.Id),
                     })
                 .Destructure.ByTransforming<Warehouse>(
                     w => new
                     {
                         Id = w.Id,
                         HubId = w.HubId,
-                        PelletIds = w.Pellets.Select(p => p.Id),
+                        InventoryIds = w.Inventory.Select(p => p.Id),
                         WorkIds = w.Works.Select(w => w.Id),
-                        // XSize = w.XSize,
-                        // YSize = w.YSize,
-                        // XLocation = w.XLocation,
-                        // YLocation = w.YLocation
                     })
                 .Destructure.ByTransforming<Work>(
                     w => new

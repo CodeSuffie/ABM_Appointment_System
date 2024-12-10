@@ -7,6 +7,10 @@ public class TruckConfiguration : IEntityTypeConfiguration<Truck>
 {
     public void Configure(EntityTypeBuilder<Truck> builder)
     {
+        builder.HasMany(x => x.Inventory)
+            .WithOne(x => x.Truck)
+            .HasForeignKey(x => x.TruckId);
+        
         builder.HasOne(x => x.TruckCompany)
             .WithMany(x => x.Trucks)
             .HasForeignKey(x => x.TruckCompanyId);

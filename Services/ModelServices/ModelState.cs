@@ -4,7 +4,7 @@ namespace Services.ModelServices;
 
 public sealed class ModelState
 {
-    public TimeSpan ModelTime = new TimeSpan(0, 0, 0);
+    public TimeSpan ModelTime = new(0, 0, 0);
     public ModelConfigBase ModelConfig = new ModelConfig();
     public AgentConfigBase AgentConfig = new AgentConfig();
     

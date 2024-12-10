@@ -14,7 +14,6 @@ public sealed class BayStepper : IStepperService<Bay>
     private readonly ILogger<BayStepper> _logger;
     private readonly BayService _bayService;
     private readonly BayRepository _bayRepository;
-    private readonly PelletService _pelletService;
     private readonly ModelState _modelState;
     private readonly Histogram<int> _closedBaysHistogram;
     private readonly Histogram<int> _freeBaysHistogram;
@@ -27,14 +26,12 @@ public sealed class BayStepper : IStepperService<Bay>
         ILogger<BayStepper> logger,
         BayService bayService,
         BayRepository bayRepository,
-        PelletService pelletService,
         ModelState modelState,
         Meter meter)
     {
         _logger = logger;
         _bayService = bayService;
         _bayRepository = bayRepository;
-        _pelletService = pelletService;
         _modelState = modelState;
 
         _closedBaysHistogram = meter.CreateHistogram<int>("closed-bay", "Bay", "#Bays Closed.");

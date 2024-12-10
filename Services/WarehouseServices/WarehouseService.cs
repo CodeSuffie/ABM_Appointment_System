@@ -17,6 +17,7 @@ public sealed class WarehouseService(
         {
             XSize = modelState.AgentConfig.WarehouseXSize,
             YSize = modelState.AgentConfig.WarehouseYSize,
+            Capacity = modelState.AgentConfig.WarehouseAverageCapacity,
             Hub = hub,
         };
         

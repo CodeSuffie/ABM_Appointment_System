@@ -1,9 +1,16 @@
+using Database.Abstractions;
+
 namespace Database.Models;
 
-public class Truck
+public class Truck : IStorage<Pellet>
 {
     public long Id { get; set; }
+    
+    // IStorage<Pellet>
     public long Capacity { get; set; }
+    public List<Pellet> Inventory { get; set; } = [];
+    
+    // Truck
     public long Speed { get; set; }
 
     public TruckCompany TruckCompany { get; set; } = new();
