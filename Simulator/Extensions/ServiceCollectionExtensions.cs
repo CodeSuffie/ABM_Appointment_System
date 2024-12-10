@@ -19,6 +19,7 @@ using Services.ModelServices;
 using Services.ParkingSpotServices;
 using Services.PelletServices;
 using Services.PickerServices;
+using Services.StufferServices;
 using Services.TripServices;
 using Services.TruckCompanyServices;
 using Services.TruckServices;
@@ -84,11 +85,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStepperService,                 PickerStepper>();
         services.AddScoped<PickerRepository>();
         
-        
-        // services.AddScoped<StufferService>();
-        // services.AddScoped<IPriorityInitializationService,  StufferInitialize>();
-        // services.AddScoped<IStepperService,                 StufferStepper>();
-        // services.AddScoped<StufferRepository>();
+        services.AddScoped<StufferService>();
+        services.AddScoped<IPriorityInitializationService,  StufferInitialize>();
+        services.AddScoped<IStepperService,                 StufferStepper>();
+        services.AddScoped<StufferRepository>();
         
         services.AddScoped<TripService>();
         services.AddScoped<IStepperService,                 TripStepper>();

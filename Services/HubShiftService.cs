@@ -12,8 +12,7 @@ public sealed class HubShiftService(
     OperatingHourRepository operatingHourRepository,
     AdminStaffRepository adminStaffRepository,
     PickerRepository pickerRepository,
-    // TODO: Stuffer
-    // StufferRepository stufferRepository,
+    StufferRepository stufferRepository,
     HubShiftRepository hubShiftRepository,
     ModelState modelState) 
 {
@@ -63,29 +62,28 @@ public sealed class HubShiftService(
         return operatingHour.StartTime + new TimeSpan(shiftHour, 0, 0);
     }
     
-    // TODO: Stuffer
-    // private TimeSpan? GetStartTime(Stuffer stuffer, OperatingHour operatingHour)
-    // {
-    //     var maxShiftStart = operatingHour.Duration - stuffer.AverageShiftLength;
-    //
-    //     if (maxShiftStart < TimeSpan.Zero)
-    //     {
-    //         logger.LogError("Stuffer \n({@Stuffer})\n its ShiftLength \n({TimeSpan})\n " +
-    //                         "is longer than this OperatingHour \n({@OperatingHour})\n its Length \n({TimeSpan})",
-    //             stuffer,
-    //             stuffer.AverageShiftLength,
-    //             operatingHour,
-    //             operatingHour.Duration);
-    //
-    //         return null;
-    //     }
-    //         
-    //     var shiftBlock = (maxShiftStart / 3).Hours;
-    //         
-    //     var shiftHour = shiftBlock * modelState.Random(3);
-    //
-    //     return operatingHour.StartTime + new TimeSpan(shiftHour, 0, 0);
-    // }
+    private TimeSpan? GetStartTime(Stuffer stuffer, OperatingHour operatingHour)
+    {
+        var maxShiftStart = operatingHour.Duration - stuffer.AverageShiftLength;
+    
+        if (maxShiftStart < TimeSpan.Zero)
+        {
+            logger.LogError("Stuffer \n({@Stuffer})\n its ShiftLength \n({TimeSpan})\n " +
+                            "is longer than this OperatingHour \n({@OperatingHour})\n its Length \n({TimeSpan})",
+                stuffer,
+                stuffer.AverageShiftLength,
+                operatingHour,
+                operatingHour.Duration);
+    
+            return null;
+        }
+            
+        var shiftBlock = (maxShiftStart / 3).Hours;
+            
+        var shiftHour = shiftBlock * modelState.Random(3);
+    
+        return operatingHour.StartTime + new TimeSpan(shiftHour, 0, 0);
+    }
     
     public async Task<double?> GetWorkChanceAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
@@ -111,18 +109,17 @@ public sealed class HubShiftService(
         return null;
     }
     
-    // TODO: Stuffer
-    // public async Task<double?> GetWorkChanceAsync(Stuffer stuffer, CancellationToken cancellationToken)
-    // {
-    //     var hub = await hubRepository.GetAsync(stuffer, cancellationToken);
-    //     
-    //     if (hub != null) return stuffer.WorkChance / hub.WorkChance;
-    //     
-    //     logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to get the OperatingHourChance for.",
-    //         stuffer);
-    //
-    //     return null;
-    // }
+    public async Task<double?> GetWorkChanceAsync(Stuffer stuffer, CancellationToken cancellationToken)
+    {
+        var hub = await hubRepository.GetAsync(stuffer, cancellationToken);
+        
+        if (hub != null) return stuffer.WorkChance / hub.WorkChance;
+        
+        logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to get the OperatingHourChance for.",
+            stuffer);
+    
+        return null;
+    }
     
     public HubShift? GetNewObject(AdminStaff adminStaff, OperatingHour operatingHour)
     {
@@ -168,28 +165,27 @@ public sealed class HubShiftService(
         return hubShift;
     }
     
-    // TODO: Stuffer
-    // public HubShift? GetNewObject(Stuffer stuffer, OperatingHour operatingHour)
-    // {
-    //     var startTime = GetStartTime(stuffer, operatingHour);
-    //     if (startTime == null)
-    //     {
-    //         logger.LogError("No start time could be assigned to the new HubShift for this " +
-    //                         "Stuffer \n({@Stuffer})\n during this OperatingHour \n({@OperatingHour})",
-    //             stuffer,
-    //             operatingHour);
-    //
-    //         return null;
-    //     }
-    //     
-    //     var hubShift = new HubShift {
-    //         Stuffer = stuffer,
-    //         StartTime = (TimeSpan) startTime,
-    //         Duration = stuffer.AverageShiftLength
-    //     };
-    //
-    //     return hubShift;
-    // }
+    public HubShift? GetNewObject(Stuffer stuffer, OperatingHour operatingHour)
+    {
+        var startTime = GetStartTime(stuffer, operatingHour);
+        if (startTime == null)
+        {
+            logger.LogError("No start time could be assigned to the new HubShift for this " +
+                            "Stuffer \n({@Stuffer})\n during this OperatingHour \n({@OperatingHour})",
+                stuffer,
+                operatingHour);
+    
+            return null;
+        }
+        
+        var hubShift = new HubShift {
+            Stuffer = stuffer,
+            StartTime = (TimeSpan) startTime,
+            Duration = stuffer.AverageShiftLength
+        };
+    
+        return hubShift;
+    }
 
     public async Task GetNewObjectsAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
@@ -307,64 +303,63 @@ public sealed class HubShiftService(
         }
     }
     
-    // TODO: Stuffer
-    // public async Task GetNewObjectsAsync(Stuffer stuffer, CancellationToken cancellationToken)
-    // {
-    //     var hub = await hubRepository.GetAsync(stuffer, cancellationToken);
-    //     if (hub == null)
-    //     {
-    //         logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to create HubShifts for.",
-    //             stuffer);
-    //
-    //         return;
-    //     }
-    //     
-    //     var operatingHours = operatingHourRepository.Get(hub)
-    //         .AsAsyncEnumerable()
-    //         .WithCancellation(cancellationToken);
-    //     
-    //     await foreach (var operatingHour in operatingHours)
-    //     {
-    //         var workChance = await GetWorkChanceAsync(stuffer, cancellationToken);
-    //         if (workChance == null)
-    //         {
-    //             logger.LogError("WorkChance could not be calculated for this Stuffer " +
-    //                             "\n({@Stuffer})\n during this OperatingHour \n({@OperatingHour})",
-    //                 stuffer,
-    //                 operatingHour);
-    //
-    //             continue;
-    //         }
-    //         
-    //         if (modelState.RandomDouble() > workChance)
-    //         {
-    //             logger.LogInformation("Stuffer \n({@Stuffer})\n will not have an HubShift during " +
-    //                                   "this OperatingHour \n({@OperatingHour})",
-    //                 stuffer,
-    //                 operatingHour);
-    //             
-    //             continue;
-    //         }
-    //         
-    //         var hubShift = GetNewObject(stuffer, operatingHour);
-    //         if (hubShift == null)
-    //         {
-    //             logger.LogError("No new HubShift could be created for this Stuffer " +
-    //                             "\n({@Stuffer})\n during this OperatingHour \n({@OperatingHour})",
-    //                 stuffer,
-    //                 operatingHour);
-    //
-    //             continue;
-    //         }
-    //
-    //         await stufferRepository.AddAsync(stuffer, hubShift, cancellationToken);
-    //         logger.LogInformation("New HubShift created for this Stuffer \n({@Stuffer})\n during this " +
-    //                               "OperatingHour \n({@OperatingHour})\n: HubShift={@HubShift}",
-    //             stuffer,
-    //             operatingHour,
-    //             hubShift);
-    //     }
-    // }
+    public async Task GetNewObjectsAsync(Stuffer stuffer, CancellationToken cancellationToken)
+    {
+        var hub = await hubRepository.GetAsync(stuffer, cancellationToken);
+        if (hub == null)
+        {
+            logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to create HubShifts for.",
+                stuffer);
+    
+            return;
+        }
+        
+        var operatingHours = operatingHourRepository.Get(hub)
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+        
+        await foreach (var operatingHour in operatingHours)
+        {
+            var workChance = await GetWorkChanceAsync(stuffer, cancellationToken);
+            if (workChance == null)
+            {
+                logger.LogError("WorkChance could not be calculated for this Stuffer " +
+                                "\n({@Stuffer})\n during this OperatingHour \n({@OperatingHour})",
+                    stuffer,
+                    operatingHour);
+    
+                continue;
+            }
+            
+            if (modelState.RandomDouble() > workChance)
+            {
+                logger.LogInformation("Stuffer \n({@Stuffer})\n will not have an HubShift during " +
+                                      "this OperatingHour \n({@OperatingHour})",
+                    stuffer,
+                    operatingHour);
+                
+                continue;
+            }
+            
+            var hubShift = GetNewObject(stuffer, operatingHour);
+            if (hubShift == null)
+            {
+                logger.LogError("No new HubShift could be created for this Stuffer " +
+                                "\n({@Stuffer})\n during this OperatingHour \n({@OperatingHour})",
+                    stuffer,
+                    operatingHour);
+    
+                continue;
+            }
+    
+            await stufferRepository.AddAsync(stuffer, hubShift, cancellationToken);
+            logger.LogInformation("New HubShift created for this Stuffer \n({@Stuffer})\n during this " +
+                                  "OperatingHour \n({@OperatingHour})\n: HubShift={@HubShift}",
+                stuffer,
+                operatingHour,
+                hubShift);
+        }
+    }
     
     private bool IsCurrent(HubShift hubShift)
     {

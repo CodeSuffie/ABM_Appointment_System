@@ -4,6 +4,7 @@ namespace Database.Models;
 
 public class Picker : IStaff<HubShift>
 {
+    // IStaff<HubShift>
     public long Id { get; set; }
     public double WorkChance { get; set; }
     public TimeSpan AverageShiftLength { get; set; }

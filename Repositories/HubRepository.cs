@@ -41,11 +41,10 @@ public sealed class HubRepository(ModelDbContext context)
         return Get().FirstOrDefaultAsync(h => h.Id == picker.HubId, cancellationToken);
     }
     
-    // TODO: Stuffer
-    // public Task<Hub?> GetAsync(Stuffer stuffer, CancellationToken cancellationToken)
-    // {
-    //     return Get().FirstOrDefaultAsync(h => h.Id == stuffer.HubId, cancellationToken);
-    // }
+    public Task<Hub?> GetAsync(Stuffer stuffer, CancellationToken cancellationToken)
+    {
+        return Get().FirstOrDefaultAsync(h => h.Id == stuffer.HubId, cancellationToken);
+    }
     
     public Task<Hub?> GetAsync(Load load, CancellationToken cancellationToken)
     {

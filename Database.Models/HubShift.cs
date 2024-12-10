@@ -16,7 +16,6 @@ public class HubShift : IShift
     public Picker? Picker { get; set; }
     public long? PickerId { get; set; }
     
-    // TODO: Stuffer
-    // public Stuffer? Stuffer { get; set; }
-    // public long? StufferId { get; set; }
+    public Stuffer? Stuffer { get; set; }
+    public long? StufferId { get; set; }
 }

@@ -80,8 +80,7 @@ internal static class LoggerFactory
                         Duration = adsh.Duration,
                         AdminStaffId = adsh.AdminStaffId,
                         PickerId = adsh.AdminStaffId,
-                        // TODO: Stuffer
-                        // StufferId = adsh.AdminStaffId,
+                        StufferId = adsh.StufferId,
                     })
                 .Destructure.ByTransforming<Load>(
                     l => new
@@ -127,17 +126,16 @@ internal static class LoggerFactory
                         AverageShiftLength = pi.AverageShiftLength,
                         ShiftIds = pi.Shifts.Select(sh => sh.Id)
                     })
-                // TODO: Stuffer
-                // .Destructure.ByTransforming<Stuffer>(
-                //     s => new
-                //     {
-                //         Id = s.Id,
-                //         HubId = s.HubId,
-                //         Work = s.Work,
-                //         WorkChance = s.WorkChance,
-                //         AverageShiftLength = s.AverageShiftLength,
-                //         ShiftIds = s.Shifts.Select(sh => sh.Id)
-                //     })
+                .Destructure.ByTransforming<Stuffer>(
+                    s => new
+                    {
+                        Id = s.Id,
+                        HubId = s.HubId,
+                        Work = s.Work,
+                        WorkChance = s.WorkChance,
+                        AverageShiftLength = s.AverageShiftLength,
+                        ShiftIds = s.Shifts.Select(sh => sh.Id)
+                    })
                 .Destructure.ByTransforming<Trip>(
                     tp => new
                     {

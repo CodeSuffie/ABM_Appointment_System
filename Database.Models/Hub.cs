@@ -23,8 +23,7 @@ public class Hub : IArea, IStaff<OperatingHour>
     public List<AdminStaff> AdminStaffs { get; set; } = [];
     public List<BayStaff> BayStaffs { get; set; } = [];
     public List<Picker> Pickers { get; set; } = [];
-    // TODO: Stuffer
-    // public List<Stuffer> Stuffers { get; set; } = [];
+    public List<Stuffer> Stuffers { get; set; } = [];
     
     public Warehouse? Warehouse { get; set; }
     public long? WarehouseId { get; set; }

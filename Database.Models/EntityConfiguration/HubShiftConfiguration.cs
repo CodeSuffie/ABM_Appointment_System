@@ -15,9 +15,8 @@ public class HubShiftConfiguration : IEntityTypeConfiguration<HubShift>
             .WithMany(x => x.Shifts)
             .HasForeignKey(x => x.PickerId);
         
-        // TODO: Stuffer
-        // builder.HasOne(x => x.Stuffer)
-        //     .WithMany(x => x.Shifts)
-        //     .HasForeignKey(x => x.StufferId);
+        builder.HasOne(x => x.Stuffer)
+            .WithMany(x => x.Shifts)
+            .HasForeignKey(x => x.StufferId);
     }
 }

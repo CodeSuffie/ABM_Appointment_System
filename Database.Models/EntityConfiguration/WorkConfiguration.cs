@@ -23,10 +23,9 @@ public class WorkConfiguration : IEntityTypeConfiguration<Work>
             .WithOne(x => x.Work)
             .HasForeignKey<Work>(x => x.PickerId);
         
-        // TODO: Stuffer
-        // builder.HasOne(x => x.Stuffer)
-        //     .WithOne(x => x.Work)
-        //     .HasForeignKey<Work>(x => x.StufferId);
+        builder.HasOne(x => x.Stuffer)
+            .WithOne(x => x.Work)
+            .HasForeignKey<Work>(x => x.StufferId);
 
         builder.HasOne(x => x.Bay)
             .WithMany(x => x.Works)

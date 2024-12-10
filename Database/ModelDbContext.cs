@@ -22,8 +22,7 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
     public DbSet<AdminStaff> AdminStaffs { get; set; }
     public DbSet<BayStaff> BayStaffs { get; set; }
     public DbSet<Picker> Pickers { get; set; }
-    // TODO: Stuffer
-    // public DbSet<Stuffer> Stuffers { get; set; }
+    public DbSet<Stuffer> Stuffers { get; set; }
     
     public DbSet<OperatingHour> OperatingHours { get; set; }
     
@@ -56,8 +55,7 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
         modelBuilder.ApplyConfiguration(new AdminStaffConfiguration());
         modelBuilder.ApplyConfiguration(new BayStaffConfiguration());
         modelBuilder.ApplyConfiguration(new PickerConfiguration());
-        // TODO: Stuffer
-        // modelBuilder.ApplyConfiguration(new StufferConfiguration());
+        modelBuilder.ApplyConfiguration(new StufferConfiguration());
         
         modelBuilder.ApplyConfiguration(new OperatingHourConfiguration());
         
