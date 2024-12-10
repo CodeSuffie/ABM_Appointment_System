@@ -189,7 +189,7 @@ internal static class LoggerFactory
                         WarehouseId = w.WarehouseId,
                         PelletId = w.PelletId
                     })
-                .MinimumLevel.Information()
+                .MinimumLevel.Error()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .WriteTo.Console(theme: AnsiConsoleTheme.Code)
                 .CreateLogger();

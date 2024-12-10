@@ -15,7 +15,7 @@ public sealed class BayStaffRepository(ModelDbContext context)
 
     public async Task<BayStaff?> GetAsync(Work work, CancellationToken cancellationToken)
     {
-        var bayStaff = await context.BayStaffs
+        var bayStaff = await Get()
             .FirstOrDefaultAsync(bs => bs.Id == work.BayStaffId, cancellationToken);
 
         return bayStaff;

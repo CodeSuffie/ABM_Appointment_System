@@ -11,23 +11,22 @@ namespace Services.BayStaffServices;
 public sealed class BayStaffStepper : IStepperService<BayStaff>
 {
     private readonly ILogger<BayStaffStepper> _logger;
-    private readonly WorkRepository _workRepository;
     private readonly BayRepository _bayRepository;
     private readonly BayShiftService _bayShiftService;
+    private readonly WorkRepository _workRepository;
     private readonly WorkService _workService;
     private readonly BayStaffService _bayStaffService;
     private readonly BayStaffRepository _bayStaffRepository;
     private readonly ModelState _modelState;
     private readonly Histogram<int> _workingBayStaffHistogram;
     private readonly Histogram<int> _dropOffBayStaffHistogram;
-    private readonly Histogram<int> _fetchBayStaffHistogram;
     private readonly Histogram<int> _pickUpBayStaffHistogram;
 
     public BayStaffStepper(
         ILogger<BayStaffStepper> logger,
-        WorkRepository workRepository,
         BayRepository bayRepository,
         BayShiftService bayShiftService,
+        WorkRepository workRepository,
         WorkService workService,
         BayStaffService bayStaffService,
         BayStaffRepository bayStaffRepository,
@@ -35,9 +34,9 @@ public sealed class BayStaffStepper : IStepperService<BayStaff>
         Meter meter)
     {
         _logger = logger;
-        _workRepository = workRepository;
         _bayRepository = bayRepository;
         _bayShiftService = bayShiftService;
+        _workRepository = workRepository;
         _workService = workService;
         _bayStaffService = bayStaffService;
         _bayStaffRepository = bayStaffRepository;
@@ -45,7 +44,6 @@ public sealed class BayStaffStepper : IStepperService<BayStaff>
 
         _workingBayStaffHistogram = meter.CreateHistogram<int>("working-bay-staff", "BayStaff", "#BayStaff Working.");
         _dropOffBayStaffHistogram = meter.CreateHistogram<int>("drop-off-bay-staff", "BayStaff", "#BayStaff Working on a Drop-Off.");
-        _fetchBayStaffHistogram = meter.CreateHistogram<int>("fetch-bay-staff", "BayStaff", "#BayStaff Working on a Fetch.");
         _pickUpBayStaffHistogram = meter.CreateHistogram<int>("pick-up-bay-staff", "BayStaff", "#BayStaff Working on a Pick-Up.");
     }
 
@@ -59,9 +57,6 @@ public sealed class BayStaffStepper : IStepperService<BayStaff>
         
         var dropOff = await _bayStaffRepository.CountAsync(WorkType.DropOff, cancellationToken);
         _dropOffBayStaffHistogram.Record(dropOff, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var fetch = await _bayStaffRepository.CountAsync(WorkType.Fetch, cancellationToken);
-        _fetchBayStaffHistogram.Record(fetch, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
         var pickUp = await _bayStaffRepository.CountAsync(WorkType.PickUp, cancellationToken);
         _pickUpBayStaffHistogram.Record(pickUp, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
@@ -77,8 +72,8 @@ public sealed class BayStaffStepper : IStepperService<BayStaff>
         if (work == null)
         {
             _logger.LogInformation("BayStaff \n({@BayStaff})\n does not have active Work assigned in this Step \n({Step})",
-                         bayStaff,
-                         _modelState.ModelTime);
+                 bayStaff,
+                 _modelState.ModelTime);
             
             var shift = await _bayShiftService.GetCurrentAsync(bayStaff, cancellationToken);
             if (shift == null)

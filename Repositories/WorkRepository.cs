@@ -9,6 +9,8 @@ public sealed class WorkRepository(
     TripRepository tripRepository,
     AdminStaffRepository adminStaffRepository,
     BayStaffRepository bayStaffRepository,
+    PickerRepository pickerRepository,
+    StufferRepository stufferRepository,
     BayRepository bayRepository,
     PelletRepository pelletRepository)
 {
@@ -58,6 +60,24 @@ public sealed class WorkRepository(
         var work = await context.Works
             .FirstOrDefaultAsync(x => x.BayStaff != null &&
                                       x.BayStaffId == bayStaff.Id, cancellationToken);
+        
+        return work;
+    }
+
+    public async Task<Work?> GetAsync(Picker picker, CancellationToken cancellationToken)
+    {
+        var work = await context.Works
+            .FirstOrDefaultAsync(x => x.Picker != null &&
+                                      x.PickerId == picker.Id, cancellationToken);
+        
+        return work;
+    }
+    
+    public async Task<Work?> GetAsync(Stuffer stuffer, CancellationToken cancellationToken)
+    {
+        var work = await context.Works
+            .FirstOrDefaultAsync(x => x.Stuffer != null &&
+                                      x.StufferId == stuffer.Id, cancellationToken);
         
         return work;
     }
@@ -130,6 +150,40 @@ public sealed class WorkRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
     
+    public async Task AddAsync(Work work, Bay bay, Picker picker, Pellet pellet, CancellationToken cancellationToken)
+    {
+        work.Bay = bay;
+        bay.Works.Add(work);
+        
+        work.Picker = picker;
+        picker.Work = work;
+
+        work.Pellet = pellet;
+        pellet.Work = work;
+        
+        await context.Works
+            .AddAsync(work, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task AddAsync(Work work, Bay bay, Stuffer stuffer, Pellet pellet, CancellationToken cancellationToken)
+    {
+        work.Bay = bay;
+        bay.Works.Add(work);
+        
+        work.Stuffer = stuffer;
+        stuffer.Work = work;
+
+        work.Pellet = pellet;
+        pellet.Work = work;
+        
+        await context.Works
+            .AddAsync(work, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
     public async Task RemoveAsync(Work work, CancellationToken cancellationToken)
     {
         // var dbWork = await Get()
@@ -156,6 +210,18 @@ public sealed class WorkRepository(
         if (bayStaff != null)
         {
             bayStaff.Work = null;
+        }
+        
+        var picker = await pickerRepository.GetAsync(work, cancellationToken);
+        if (picker != null)
+        {
+            picker.Work = null;
+        }
+        
+        var stuffer = await stufferRepository.GetAsync(work, cancellationToken);
+        if (stuffer != null)
+        {
+            stuffer.Work = null;
         }
         
         var pellet = await pelletRepository.GetAsync(work, cancellationToken);

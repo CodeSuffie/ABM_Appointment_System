@@ -11,28 +11,96 @@ namespace Services.StufferServices;
 public sealed class StufferStepper : IStepperService<Stuffer>
 {
     private readonly ILogger<StufferStepper> _logger;
+    private readonly HubShiftService _hubShiftService;
+    private readonly WorkRepository _workRepository;
+    private readonly WorkService _workService;
+    private readonly StufferService _stufferService;
     private readonly StufferRepository _stufferRepository;
     private readonly ModelState _modelState;
+    private readonly Histogram<int> _workingStufferHistogram;
+    private readonly Histogram<int> _stuffingStufferHistogram;
     
     public StufferStepper(
         ILogger<StufferStepper> logger,
+        HubShiftService hubShiftService,
+        WorkRepository workRepository,
+        WorkService workService,
+        StufferService stufferService,
         StufferRepository stufferRepository,
         ModelState modelState,
         Meter meter)
     {
         _logger = logger;
+        _hubShiftService = hubShiftService;
+        _workRepository = workRepository;
+        _workService = workService;
+        _stufferService = stufferService;
         _stufferRepository = stufferRepository;
         _modelState = modelState;
+        
+        _workingStufferHistogram = meter.CreateHistogram<int>("working-stuffer", "Stuffer", "#Stuffer Working.");
+        _stuffingStufferHistogram = meter.CreateHistogram<int>("fetch-stuffer", "Stuffer", "#Stuffer Working on a Stuff.");
     }
     
-    public Task DataCollectAsync(CancellationToken cancellationToken)
+    public async Task DataCollectAsync(CancellationToken cancellationToken)
     {
-        return Task.CompletedTask;
+        _logger.LogDebug("Handling Data Collection for Stuffer in this Step \n({Step})",
+            _modelState.ModelTime);
+        
+        var working = await _stufferRepository.CountAsync(_modelState.ModelTime, cancellationToken);
+        _workingStufferHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+
+        var fetching = await _stufferRepository.CountAsync(cancellationToken);
+        _stuffingStufferHistogram.Record(fetching, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        
+        _logger.LogDebug("Finished handling Data Collection for Stuffer in this Step \n({Step})",
+            _modelState.ModelTime);
     }
     
-    public Task StepAsync(Stuffer stuffer, CancellationToken cancellationToken)
+    public async Task StepAsync(Stuffer stuffer, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var work = await _workRepository.GetAsync(stuffer, cancellationToken);
+        
+        if (work == null)
+        {
+            _logger.LogInformation("Stuffer \n({@Stuffer})\n does not have active Work assigned in this Step \n({Step})",
+                stuffer,
+                _modelState.ModelTime);
+            
+            var shift = await _hubShiftService.GetCurrentAsync(stuffer, cancellationToken);
+            if (shift == null)
+            {
+                _logger.LogInformation("Stuffer \n({@Stuffer})\n is not working in this Step \n({Step})",
+                    stuffer,
+                    _modelState.ModelTime);
+                
+                _logger.LogDebug("Stuffer \n({@Stuffer})\n will remain idle in this Step \n({Step})",
+                    stuffer,
+                    _modelState.ModelTime);
+                
+                return;
+            }
+            
+            _logger.LogDebug("Alerting Free for this Stuffer \n({@Stuffer})\n in this Step \n({Step})",
+                stuffer,
+                _modelState.ModelTime);
+            await _stufferService.AlertFreeAsync(stuffer, cancellationToken);
+            
+            return;
+        }
+        
+        if (_workService.IsWorkCompleted(work))
+        {
+            _logger.LogInformation("Stuffer \n({@Stuffer})\n just completed assigned Work \n({@Work})\n in this Step \n({Step})",
+                stuffer,
+                work,
+                _modelState.ModelTime);
+            
+            _logger.LogDebug("Alerting Work Completed for this Stuffer \n({@Stuffer})\n in this Step \n({Step})",
+                stuffer,
+                _modelState.ModelTime);
+            await _stufferService.AlertWorkCompleteAsync(stuffer, cancellationToken);
+        }
     }
 
     public async Task StepAsync(CancellationToken cancellationToken)

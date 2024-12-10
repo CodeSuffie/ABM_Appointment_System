@@ -116,19 +116,19 @@ public sealed class BayService(
     
     public async Task UpdateFlagsAsync(Bay bay, CancellationToken cancellationToken)
     {
-        var trip = await tripRepository.GetAsync(bay, cancellationToken);
-        if (trip == null)
-        {
-            logger.LogInformation("Bay ({@Bay}) did not have a Trip assigned.",
-                bay);
-            
-            logger.LogDebug("Removing all BayFlags from thisBay ({@Bay}).",
-                bay);
-            await bayRepository.RemoveAsync(bay, BayFlags.DroppedOff | BayFlags.Fetched | BayFlags.PickedUp, cancellationToken);
-            return;
-        }
+        // var trip = await tripRepository.GetAsync(bay, cancellationToken);
+        // if (trip == null)
+        // {
+        //     logger.LogInformation("Bay ({@Bay}) did not have a Trip assigned.",
+        //         bay);
+        //     
+        //     logger.LogDebug("Removing all BayFlags from thisBay ({@Bay}).",
+        //         bay);
+        //     await bayRepository.RemoveAsync(bay, BayFlags.DroppedOff | BayFlags.Fetched | BayFlags.PickedUp, cancellationToken);
+        //     return;
+        // }
 
-        if (! await pelletService.HasDropOffPelletsAsync(trip, cancellationToken))
+        if (! await pelletService.HasDropOffPelletsAsync(bay, cancellationToken))
         {
             await bayRepository.AddAsync(bay, BayFlags.DroppedOff, cancellationToken);
         }
@@ -137,7 +137,7 @@ public sealed class BayService(
             await bayRepository.RemoveAsync(bay, BayFlags.DroppedOff, cancellationToken);
         }
         
-        if (! await pelletService.HasFetchPelletsAsync(trip, cancellationToken))
+        if (! await pelletService.HasFetchPelletsAsync(bay, cancellationToken))
         {
             await bayRepository.AddAsync(bay, BayFlags.Fetched, cancellationToken);
         }
@@ -146,7 +146,7 @@ public sealed class BayService(
             await bayRepository.RemoveAsync(bay, BayFlags.Fetched, cancellationToken);
         }
         
-        if (! await pelletService.HasPickUpPelletsAsync(trip, cancellationToken))
+        if (! await pelletService.HasPickUpPelletsAsync(bay, cancellationToken))
         {
             await bayRepository.AddAsync(bay, BayFlags.PickedUp, cancellationToken);
         }

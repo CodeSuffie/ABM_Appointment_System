@@ -380,12 +380,21 @@ public sealed class PelletService
         await PickUp(pellet, bay, truck, cancellationToken);
     }
     
-    public async Task<List<Pellet>> GetDropOffPelletsAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task<List<Pellet>> GetDropOffPelletsAsync(Bay bay, CancellationToken cancellationToken)
     {
+        var trip = await _tripRepository.GetAsync(bay, cancellationToken);
+        if (trip == null)
+        {
+            _logger.LogError("Bay \n({@Bay})\n did not have a Trip assigned.",
+                bay);
+            
+            return [];
+        }
+        
         var dropOffLoad = await _loadRepository.GetAsync(trip, LoadType.DropOff, cancellationToken);
         if (dropOffLoad == null)
         {
-            _logger.LogInformation("Trip ({@Trip}) did not have a Load assigned to Drop-Off.",
+            _logger.LogInformation("Trip \n({@Trip})\n did not have a Load assigned to Drop-Off.",
                 trip);
             
             return [];
@@ -413,22 +422,23 @@ public sealed class PelletService
         return dropOffPellets;
     }
 
-    public async Task<List<Pellet>> GetFetchPelletsAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task<List<Pellet>> GetFetchPelletsAsync(Bay bay, CancellationToken cancellationToken)
     {
-        var pickUpLoad = await _loadRepository.GetAsync(trip, LoadType.PickUp, cancellationToken);
-        if (pickUpLoad == null)
+        var trip = await _tripRepository.GetAsync(bay, cancellationToken);
+        if (trip == null)
         {
-            _logger.LogInformation("Trip ({@Trip}) did not have a Load assigned to Pick-Up.",
-                trip);
+            _logger.LogError("Bay \n({@Bay})\n did not have a Trip assigned.",
+                bay);
             
             return [];
         }
-
-        var bay = await _bayRepository.GetAsync(trip, cancellationToken);
-        if (bay == null)
+        
+        var pickUpLoad = await _loadRepository.GetAsync(trip, LoadType.PickUp, cancellationToken);
+        if (pickUpLoad == null)
         {
-            _logger.LogError("Trip ({@Trip}) did not have a Bay assigned.",
-                trip);
+            _logger.LogInformation("Trip \n({@Trip})\n at Bay \n({@Bay})\n did not have a Load assigned to Pick-Up.",
+                trip,
+                bay);
             
             return [];
         }
@@ -456,8 +466,17 @@ public sealed class PelletService
         return fetchPellets;
     }
 
-    public async Task<List<Pellet>> GetPickUpPelletsAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task<List<Pellet>> GetPickUpPelletsAsync(Bay bay, CancellationToken cancellationToken)
     {
+        var trip = await _tripRepository.GetAsync(bay, cancellationToken);
+        if (trip == null)
+        {
+            _logger.LogError("Bay \n({@Bay})\n did not have a Trip assigned.",
+                bay);
+            
+            return [];
+        }
+        
         var pickUpLoad = await _loadRepository.GetAsync(trip, LoadType.PickUp, cancellationToken);
         if (pickUpLoad == null)
         {
@@ -490,9 +509,9 @@ public sealed class PelletService
         return pickUpPellets;
     }
 
-    public async Task<Pellet?> GetNextDropOffAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task<List<Pellet>> GetAvailableDropOffPelletsAsync(Bay bay, CancellationToken cancellationToken)
     {
-        var pellets = await GetDropOffPelletsAsync(trip, cancellationToken);
+        var pellets = await GetDropOffPelletsAsync(bay, cancellationToken);
         var dropOffPellets = new List<Pellet>();
         
         foreach (var pellet in pellets)
@@ -505,12 +524,12 @@ public sealed class PelletService
             }
         }
 
-        return dropOffPellets.Count <= 0 ? null : dropOffPellets[0];
+        return dropOffPellets;
     }
-
-    public async Task<Pellet?> GetNextFetchAsync(Trip trip, CancellationToken cancellationToken)
+    
+    public async Task<List<Pellet>> GetAvailableFetchPelletsAsync(Bay bay, CancellationToken cancellationToken)
     {
-        var pellets = await GetFetchPelletsAsync(trip, cancellationToken);
+        var pellets = await GetFetchPelletsAsync(bay, cancellationToken);
         var fetchPellets = new List<Pellet>();
         
         foreach (var pellet in pellets)
@@ -523,21 +542,12 @@ public sealed class PelletService
             }
         }
 
-        return fetchPellets.Count <= 0 ? null : fetchPellets[0];
+        return fetchPellets;
     }
     
-    public async Task<Pellet?> GetNextPickUpAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task<List<Pellet>> GetAvailablePickUpPelletsAsync(Bay bay, CancellationToken cancellationToken)
     {
-        var pellets = await GetPickUpPelletsAsync(trip, cancellationToken);
-
-        var bay = await _bayRepository.GetAsync(trip, cancellationToken);
-        if (bay == null)
-        {
-            _logger.LogError("Trip ({@Trip}) did not have a Bay assigned.",
-                trip);
-            
-            return null;
-        }
+        var pellets = await GetPickUpPelletsAsync(bay, cancellationToken);
 
         pellets = pellets
             .Where(p => p.BayId == bay.Id)
@@ -555,22 +565,40 @@ public sealed class PelletService
             }
         }
 
-        return pickUpPellets.Count <= 0 ? null : pickUpPellets[0];
+        return pickUpPellets;
     }
 
-    public async Task<bool> HasDropOffPelletsAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task<Pellet?> GetNextDropOffAsync(Bay bay, CancellationToken cancellationToken)
     {
-        return (await GetDropOffPelletsAsync(trip, cancellationToken)).Count > 0;
+        var pellets = await GetAvailableDropOffPelletsAsync(bay, cancellationToken);
+        return pellets.Count <= 0 ? null : pellets[0];
     }
 
-    public async Task<bool> HasFetchPelletsAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task<Pellet?> GetNextFetchAsync(Bay bay, CancellationToken cancellationToken)
     {
-        return (await GetFetchPelletsAsync(trip, cancellationToken)).Count > 0;
+        var pellets = await GetAvailableFetchPelletsAsync(bay, cancellationToken);
+        return pellets.Count <= 0 ? null : pellets[0];
+    }
+    
+    public async Task<Pellet?> GetNextPickUpAsync(Bay bay, CancellationToken cancellationToken)
+    {
+        var pellets = await GetAvailablePickUpPelletsAsync(bay, cancellationToken);
+        return pellets.Count <= 0 ? null : pellets[0];
     }
 
-    public async Task<bool> HasPickUpPelletsAsync(Trip trip, CancellationToken cancellationToken)
+    public async Task<bool> HasDropOffPelletsAsync(Bay bay, CancellationToken cancellationToken)
     {
-        return (await GetPickUpPelletsAsync(trip, cancellationToken)).Count > 0;
+        return (await GetDropOffPelletsAsync(bay, cancellationToken)).Count > 0;
+    }
+
+    public async Task<bool> HasFetchPelletsAsync(Bay bay, CancellationToken cancellationToken)
+    {
+        return (await GetFetchPelletsAsync(bay, cancellationToken)).Count > 0;
+    }
+
+    public async Task<bool> HasPickUpPelletsAsync(Bay bay, CancellationToken cancellationToken)
+    {
+        return (await GetPickUpPelletsAsync(bay, cancellationToken)).Count > 0;
     }
 
     public async Task CompleteAsync(Trip trip, CancellationToken cancellationToken)

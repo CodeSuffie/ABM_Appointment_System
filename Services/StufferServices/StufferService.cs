@@ -41,4 +41,14 @@ public sealed class StufferService(
 
         return stuffer;
     }
+
+    public async Task AlertWorkCompleteAsync(Stuffer stuffer, CancellationToken cancellationToken)
+    {
+        //throw new NotImplementedException();
+    }
+
+    public async Task AlertFreeAsync(Stuffer stuffer, CancellationToken cancellationToken)
+    {
+        //throw new NotImplementedException();
+    }
 }

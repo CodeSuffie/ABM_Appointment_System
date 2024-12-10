@@ -12,4 +12,20 @@ public sealed class HubShiftRepository(ModelDbContext context)
 
         return shifts;
     }
+    
+    public IQueryable<HubShift> Get(Picker picker)
+    {
+        var shifts = context.HubShifts
+            .Where(a => a.PickerId == picker.Id);
+
+        return shifts;
+    }
+    
+    public IQueryable<HubShift> Get(Stuffer stuffer)
+    {
+        var shifts = context.HubShifts
+            .Where(a => a.StufferId == stuffer.Id);
+
+        return shifts;
+    }
 }

@@ -12,6 +12,7 @@ public abstract class ModelConfigBase
     public abstract TimeSpan DropOffWorkTime { get; }
     public abstract TimeSpan PickUpWorkTime { get; }
     public abstract TimeSpan FetchWorkTime { get; }
+    public abstract TimeSpan StuffWorkTime { get; }
     
     public abstract int MaxX { get; }
     public abstract int MaxY { get; }
@@ -35,6 +36,7 @@ public class ModelConfig : ModelConfigBase
     public override TimeSpan DropOffWorkTime { get; } = TimeSpan.FromMinutes(9);
     public override TimeSpan PickUpWorkTime { get; } = TimeSpan.FromMinutes(9);
     public override TimeSpan FetchWorkTime { get; } = TimeSpan.FromMinutes(9);
+    public override TimeSpan StuffWorkTime { get; } = TimeSpan.FromMinutes(9);
     
     public override int MaxX { get; } = 200;
     public override int MaxY { get; } = 200;

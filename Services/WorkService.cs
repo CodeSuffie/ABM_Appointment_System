@@ -33,6 +33,7 @@ public sealed class WorkService(
             WorkType.DropOff => modelState.ModelConfig.DropOffWorkTime,
             WorkType.PickUp => modelState.ModelConfig.PickUpWorkTime,
             WorkType.Fetch => modelState.ModelConfig.FetchWorkTime,
+            WorkType.Stuff => modelState.ModelConfig.StuffWorkTime,
             _ => null
         };
     }
@@ -77,5 +78,19 @@ public sealed class WorkService(
         var work = GetNew(workType);
 
         await workRepository.AddAsync(work, bay, bayStaff, pellet, cancellationToken);
+    }
+
+    public async Task AddAsync(Bay bay, Picker picker, Pellet pellet, CancellationToken cancellationToken)
+    {
+        var work = GetNew(WorkType.Fetch);
+
+        await workRepository.AddAsync(work, bay, picker, pellet, cancellationToken);
+    }
+    
+    public async Task AddAsync(Bay bay, Stuffer stuffer, Pellet pellet, CancellationToken cancellationToken)
+    {
+        var work = GetNew(WorkType.Stuff);
+
+        await workRepository.AddAsync(work, bay, stuffer, pellet, cancellationToken);
     }
 }

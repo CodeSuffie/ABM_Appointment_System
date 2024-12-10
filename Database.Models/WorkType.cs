@@ -9,7 +9,8 @@ public enum WorkType
     WaitBay,
     Bay,
     DropOff,
-    Fetch,
     PickUp,
     TravelHome,
+    Fetch,
+    Stuff,
 }

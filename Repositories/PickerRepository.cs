@@ -1,5 +1,6 @@
 using Database;
 using Database.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Repositories;
 
@@ -10,6 +11,14 @@ public sealed class PickerRepository(ModelDbContext context)
         var pickers = context.Pickers;
 
         return pickers;
+    }
+
+    public async Task<Picker?> GetAsync(Work work, CancellationToken cancellationToken)
+    {
+        var picker = await Get()
+            .FirstOrDefaultAsync(pi => pi.Id == work.PickerId, cancellationToken);
+
+        return picker;
     }
 
     public async Task AddAsync(Picker picker, CancellationToken cancellationToken)
@@ -26,5 +35,21 @@ public sealed class PickerRepository(ModelDbContext context)
         hubShift.Picker = picker;
         
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task<int> CountAsync(TimeSpan time, CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(pi => pi.Shifts
+                .Any(sh => sh.StartTime <= time && 
+                           sh.StartTime + sh.Duration >= time))
+            .CountAsync(cancellationToken);
+    }
+
+    public Task<int> CountAsync(CancellationToken cancellationToken)
+    {
+        return Get()
+            .Where(pi => pi.Work != null)
+            .CountAsync(cancellationToken);
     }
 }

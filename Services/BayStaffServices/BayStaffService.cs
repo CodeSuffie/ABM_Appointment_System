@@ -20,7 +20,6 @@ public sealed class BayStaffService
     private readonly TripRepository _tripRepository;
     private readonly BayShiftService _bayShiftService;
     private readonly BayStaffRepository _bayStaffRepository;
-    private readonly Counter<int> _fetchMissCounter;
     
     public BayStaffService(
         ILogger<BayStaffService> logger,
@@ -47,7 +46,6 @@ public sealed class BayStaffService
         _bayStaffRepository = bayStaffRepository;
 
         meter.CreateCounter<int>("pick-up-miss", "PickUpMiss", "#PickUp Loads Missed.");
-        _fetchMissCounter = meter.CreateCounter<int>("fetch-miss", "FetchMiss", "#PickUp Load not fetched yet.");
     }
     
     public async Task<BayStaff?> GetNewObjectAsync(CancellationToken cancellationToken)
@@ -105,11 +103,6 @@ public sealed class BayStaffService
             case WorkType.DropOff:
                 await _pelletService.AlertDroppedOffAsync(pellet, bay, cancellationToken);
                 break;
-                
-                
-            case WorkType.Fetch:
-                await _pelletService.AlertFetchedAsync(pellet, bay, cancellationToken);
-                break;
             
             case WorkType.PickUp:
                 await _pelletService.AlertPickedUpAsync(pellet, trip, cancellationToken);
@@ -151,27 +144,19 @@ public sealed class BayStaffService
 
         if (!startedDropOff)
         {
-            _logger.LogDebug("Try to start Fetch Work for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
+            _logger.LogDebug("Try to start Pick-Up Work for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
                 bayStaff,
                 bay);
-            var startedFetch = await TryStartFetchAsync(trip, bayStaff, bay, cancellationToken);
+            var startedPickUp = await TryStartPickUpAsync(trip, bayStaff, bay, cancellationToken);
             
-            if (!startedFetch)
+            if (!startedPickUp)
             {
-                _logger.LogDebug("Try to start Pick-Up Work for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
+                _logger.LogInformation("BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with assigned BayFlag {@BayFlag}" +
+                                       "and can therefore remain idle in this Step \n({Step})",
                     bayStaff,
-                    bay);
-                var startedPickUp = await TryStartPickUpAsync(trip, bayStaff, bay, cancellationToken);
-                
-                if (!startedPickUp)
-                {
-                    _logger.LogInformation("BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with assigned BayFlag {@BayFlag}" +
-                                           "and can therefore remain idle in this Step \n({Step})",
-                        bayStaff,
-                        bay,
-                        BayFlags.PickedUp,
-                        _modelState.ModelTime);
-                }
+                    bay,
+                    BayFlags.PickedUp,
+                    _modelState.ModelTime);
             }
         }
     }
@@ -190,7 +175,7 @@ public sealed class BayStaffService
             return false;
         }
 
-        var pellet = await _pelletService.GetNextDropOffAsync(trip, cancellationToken);
+        var pellet = await _pelletService.GetNextDropOffAsync(bay, cancellationToken);
         if (pellet == null)
         {
             _logger.LogInformation("Trip \n({@Trip})\n did not have any more Pellets assigned to Drop-Off.",
@@ -210,41 +195,6 @@ public sealed class BayStaffService
 
         return true;
     }
-
-    private async Task<bool> TryStartFetchAsync(Trip trip, BayStaff bayStaff, Bay bay, CancellationToken cancellationToken)
-    {
-        if (bay.BayFlags.HasFlag(BayFlags.Fetched))
-        {
-            _logger.LogInformation(
-                "BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with Fetch work completed " +
-                "and can therefore not start Fetch Work this Step \n({Step})",
-                bayStaff,
-                bay,
-                _modelState.ModelTime);
-
-            return false;
-        }
-        
-        var pellet = await _pelletService.GetNextFetchAsync(trip, cancellationToken);
-        if (pellet == null)
-        {
-            _logger.LogInformation("Trip \n({@Trip})\n did not have any more Pellets assigned to Fetch.",
-                trip);
-            
-            _logger.LogInformation("Fetch Work could not be started for this Trip \n({@Trip}).",
-                trip);
-            
-            return false;
-        }
-            
-        _logger.LogDebug("Starting Fetch Work for this BayStaff \n({@BayStaff})\n for this Trip \n({@Trip})\n for this Pellet \n({@Pellet})",
-            bayStaff,
-            trip,
-            pellet);
-        await StartFetchAsync(bayStaff, pellet, bay, cancellationToken);
-            
-        return true;
-    }
     
     private async Task<bool> TryStartPickUpAsync(Trip trip, BayStaff bayStaff, Bay bay, CancellationToken cancellationToken)
     {
@@ -260,7 +210,7 @@ public sealed class BayStaffService
             return false;
         }
         
-        var pellet = await _pelletService.GetNextPickUpAsync(trip, cancellationToken);
+        var pellet = await _pelletService.GetNextPickUpAsync(bay, cancellationToken);
         if (pellet == null)
         {
             _logger.LogInformation("Trip \n({@Trip})\n did not have any more Pellets assigned to Pick-Up.",
@@ -288,17 +238,6 @@ public sealed class BayStaffService
             bayStaff,
             bay);
         await _workService.AddAsync(bay, bayStaff, pellet, WorkType.DropOff, cancellationToken);
-    }
-    
-    public async Task StartFetchAsync(BayStaff bayStaff, Pellet pellet, Bay bay, CancellationToken cancellationToken)
-    {
-        _logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
-            WorkType.Fetch,
-            bayStaff,
-            bay);
-        await _workService.AddAsync(bay, bayStaff, pellet, WorkType.Fetch, cancellationToken);
-        
-        _fetchMissCounter.Add(1, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
     }
 
     public async Task StartPickUpAsync(BayStaff bayStaff, Pellet pellet, Bay bay, CancellationToken cancellationToken)
