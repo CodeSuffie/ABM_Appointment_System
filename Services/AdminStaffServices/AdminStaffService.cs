@@ -14,7 +14,7 @@ public sealed class AdminStaffService(
     TripRepository tripRepository,
     TripService tripService,
     WorkRepository workRepository,
-    AdminShiftService adminShiftService,
+    HubShiftService hubShiftService,
     AdminStaffRepository adminStaffRepository,
     ModelState modelState)
 {
@@ -35,14 +35,14 @@ public sealed class AdminStaffService(
         {
             Hub = hub,
             WorkChance = modelState.AgentConfig.AdminStaffAverageWorkDays,
-            AverageShiftLength = modelState.AgentConfig.AdminShiftAverageLength
+            AverageShiftLength = modelState.AgentConfig.AdminHubShiftAverageLength
         };
 
         await adminStaffRepository.AddAsync(adminStaff, cancellationToken);
         
-        logger.LogDebug("Setting AdminShifts for this AdminStaff \n({@AdminStaff})",
+        logger.LogDebug("Setting HubShifts for this AdminStaff \n({@AdminStaff})",
             adminStaff);
-        await adminShiftService.GetNewObjectsAsync(adminStaff, cancellationToken);
+        await hubShiftService.GetNewObjectsAsync(adminStaff, cancellationToken);
 
         return adminStaff;
     }

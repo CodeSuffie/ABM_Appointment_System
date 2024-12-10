@@ -2,11 +2,9 @@ using System.Diagnostics.Metrics;
 using Database.Models;
 using Microsoft.Extensions.Logging;
 using Repositories;
-using Services.BayServices;
 using Services.HubServices;
 using Services.ModelServices;
 using Services.PelletServices;
-using SQLitePCL;
 
 namespace Services.BayStaffServices;
 
@@ -18,12 +16,10 @@ public sealed class BayStaffService
     private readonly PelletRepository _pelletRepository;
     private readonly HubService _hubService;
     private readonly BayRepository _bayRepository;
-    private readonly BayService _bayService;
     private readonly WorkService _workService;
     private readonly TripRepository _tripRepository;
     private readonly BayShiftService _bayShiftService;
     private readonly BayStaffRepository _bayStaffRepository;
-    private readonly Counter<int> _pickUpMissCounter;
     private readonly Counter<int> _fetchMissCounter;
     
     public BayStaffService(
@@ -33,7 +29,6 @@ public sealed class BayStaffService
         PelletRepository pelletRepository,
         HubService hubService,
         BayRepository bayRepository,
-        BayService bayService,
         WorkService workService,
         TripRepository tripRepository,
         BayShiftService bayShiftService,
@@ -46,13 +41,12 @@ public sealed class BayStaffService
         _pelletRepository = pelletRepository;
         _hubService = hubService;
         _bayRepository = bayRepository;
-        _bayService = bayService;
         _workService = workService;
         _tripRepository = tripRepository;
         _bayShiftService = bayShiftService;
         _bayStaffRepository = bayStaffRepository;
 
-        _pickUpMissCounter = meter.CreateCounter<int>("pick-up-miss", "PickUpMiss", "#PickUp Loads Missed.");
+        meter.CreateCounter<int>("pick-up-miss", "PickUpMiss", "#PickUp Loads Missed.");
         _fetchMissCounter = meter.CreateCounter<int>("fetch-miss", "FetchMiss", "#PickUp Load not fetched yet.");
     }
     

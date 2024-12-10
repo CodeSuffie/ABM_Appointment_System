@@ -1,12 +1,7 @@
 using System.Diagnostics.Metrics;
-using Database.Models;
 using Microsoft.Extensions.Logging;
-using Repositories;
 using Services.Abstractions;
-using Services.BayServices;
-using Services.HubServices;
 using Services.ModelServices;
-using Services.TruckCompanyServices;
 
 namespace Services.PelletServices;
 

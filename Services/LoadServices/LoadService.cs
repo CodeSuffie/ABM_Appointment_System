@@ -1,12 +1,10 @@
 using System.Diagnostics.Metrics;
 using Database.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.HubServices;
 using Services.ModelServices;
 using Services.PelletServices;
-using Services.TruckCompanyServices;
 
 namespace Services.LoadServices;
 

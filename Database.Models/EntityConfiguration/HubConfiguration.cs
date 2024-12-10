@@ -19,6 +19,15 @@ public class HubConfiguration : IEntityTypeConfiguration<Hub>
             .WithOne(x => x.Hub)
             .HasForeignKey(x => x.HubId);
         
+        builder.HasMany(x => x.Pickers)
+            .WithOne(x => x.Hub)
+            .HasForeignKey(x => x.HubId);
+        
+        // TODO: Stuffer
+        // builder.HasMany(x => x.Stuffers)
+        //     .WithOne(x => x.Hub)
+        //     .HasForeignKey(x => x.HubId);
+        
         builder.HasOne(x => x.Warehouse)
             .WithOne(x => x.Hub)
             .HasForeignKey<Warehouse>(x => x.HubId);

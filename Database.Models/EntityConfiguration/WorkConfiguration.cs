@@ -18,6 +18,15 @@ public class WorkConfiguration : IEntityTypeConfiguration<Work>
         builder.HasOne(x => x.BayStaff)
             .WithOne(x => x.Work)
             .HasForeignKey<Work>(x => x.BayStaffId);
+        
+        builder.HasOne(x => x.Picker)
+            .WithOne(x => x.Work)
+            .HasForeignKey<Work>(x => x.PickerId);
+        
+        // TODO: Stuffer
+        // builder.HasOne(x => x.Stuffer)
+        //     .WithOne(x => x.Work)
+        //     .HasForeignKey<Work>(x => x.StufferId);
 
         builder.HasOne(x => x.Bay)
             .WithMany(x => x.Works)

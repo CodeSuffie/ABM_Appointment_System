@@ -18,6 +18,7 @@ using Services.LoadServices;
 using Services.ModelServices;
 using Services.ParkingSpotServices;
 using Services.PelletServices;
+using Services.PickerServices;
 using Services.TripServices;
 using Services.TruckCompanyServices;
 using Services.TruckServices;
@@ -77,7 +78,18 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPriorityInitializationService,  PelletInitialize>();
         services.AddScoped<IStepperService,                 PelletStepper>();
         services.AddScoped<PelletRepository>();
-
+        
+        services.AddScoped<PickerService>();
+        services.AddScoped<IPriorityInitializationService,  PickerInitialize>();
+        services.AddScoped<IStepperService,                 PickerStepper>();
+        services.AddScoped<PickerRepository>();
+        
+        
+        // services.AddScoped<StufferService>();
+        // services.AddScoped<IPriorityInitializationService,  StufferInitialize>();
+        // services.AddScoped<IStepperService,                 StufferStepper>();
+        // services.AddScoped<StufferRepository>();
+        
         services.AddScoped<TripService>();
         services.AddScoped<IStepperService,                 TripStepper>();
         services.AddScoped<TripRepository>();
@@ -95,8 +107,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStepperService,                 LoadStepper>();
         services.AddScoped<LoadRepository>();
 
-        services.AddScoped<AdminShiftService>();
-        services.AddScoped<AdminShiftRepository>();
+        services.AddScoped<HubShiftService>();
+        services.AddScoped<HubShiftRepository>();
 
         services.AddScoped<BayShiftService>();
         services.AddScoped<BayShiftRepository>();

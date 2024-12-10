@@ -37,10 +37,10 @@ public sealed class AdminStaffRepository(ModelDbContext context)
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task AddAsync(AdminStaff adminStaff, AdminShift adminShift, CancellationToken cancellationToken)
+    public async Task AddAsync(AdminStaff adminStaff, HubShift hubShift, CancellationToken cancellationToken)
     {
-        adminStaff.Shifts.Add(adminShift);
-        adminShift.AdminStaff = adminStaff;
+        adminStaff.Shifts.Add(hubShift);
+        hubShift.AdminStaff = adminStaff;
         
         await context.SaveChangesAsync(cancellationToken);
     }

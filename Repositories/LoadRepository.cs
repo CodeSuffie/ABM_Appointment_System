@@ -4,9 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Repositories;
 
-public sealed class LoadRepository(
-    ModelDbContext context,
-    BayRepository bayRepository)
+public sealed class LoadRepository(ModelDbContext context)
 {
     public IQueryable<Load> Get()
     {

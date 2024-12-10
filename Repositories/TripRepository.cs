@@ -12,8 +12,7 @@ public sealed class TripRepository(
     ParkingSpotRepository parkingSpotRepository,
     AdminStaffRepository adminStaffRepository,
     TruckRepository truckRepository,
-    HubRepository hubRepository,
-    LoadRepository loadRepository)
+    HubRepository hubRepository)
 {
     public IQueryable<Trip> Get()
     {

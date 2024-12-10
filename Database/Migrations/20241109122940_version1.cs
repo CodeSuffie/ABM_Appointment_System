@@ -316,7 +316,7 @@ namespace Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AdminShifts",
+                name: "HubShifts",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
@@ -366,7 +366,7 @@ namespace Database.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_AdminShifts_AdminStaffId",
-                table: "AdminShifts",
+                table: "HubShifts",
                 column: "AdminStaffId");
 
             migrationBuilder.CreateIndex(
@@ -484,7 +484,7 @@ namespace Database.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "AdminShifts");
+                name: "HubShifts");
 
             migrationBuilder.DropTable(
                 name: "BayShifts");

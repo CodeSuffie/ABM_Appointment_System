@@ -14,7 +14,7 @@ public sealed class AdminStaffStepper : IStepperService<AdminStaff>
     private readonly AdminStaffService _adminStaffService;
     private readonly WorkRepository _workRepository;
     private readonly WorkService _workService;
-    private readonly AdminShiftService _adminShiftService;
+    private readonly HubShiftService _hubShiftService;
     private readonly AdminStaffRepository _adminStaffRepository;
     private readonly ModelState _modelState;
     private readonly Histogram<int> _workingAdminStaffHistogram;
@@ -25,7 +25,7 @@ public sealed class AdminStaffStepper : IStepperService<AdminStaff>
         AdminStaffService adminStaffService,
         WorkRepository workRepository,
         WorkService workService,
-        AdminShiftService adminShiftService,
+        HubShiftService hubShiftService,
         AdminStaffRepository adminStaffRepository,
         ModelState modelState,
         Meter meter)
@@ -34,7 +34,7 @@ public sealed class AdminStaffStepper : IStepperService<AdminStaff>
         _adminStaffService = adminStaffService;
         _workRepository = workRepository;
         _workService = workService;
-        _adminShiftService = adminShiftService;
+        _hubShiftService = hubShiftService;
         _adminStaffRepository = adminStaffRepository;
         _modelState = modelState;
 
@@ -67,7 +67,7 @@ public sealed class AdminStaffStepper : IStepperService<AdminStaff>
                              adminStaff,
                              _modelState.ModelTime);
             
-            var shift = await _adminShiftService.GetCurrentAsync(adminStaff, cancellationToken);
+            var shift = await _hubShiftService.GetCurrentAsync(adminStaff, cancellationToken);
             if (shift == null)
             {
                 _logger.LogInformation("AdminStaff \n({@AdminStaff})\n is not working in this Step \n({Step})",

@@ -21,10 +21,13 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
     
     public DbSet<AdminStaff> AdminStaffs { get; set; }
     public DbSet<BayStaff> BayStaffs { get; set; }
+    public DbSet<Picker> Pickers { get; set; }
+    // TODO: Stuffer
+    // public DbSet<Stuffer> Stuffers { get; set; }
     
     public DbSet<OperatingHour> OperatingHours { get; set; }
     
-    public DbSet<AdminShift> AdminShifts { get; set; }
+    public DbSet<HubShift> HubShifts { get; set; }
     public DbSet<BayShift> BayShifts { get; set; }
     
     public DbSet<Work> Works { get; set; }
@@ -52,10 +55,13 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
         
         modelBuilder.ApplyConfiguration(new AdminStaffConfiguration());
         modelBuilder.ApplyConfiguration(new BayStaffConfiguration());
+        modelBuilder.ApplyConfiguration(new PickerConfiguration());
+        // TODO: Stuffer
+        // modelBuilder.ApplyConfiguration(new StufferConfiguration());
         
         modelBuilder.ApplyConfiguration(new OperatingHourConfiguration());
         
-        modelBuilder.ApplyConfiguration(new AdminShiftConfiguration());
+        modelBuilder.ApplyConfiguration(new HubShiftConfiguration());
         modelBuilder.ApplyConfiguration(new BayShiftConfiguration());
         
         modelBuilder.ApplyConfiguration(new WorkConfiguration());

@@ -2,7 +2,6 @@ using System.Diagnostics.Metrics;
 using Database.Models;
 using Microsoft.Extensions.Logging;
 using Repositories;
-using Services.BayServices;
 using Services.HubServices;
 using Services.ModelServices;
 using Services.TruckCompanyServices;
@@ -66,8 +65,6 @@ public sealed class PelletCreation
     
             _unclaimedPellets.Add(1);
         }
-
-        var truckCompanies = _truckCompanyRepository.Get();
     }
 
     public async Task AddNewWarehousePelletsAsync(int count, CancellationToken cancellationToken)

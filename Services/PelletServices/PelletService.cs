@@ -113,7 +113,7 @@ public sealed class PelletService
         }
             
         var pellets = allPellets
-            .OrderBy(x => _modelState
+            .OrderBy(_ => _modelState
                 .Random())
             .Take((int) count)
             .ToList();
@@ -149,7 +149,7 @@ public sealed class PelletService
         }
             
         var pellets = allPellets
-            .OrderBy(x => _modelState
+            .OrderBy(_ => _modelState
                 .Random())
             .Take((int) count)
             .ToList();

@@ -17,7 +17,7 @@ namespace Database.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
 
-            modelBuilder.Entity("Database.Models.AdminShift", b =>
+            modelBuilder.Entity("Database.Models.HubShift", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -36,7 +36,7 @@ namespace Database.Migrations
 
                     b.HasIndex("AdminStaffId");
 
-                    b.ToTable("AdminShifts");
+                    b.ToTable("HubShifts");
                 });
 
             modelBuilder.Entity("Database.Models.AdminStaff", b =>
@@ -375,7 +375,7 @@ namespace Database.Migrations
                     b.ToTable("Works");
                 });
 
-            modelBuilder.Entity("Database.Models.AdminShift", b =>
+            modelBuilder.Entity("Database.Models.HubShift", b =>
                 {
                     b.HasOne("Database.Models.AdminStaff", "AdminStaff")
                         .WithMany("Shifts")

@@ -13,14 +13,6 @@ internal static class LoggerFactory
     public static Logger CreateLogger()
     {
         return new LoggerConfiguration()
-                .Destructure.ByTransforming<AdminShift>(
-                    adsh => new 
-                    {
-                        Id = adsh.Id,
-                        StartTime = adsh.StartTime,
-                        Duration = adsh.Duration,
-                        AdminStaffId = adsh.AdminStaffId
-                    })
                 .Destructure.ByTransforming<AdminStaff>(
                     ads => new 
                     { 
@@ -80,6 +72,17 @@ internal static class LoggerFactory
                         // XLocation = h.XLocation,
                         // YLocation = h.YLocation
                     })
+                .Destructure.ByTransforming<HubShift>(
+                    adsh => new 
+                    {
+                        Id = adsh.Id,
+                        StartTime = adsh.StartTime,
+                        Duration = adsh.Duration,
+                        AdminStaffId = adsh.AdminStaffId,
+                        PickerId = adsh.AdminStaffId,
+                        // TODO: Stuffer
+                        // StufferId = adsh.AdminStaffId,
+                    })
                 .Destructure.ByTransforming<Load>(
                     l => new
                     {
@@ -114,6 +117,27 @@ internal static class LoggerFactory
                         WarehouseId = p.WarehouseId,
                         WorkId = p.WorkId
                     })
+                .Destructure.ByTransforming<Picker>(
+                    pi => new
+                    {
+                        Id = pi.Id,
+                        HubId = pi.HubId,
+                        Work = pi.Work,
+                        WorkChance = pi.WorkChance,
+                        AverageShiftLength = pi.AverageShiftLength,
+                        ShiftIds = pi.Shifts.Select(sh => sh.Id)
+                    })
+                // TODO: Stuffer
+                // .Destructure.ByTransforming<Stuffer>(
+                //     s => new
+                //     {
+                //         Id = s.Id,
+                //         HubId = s.HubId,
+                //         Work = s.Work,
+                //         WorkChance = s.WorkChance,
+                //         AverageShiftLength = s.AverageShiftLength,
+                //         ShiftIds = s.Shifts.Select(sh => sh.Id)
+                //     })
                 .Destructure.ByTransforming<Trip>(
                     tp => new
                     {

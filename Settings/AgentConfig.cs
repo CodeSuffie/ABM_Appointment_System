@@ -26,11 +26,19 @@ public abstract class AgentConfigBase
     
     public abstract int AdminStaffCount { get; }
     public abstract double AdminStaffAverageWorkDays { get; }
-    public abstract TimeSpan AdminShiftAverageLength { get; }
+    public abstract TimeSpan AdminHubShiftAverageLength { get; }
     
     public abstract int BayStaffCount { get; }
     public abstract double BayStaffAverageWorkDays { get; }
     public abstract TimeSpan BayShiftAverageLength { get; }
+    
+    public abstract int PickerCount { get; }
+    public abstract double PickerAverageWorkDays { get; }
+    public abstract TimeSpan PickerHubShiftAverageLength { get; }
+    
+    public abstract int StufferCount { get; }
+    public abstract double StufferAverageWorkDays { get; }
+    public abstract TimeSpan StufferHubShiftAverageLength { get; }
 }
 
 public class AgentConfig : AgentConfigBase
@@ -96,9 +104,17 @@ public class AgentConfig : AgentConfigBase
     
     public override int AdminStaffCount { get; } = 2;
     public override double AdminStaffAverageWorkDays { get; } = 1;
-    public override TimeSpan AdminShiftAverageLength { get; } = TimeSpan.FromHours(24);
+    public override TimeSpan AdminHubShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
     public override int BayStaffCount { get; } = 25;
     public override double BayStaffAverageWorkDays { get; } = 1;
     public override TimeSpan BayShiftAverageLength { get; } = TimeSpan.FromHours(24);
+    
+    public override int PickerCount { get; } = 10;
+    public override double PickerAverageWorkDays { get; } = 1;
+    public override TimeSpan PickerHubShiftAverageLength { get; } = TimeSpan.FromHours(24);
+    
+    public override int StufferCount { get; } = 10;
+    public override double StufferAverageWorkDays { get; } = 1;
+    public override TimeSpan StufferHubShiftAverageLength { get; } = TimeSpan.FromHours(24);
 }

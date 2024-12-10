@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
 using Services.ModelServices;
-using Services.PelletServices;
 
 namespace Services.BayServices;
 

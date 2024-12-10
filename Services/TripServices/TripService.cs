@@ -22,7 +22,6 @@ public sealed class TripService
     private readonly TruckCompanyRepository _truckCompanyRepository;
     private readonly WorkService _workService;
     private readonly PelletService _pelletService;
-    private readonly PelletRepository _pelletRepository;
 
     public TripService(ILogger<TripService> logger,
         LoadService loadService,
@@ -36,8 +35,7 @@ public sealed class TripService
         LocationService locationService,
         TruckCompanyRepository truckCompanyRepository,
         WorkService workService,
-        PelletService pelletService,
-        PelletRepository pelletRepository)
+        PelletService pelletService)
     {
         _logger = logger;
         _loadService = loadService;
@@ -52,7 +50,6 @@ public sealed class TripService
         _truckCompanyRepository = truckCompanyRepository;
         _workService = workService;
         _pelletService = pelletService;
-        _pelletRepository = pelletRepository;
     }
 
     public async Task<Trip?> GetNextAsync(Truck truck, CancellationToken cancellationToken)

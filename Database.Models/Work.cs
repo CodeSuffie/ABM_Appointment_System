@@ -18,6 +18,13 @@ public class Work
     public BayStaff? BayStaff { get; set; }
     public long? BayStaffId { get; set; }
     
+    public Picker? Picker { get; set; }
+    public long? PickerId { get; set; }
+    
+    // TODO: Stuffer
+    // public Stuffer? Stuffer { get; set; }
+    // public long? StufferId { get; set; }
+    
     public Bay? Bay { get; set; }
     public long? BayId { get; set; }
     
