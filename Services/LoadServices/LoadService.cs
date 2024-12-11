@@ -71,7 +71,11 @@ public sealed class LoadService
             truck);
         await _pelletService.SetPelletsAsync(load, truck.Capacity, cancellationToken);
 
-        return load;
+        if (load.Pellets.Count != 0) return load;
+        
+        await _loadRepository.RemoveAsync(load, cancellationToken);
+        return null;
+
     }
     
     public async Task<Load?> GetNewPickUpAsync(Truck truck, Hub hub, CancellationToken cancellationToken)
@@ -100,7 +104,10 @@ public sealed class LoadService
             hub);
         await _pelletService.SetPelletsAsync(load, truck.Capacity, cancellationToken);
 
-        return load;
+        if (load.Pellets.Count != 0) return load;
+        
+        await _loadRepository.RemoveAsync(load, cancellationToken);
+        return null;
     }
     
     public async Task<Load?> GetNewPickUpAsync(Truck truck, CancellationToken cancellationToken)

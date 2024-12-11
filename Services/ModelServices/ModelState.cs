@@ -4,9 +4,22 @@ namespace Services.ModelServices;
 
 public sealed class ModelState
 {
-    public TimeSpan ModelTime = new(0, 0, 0);
+    public TimeSpan ModelTime = new TimeSpan(0, 0, 0);
     public ModelConfigBase ModelConfig = new ModelConfig();
     public AgentConfigBase AgentConfig = new AgentConfig();
+    public AppointmentConfigBase? AppointmentConfig = null;
+
+    public void Initialize(
+        TimeSpan startTime,
+        ModelConfigBase modelConfig,
+        AgentConfigBase agentConfig,
+        AppointmentConfigBase? appointmentConfig)
+    {
+        ModelTime = startTime;
+        ModelConfig = modelConfig;
+        AgentConfig = agentConfig;
+        AppointmentConfig = ModelConfig.AppointmentSystemMode ? appointmentConfig : null;
+    }
     
     public double RandomDouble()
     {

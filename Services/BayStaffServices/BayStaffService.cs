@@ -22,6 +22,7 @@ public sealed class BayStaffService
     private readonly BayShiftService _bayShiftService;
     private readonly BayService _bayService;
     private readonly BayStaffRepository _bayStaffRepository;
+    private readonly Counter<int> _dropOffMissCounter;
 
     public BayStaffService(
         ILogger<BayStaffService> logger,
@@ -49,7 +50,7 @@ public sealed class BayStaffService
         _bayService = bayService;
         _bayStaffRepository = bayStaffRepository;
 
-        meter.CreateCounter<int>("pick-up-miss", "PickUpMiss", "#PickUp Loads Missed.");
+        _dropOffMissCounter = meter.CreateCounter<int>("drop-off-miss", "DropOffMiss", "#Drop Off Pellets Unable to place at Bay.");
     }
     
     private int GetSpeed()
@@ -195,6 +196,8 @@ public sealed class BayStaffService
                 bayStaff,
                 bay,
                 _modelState.ModelTime);
+            
+            _dropOffMissCounter.Add(1,  new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
 
             return false;
         }

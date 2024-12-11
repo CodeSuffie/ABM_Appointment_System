@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Repositories;
 
-public sealed class LoadRepository(ModelDbContext context)
+public sealed class LoadRepository(
+    ModelDbContext context,
+    TruckCompanyRepository truckCompanyRepository)
 {
     public IQueryable<Load> Get()
     {
@@ -80,5 +82,13 @@ public sealed class LoadRepository(ModelDbContext context)
         return context.Loads
             .Where(l => l.Trip == null)
             .CountAsync(cancellationToken);
+    }
+
+    public Task RemoveAsync(Load load, CancellationToken cancellationToken)
+    {
+        context.Loads
+            .Remove(load);
+        
+        return context.SaveChangesAsync(cancellationToken);
     }
 }

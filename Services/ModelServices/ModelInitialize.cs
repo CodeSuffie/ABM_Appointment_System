@@ -11,9 +11,11 @@ public sealed class ModelInitialize(
 {
     public void InitializeObject()
     {
-        modelState.ModelTime = new TimeSpan(0, 0, 0);
-        modelState.ModelConfig = new ModelConfig();
-        modelState.AgentConfig = new AgentConfig();
+        modelState.Initialize(
+            new TimeSpan(0, 0, 0),
+            new AppointmentModelConfig(),
+            new AgentConfig(),
+            new AppointmentConfig());
             
         logger.LogInformation("New ModelState created: ModelState={@ModelState}", modelState);
     }

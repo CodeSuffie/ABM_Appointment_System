@@ -46,6 +46,11 @@ public sealed class TruckService(
         return truck;
     }
 
+    public int GetTravelTime(Truck truck, TruckCompany truckCompany, Hub hub)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task AlertFreeAsync(Truck truck, CancellationToken cancellationToken)
     {
         var trip = await tripService.GetNextAsync(truck, cancellationToken);

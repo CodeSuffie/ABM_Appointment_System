@@ -14,6 +14,8 @@ public abstract class ModelConfigBase
     
     public abstract int PelletAverageDifficulty { get; }
     public abstract int PelletDifficultyDeviation { get; }
+    
+    public abstract bool AppointmentSystemMode { get; }
 }
 
 public class ModelConfig : ModelConfigBase
@@ -21,12 +23,19 @@ public class ModelConfig : ModelConfigBase
     public override Random Random { get; } = new Random(2);
     public override int MinutesPerHour { get; } = 60;
     
-    public override TimeSpan ModelTotalTime { get; } = TimeSpan.FromDays(7);
-    public override TimeSpan ModelStep { get; } = TimeSpan.FromMinutes(5);
+    public override TimeSpan ModelTotalTime { get; } = TimeSpan.FromDays(1);
+    public override TimeSpan ModelStep { get; } = TimeSpan.FromMinutes(1);
     
     public override int InitialTruckCompanyPellets { get; } = 300;
     public override int InitialWarehousePellets { get; } = 300;
     public override int PelletsPerStep { get; } = 0;
     public override int PelletAverageDifficulty { get; } = 1;
     public override int PelletDifficultyDeviation { get; } = 1;
+
+    public override bool AppointmentSystemMode { get; } = false;
+}
+
+public class AppointmentModelConfig : ModelConfig
+{
+    public override bool AppointmentSystemMode { get; } = true;
 }

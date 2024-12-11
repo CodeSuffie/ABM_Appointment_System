@@ -682,7 +682,7 @@ public sealed class PelletService
             return;
         }
 
-        await UnloadPelletsAsync(truck, cancellationToken);
+        await UnloadPelletsAsync(truck, trip, cancellationToken);
     }
 
     public async Task LoadPelletsAsync(Truck truck, Load load, CancellationToken cancellationToken)
@@ -707,7 +707,7 @@ public sealed class PelletService
         }
     }
     
-    public async Task UnloadPelletsAsync(Truck truck, CancellationToken cancellationToken)
+    public async Task UnloadPelletsAsync(Truck truck, Trip trip, CancellationToken cancellationToken)
     {
         var truckCompany = await _truckCompanyRepository.GetAsync(truck, cancellationToken);
         if (truckCompany == null)
@@ -717,6 +717,22 @@ public sealed class PelletService
 
             return;
         }
+
+        var loads = _loadRepository.Get(trip)
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var load in loads)
+        {
+            var loadPellets = _pelletRepository.Get(load)
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken);
+
+            await foreach (var loadPellet in loadPellets)
+            {
+                await _pelletRepository.UnsetAsync(loadPellet, load, cancellationToken);
+            }
+        }
         
         var pellets = _pelletRepository.Get(truck)
             .AsAsyncEnumerable()
@@ -724,6 +740,7 @@ public sealed class PelletService
         
         await foreach (var pellet in pellets)
         {
+            await _pelletRepository.UnsetAsync(pellet, truck, cancellationToken);
             await _pelletRepository.UnsetAsync(pellet, truck, cancellationToken);
             await _pelletRepository.SetAsync(pellet, truckCompany, cancellationToken);
         }
