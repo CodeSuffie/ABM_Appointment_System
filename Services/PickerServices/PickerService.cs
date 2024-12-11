@@ -3,6 +3,7 @@ using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
+using Services.BayServices;
 using Services.HubServices;
 using Services.ModelServices;
 using Services.PelletServices;
@@ -18,6 +19,7 @@ public sealed class PickerService
     private readonly PelletRepository _pelletRepository;
     private readonly PelletService _pelletService;
     private readonly BayRepository _bayRepository;
+    private readonly BayService _bayService;
     private readonly PickerRepository _pickerRepository;
     private readonly WorkRepository _workRepository;
     private readonly WorkService _workService;
@@ -31,6 +33,7 @@ public sealed class PickerService
         PelletRepository pelletRepository,
         PelletService pelletService,
         BayRepository bayRepository,
+        BayService bayService,
         PickerRepository pickerRepository,
         WorkRepository workRepository,
         WorkService workService,
@@ -44,6 +47,7 @@ public sealed class PickerService
         _pelletRepository = pelletRepository;
         _pelletService = pelletService;
         _bayRepository = bayRepository;
+        _bayService = bayService;
         _pickerRepository = pickerRepository;
         _workRepository = workRepository;
         _workService = workService;
@@ -138,15 +142,22 @@ public sealed class PickerService
         var fetchPelletCount = 0;
         await foreach (var bay in bays)
         {
+            if (! await _bayService.HasRoomForPelletAsync(bay, cancellationToken))
+            {
+                continue;
+            }
+            
             var bayFetchPelletCount = (await _pelletService
                 .GetAvailableFetchPelletsAsync(bay, cancellationToken))
                 .Count;
-            
-            if (bestBay == null || bayFetchPelletCount > fetchPelletCount)
+
+            if (bestBay != null && bayFetchPelletCount <= fetchPelletCount)
             {
-                fetchPelletCount = bayFetchPelletCount;
-                bestBay = bay;
+                continue;
             }
+            
+            fetchPelletCount = bayFetchPelletCount;
+            bestBay = bay;
         }
 
         if (bestBay == null)

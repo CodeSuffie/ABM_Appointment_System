@@ -11,6 +11,7 @@ namespace Services.BayServices;
 public sealed class BayService(
     ILogger<BayService> logger,
     HubRepository hubRepository,
+    PelletRepository pelletRepository,
     PelletService pelletService,
     TripService tripService,
     BayRepository bayRepository,
@@ -154,5 +155,17 @@ public sealed class BayService(
         {
             await bayRepository.RemoveAsync(bay, BayFlags.PickedUp, cancellationToken);
         }
+    }
+
+    public async Task<bool> HasRoomForPelletAsync(Bay bay, CancellationToken cancellationToken)
+    {
+        var pelletCount = await pelletRepository.Get(bay)
+            .CountAsync(cancellationToken);
+        var dropOffWorkCount = await workRepository.Get(bay, WorkType.DropOff)
+            .CountAsync(cancellationToken);
+        var fetchWorkCount = await workRepository.Get(bay, WorkType.Fetch)
+            .CountAsync(cancellationToken);
+
+        return (pelletCount + dropOffWorkCount + fetchWorkCount) < bay.Capacity;
     }
 }

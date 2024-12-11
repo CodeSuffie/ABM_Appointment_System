@@ -107,12 +107,14 @@ public sealed class StufferService(
             var bayStuffPelletCount = (await pelletService
                     .GetAvailableStuffPelletsAsync(bay, cancellationToken))
                 .Count;
-            
-            if (bestBay == null || bayStuffPelletCount > stuffPelletCount)
+
+            if (bestBay != null && bayStuffPelletCount <= stuffPelletCount)
             {
-                stuffPelletCount = bayStuffPelletCount;
-                bestBay = bay;
+                continue;
             }
+            
+            stuffPelletCount = bayStuffPelletCount;
+            bestBay = bay;
         }
 
         if (bestBay == null)

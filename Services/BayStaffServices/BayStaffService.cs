@@ -2,6 +2,7 @@ using System.Diagnostics.Metrics;
 using Database.Models;
 using Microsoft.Extensions.Logging;
 using Repositories;
+using Services.BayServices;
 using Services.HubServices;
 using Services.ModelServices;
 using Services.PelletServices;
@@ -19,6 +20,7 @@ public sealed class BayStaffService
     private readonly WorkService _workService;
     private readonly TripRepository _tripRepository;
     private readonly BayShiftService _bayShiftService;
+    private readonly BayService _bayService;
     private readonly BayStaffRepository _bayStaffRepository;
 
     public BayStaffService(
@@ -31,6 +33,7 @@ public sealed class BayStaffService
         WorkService workService,
         TripRepository tripRepository,
         BayShiftService bayShiftService,
+        BayService bayService,
         BayStaffRepository bayStaffRepository,
         Meter meter)
     {
@@ -43,6 +46,7 @@ public sealed class BayStaffService
         _workService = workService;
         _tripRepository = tripRepository;
         _bayShiftService = bayShiftService;
+        _bayService = bayService;
         _bayStaffRepository = bayStaffRepository;
 
         meter.CreateCounter<int>("pick-up-miss", "PickUpMiss", "#PickUp Loads Missed.");
@@ -167,6 +171,18 @@ public sealed class BayStaffService
         {
             _logger.LogInformation(
                 "BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with Drop-Off work completed " +
+                "and can therefore not start Drop-Off Work this Step \n({Step})",
+                bayStaff,
+                bay,
+                _modelState.ModelTime);
+
+            return false;
+        }
+
+        if (!await _bayService.HasRoomForPelletAsync(bay, cancellationToken))
+        {
+            _logger.LogInformation(
+                "BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with no room for another Pellet " +
                 "and can therefore not start Drop-Off Work this Step \n({Step})",
                 bayStaff,
                 bay,
