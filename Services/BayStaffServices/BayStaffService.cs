@@ -20,7 +20,7 @@ public sealed class BayStaffService
     private readonly TripRepository _tripRepository;
     private readonly BayShiftService _bayShiftService;
     private readonly BayStaffRepository _bayStaffRepository;
-    
+
     public BayStaffService(
         ILogger<BayStaffService> logger,
         ModelState modelState,
@@ -82,7 +82,7 @@ public sealed class BayStaffService
         
         if (trip == null)
         {
-            _logger.LogError("Bay \n({@Bay})\n did not have a Trip assigned to alert Work complete for.",
+            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned to alert Work complete for.",
                     bay);
 
             return;

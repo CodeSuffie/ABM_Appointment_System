@@ -219,24 +219,18 @@ public sealed class PelletService
     {
         await _pelletRepository.UnsetAsync(pellet, truck, cancellationToken);
         await _pelletRepository.SetAsync(pellet, warehouse, cancellationToken);
-        
-        await _pelletRepository.UnsetWorkAsync(pellet, cancellationToken);
     }
     
     private async Task Fetch(Pellet pellet, Warehouse warehouse, Bay bay, CancellationToken cancellationToken)
     {
         await _pelletRepository.UnsetAsync(pellet, warehouse, cancellationToken);
         await _pelletRepository.SetAsync(pellet, bay, cancellationToken);
-        
-        await _pelletRepository.UnsetWorkAsync(pellet, cancellationToken);
     }
     
     private async Task PickUp(Pellet pellet, Bay bay, Truck truck, CancellationToken cancellationToken)
     {
         await _pelletRepository.UnsetAsync(pellet, bay, cancellationToken);
         await _pelletRepository.SetAsync(pellet, truck, cancellationToken);
-        
-        await _pelletRepository.UnsetWorkAsync(pellet, cancellationToken);
     }
 
     public async Task AlertDroppedOffAsync(Pellet pellet, Bay bay, CancellationToken cancellationToken)

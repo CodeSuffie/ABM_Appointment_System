@@ -1,6 +1,7 @@
 using Database.Models;
 using Database.Models.EntityConfiguration;
 using Microsoft.EntityFrameworkCore;
+using Settings;
 
 namespace Database;
 
@@ -41,7 +42,6 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
     {
         modelBuilder.ApplyConfiguration(new TruckCompanyConfiguration());
         modelBuilder.ApplyConfiguration(new TruckConfiguration());
-        
         
         modelBuilder.ApplyConfiguration(new PelletConfiguration());
         modelBuilder.ApplyConfiguration(new LoadConfiguration());

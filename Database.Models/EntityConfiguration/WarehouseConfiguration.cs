@@ -14,9 +14,5 @@ public class WarehouseConfiguration : IEntityTypeConfiguration<Warehouse>
         builder.HasOne(x => x.Hub)
             .WithOne(x => x.Warehouse)
             .HasForeignKey<Warehouse>(x => x.HubId);
-        
-        builder.HasMany(x => x.Works)
-            .WithOne(x => x.Warehouse)
-            .HasForeignKey(x => x.WarehouseId);
     }
 }

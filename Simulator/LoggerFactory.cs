@@ -173,7 +173,6 @@ internal static class LoggerFactory
                         Id = w.Id,
                         HubId = w.HubId,
                         InventoryIds = w.Inventory.Select(p => p.Id),
-                        WorkIds = w.Works.Select(w => w.Id),
                     })
                 .Destructure.ByTransforming<Work>(
                     w => new
@@ -186,7 +185,6 @@ internal static class LoggerFactory
                         AdminStaffId = w.AdminStaffId,
                         BayStaffId = w.BayStaffId,
                         BayId = w.BayId,
-                        WarehouseId = w.WarehouseId,
                         PelletId = w.PelletId
                     })
                 .MinimumLevel.Error()

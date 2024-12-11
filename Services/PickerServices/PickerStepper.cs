@@ -100,6 +100,11 @@ public sealed class PickerStepper : IStepperService<Picker>
                 picker,
                 _modelState.ModelTime);
             await _pickerService.AlertWorkCompleteAsync(picker, cancellationToken);
+            
+            _logger.LogDebug("Removing old Work \n({@Work})\n for this Picker \n({@Picker})",
+                work,
+                picker);
+            await _workRepository.RemoveAsync(work, cancellationToken);
         }
     }
 

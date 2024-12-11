@@ -21,6 +21,4 @@ public class Warehouse : IArea, IStorage<Pellet>
     // Warehouse
     public Hub Hub { get; set; } = new();
     public long HubId { get; set; }
-    
-    public List<Work> Works { get; set; } = [];
 }
