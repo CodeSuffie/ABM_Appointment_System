@@ -21,6 +21,13 @@ public sealed class StufferService(
     PelletService pelletService,
     ModelState modelState)
 {
+    private int GetSpeed()
+    {
+        var averageDeviation = modelState.AgentConfig.StufferSpeedDeviation;
+        var deviation = modelState.Random(averageDeviation * 2) - averageDeviation;
+        return modelState.AgentConfig.StufferAverageSpeed + deviation;
+    }
+    
     public async Task<Stuffer?> GetNewObjectAsync(CancellationToken cancellationToken)
     {
         var hub = await hubService.SelectHubAsync(cancellationToken);
@@ -38,6 +45,8 @@ public sealed class StufferService(
         {
             Hub = hub,
             WorkChance = modelState.AgentConfig.StufferAverageWorkDays,
+            Speed = GetSpeed(),
+            Experience = modelState.RandomDouble() + 0.5,
             AverageShiftLength = modelState.AgentConfig.StufferHubShiftAverageLength
         };
         

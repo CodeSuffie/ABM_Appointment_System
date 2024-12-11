@@ -18,6 +18,13 @@ public sealed class AdminStaffService(
     AdminStaffRepository adminStaffRepository,
     ModelState modelState)
 {
+    private int GetSpeed()
+    {
+        var averageDeviation = modelState.AgentConfig.AdminStaffSpeedDeviation;
+        var deviation = modelState.Random(averageDeviation * 2) - averageDeviation;
+        return modelState.AgentConfig.AdminStaffAverageSpeed + deviation;
+    }
+    
     public async Task<AdminStaff?> GetNewObjectAsync(CancellationToken cancellationToken)
     {
         var hub = await hubService.SelectHubAsync(cancellationToken);
@@ -35,6 +42,7 @@ public sealed class AdminStaffService(
         {
             Hub = hub,
             WorkChance = modelState.AgentConfig.AdminStaffAverageWorkDays,
+            Speed = GetSpeed(),
             AverageShiftLength = modelState.AgentConfig.AdminHubShiftAverageLength
         };
 

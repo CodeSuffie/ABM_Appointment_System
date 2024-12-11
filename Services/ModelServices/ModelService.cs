@@ -22,7 +22,7 @@ public sealed class ModelService(
     public async Task RunFrameAsync()
     {
         // await using var transaction = await context.Database.BeginTransactionAsync(CancellationToken);
-        if (modelState.ModelTime > modelState.ModelConfig.ModelTime)
+        if (modelState.ModelTime > modelState.ModelConfig.ModelTotalTime)
         {
             return;
         }

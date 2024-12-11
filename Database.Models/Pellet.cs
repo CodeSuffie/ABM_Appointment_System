@@ -4,6 +4,8 @@ public class Pellet
 {
     public long Id { get; set; }
     
+    public int Difficulty { get; set; }
+    
     public TruckCompany? TruckCompany { get; set; }
     public long? TruckCompanyId { get; set; }
     

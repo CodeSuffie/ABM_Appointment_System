@@ -6,6 +6,7 @@ public abstract class AgentConfigBase
     
     public abstract int TruckCount { get; }
     public abstract int TruckAverageSpeed { get; }
+    public abstract int TruckSpeedDeviation { get; }
     public abstract int TruckAverageCapacity { get; }
     
     public abstract double HubAverageWorkDays { get; }
@@ -25,18 +26,26 @@ public abstract class AgentConfigBase
     public abstract int[,] BayLocations  { get; }
     
     public abstract int AdminStaffCount { get; }
+    public abstract int AdminStaffAverageSpeed { get; }
+    public abstract int AdminStaffSpeedDeviation { get; }
     public abstract double AdminStaffAverageWorkDays { get; }
     public abstract TimeSpan AdminHubShiftAverageLength { get; }
     
     public abstract int BayStaffCount { get; }
+    public abstract int BayStaffAverageSpeed { get; }
+    public abstract int BayStaffSpeedDeviation { get; }
     public abstract double BayStaffAverageWorkDays { get; }
     public abstract TimeSpan BayShiftAverageLength { get; }
     
     public abstract int PickerCount { get; }
+    public abstract int PickerAverageSpeed { get; }
+    public abstract int PickerSpeedDeviation { get; }
     public abstract double PickerAverageWorkDays { get; }
     public abstract TimeSpan PickerHubShiftAverageLength { get; }
     
     public abstract int StufferCount { get; }
+    public abstract int StufferAverageSpeed { get; }
+    public abstract int StufferSpeedDeviation { get; }
     public abstract double StufferAverageWorkDays { get; }
     public abstract TimeSpan StufferHubShiftAverageLength { get; }
 }
@@ -57,6 +66,7 @@ public class AgentConfig : AgentConfigBase
     
     public override int TruckCount { get; } = 10;
     public override int TruckAverageSpeed { get; } = 5;
+    public override int TruckSpeedDeviation { get; } = 2;
     public override int TruckAverageCapacity { get; } = 10;
     
     public override double HubAverageWorkDays { get; } = 1;
@@ -103,18 +113,26 @@ public class AgentConfig : AgentConfigBase
     };
     
     public override int AdminStaffCount { get; } = 2;
+    public override int AdminStaffAverageSpeed { get; } = 3;
+    public override int AdminStaffSpeedDeviation { get; } = 1;
     public override double AdminStaffAverageWorkDays { get; } = 1;
     public override TimeSpan AdminHubShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
     public override int BayStaffCount { get; } = 25;
+    public override int BayStaffAverageSpeed { get; } = 3;
+    public override int BayStaffSpeedDeviation { get; } = 1;
     public override double BayStaffAverageWorkDays { get; } = 1;
     public override TimeSpan BayShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
     public override int PickerCount { get; } = 25;
+    public override int PickerAverageSpeed { get; } = 4;
+    public override int PickerSpeedDeviation { get; } = 3;
     public override double PickerAverageWorkDays { get; } = 1;
     public override TimeSpan PickerHubShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
     public override int StufferCount { get; } = 10;
+    public override int StufferAverageSpeed { get; } = 4;
+    public override int StufferSpeedDeviation { get; } = 3;
     public override double StufferAverageWorkDays { get; } = 1;
     public override TimeSpan StufferHubShiftAverageLength { get; } = TimeSpan.FromHours(24);
 }

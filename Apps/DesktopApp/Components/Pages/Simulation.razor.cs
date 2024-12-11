@@ -375,4 +375,11 @@ public sealed partial class Simulation
         
         Disposed = true;
     }
+
+    private string GetValueNowString()
+    {
+        var part = ModelState.ModelTime / ModelState.ModelConfig.ModelTotalTime;
+        var roundedPercentage = (int)(part * 100);
+        return roundedPercentage.ToString();
+    }
 }

@@ -41,11 +41,21 @@ public sealed class PelletCreation
             meter.CreateUpDownCounter<int>("pellet-unclaimed", "Pellet", "#Pellets unclaimed (excl. completed).");
     }
     
+    private int GetDifficulty()
+    {
+        var averageDeviation = _modelState.ModelConfig.PelletDifficultyDeviation;
+        var deviation = _modelState.Random(averageDeviation * 2) - averageDeviation;
+        return _modelState.ModelConfig.PelletAverageDifficulty + deviation;
+    }
+    
     public async Task AddNewTruckCompanyPelletsAsync(int count, CancellationToken cancellationToken)
     {
         for (var i = 0; i < count; i++)
         {
-            var pellet = new Pellet();
+            var pellet = new Pellet
+            {
+                Difficulty = GetDifficulty()
+            };
             await _pelletRepository.AddAsync(pellet, cancellationToken);
 
             var truckCompany = await _truckCompanyService.SelectTruckCompanyAsync(cancellationToken);
@@ -71,7 +81,10 @@ public sealed class PelletCreation
     {
         for (var i = 0; i < count; i++)
         {
-            var pellet = new Pellet();
+            var pellet = new Pellet
+            {
+                Difficulty = GetDifficulty()
+            };
             await _pelletRepository.AddAsync(pellet, cancellationToken);
 
             var hub = await _hubService.SelectHubAsync(cancellationToken);

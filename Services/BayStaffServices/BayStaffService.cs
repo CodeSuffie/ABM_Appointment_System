@@ -52,6 +52,13 @@ public sealed class BayStaffService
         meter.CreateCounter<int>("pick-up-miss", "PickUpMiss", "#PickUp Loads Missed.");
     }
     
+    private int GetSpeed()
+    {
+        var averageDeviation = _modelState.AgentConfig.BayStaffSpeedDeviation;
+        var deviation = _modelState.Random(averageDeviation * 2) - averageDeviation;
+        return _modelState.AgentConfig.BayStaffAverageSpeed + deviation;
+    }
+    
     public async Task<BayStaff?> GetNewObjectAsync(CancellationToken cancellationToken)
     {
         var hub = await _hubService.SelectHubAsync(cancellationToken);
@@ -68,6 +75,7 @@ public sealed class BayStaffService
         {
             Hub = hub,
             WorkChance = _modelState.AgentConfig.BayStaffAverageWorkDays,
+            Speed = GetSpeed(),
             AverageShiftLength = _modelState.AgentConfig.BayShiftAverageLength
         };
 

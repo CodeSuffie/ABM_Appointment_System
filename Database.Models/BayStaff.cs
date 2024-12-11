@@ -8,6 +8,7 @@ public class BayStaff : IStaff<BayShift>
     
     // IStaff<BayShift>
     public double WorkChance { get; set; }
+    public int Speed { get; set; }
     public TimeSpan AverageShiftLength { get; set; }
 
     public List<BayShift> Shifts { get; set; } = [];

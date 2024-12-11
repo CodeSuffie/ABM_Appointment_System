@@ -25,23 +25,8 @@ public sealed class WorkService(
         return endTime <= modelState.ModelTime;
     }
     
-    public TimeSpan? GetTime(WorkType workType)
+    private Work GetNew(TimeSpan? duration, WorkType workType)
     {
-        return workType switch
-        {
-            WorkType.CheckIn => modelState.ModelConfig.CheckInWorkTime,
-            WorkType.DropOff => modelState.ModelConfig.DropOffWorkTime,
-            WorkType.PickUp => modelState.ModelConfig.PickUpWorkTime,
-            WorkType.Fetch => modelState.ModelConfig.FetchWorkTime,
-            WorkType.Stuff => modelState.ModelConfig.StuffWorkTime,
-            _ => null
-        };
-    }
-    
-    private Work GetNew(WorkType workType)
-    {
-        var duration = GetTime(workType);
-        
         var work = new Work
         {
             StartTime = modelState.ModelTime,
@@ -52,44 +37,64 @@ public sealed class WorkService(
         return work;
     }
     
+    private TimeSpan GetTime(AdminStaff adminStaff)
+    {
+        return adminStaff.Speed * modelState.ModelConfig.ModelStep;
+    }
+    
+    private TimeSpan GetTime(BayStaff bayStaff, Pellet pellet)
+    {
+        return (bayStaff.Speed + pellet.Difficulty) * modelState.ModelConfig.ModelStep;
+    }
+    
+    private TimeSpan GetTime(Picker picker, Pellet pellet)
+    {
+        return (picker.Speed + pellet.Difficulty) * picker.Experience * modelState.ModelConfig.ModelStep;
+    }
+    
+    private TimeSpan GetTime(Stuffer stuffer)
+    {
+        return stuffer.Speed * stuffer.Experience * modelState.ModelConfig.ModelStep;
+    }
+    
     public async Task AddAsync(Trip trip, WorkType workType, CancellationToken cancellationToken)
     {
-        var work = GetNew(workType);
+        var work = GetNew(null, workType);
 
         await workRepository.AddAsync(work, trip, cancellationToken);
     }
     
     public async Task AddAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var work = GetNew(WorkType.CheckIn);
+        var work = GetNew(GetTime(adminStaff), WorkType.CheckIn);
 
         await workRepository.AddAsync(work, trip, adminStaff, cancellationToken);
     }
 
     public async Task AddAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
     {
-        var work = GetNew(WorkType.Bay);
+        var work = GetNew(null, WorkType.Bay);
 
         await workRepository.AddAsync(work, trip, bay, cancellationToken);
     }
     
     public async Task AddAsync(Bay bay, BayStaff bayStaff, Pellet pellet, WorkType workType, CancellationToken cancellationToken)
     {
-        var work = GetNew(workType);
+        var work = GetNew(GetTime(bayStaff, pellet), workType);
 
         await workRepository.AddAsync(work, bay, bayStaff, pellet, cancellationToken);
     }
 
     public async Task AddAsync(Bay bay, Picker picker, Pellet pellet, CancellationToken cancellationToken)
     {
-        var work = GetNew(WorkType.Fetch);
+        var work = GetNew(GetTime(picker, pellet), WorkType.Fetch);
 
         await workRepository.AddAsync(work, bay, picker, pellet, cancellationToken);
     }
     
     public async Task AddAsync(Bay bay, Stuffer stuffer, Pellet pellet, CancellationToken cancellationToken)
     {
-        var work = GetNew(WorkType.Stuff);
+        var work = GetNew(GetTime(stuffer), WorkType.Stuff);
 
         await workRepository.AddAsync(work, bay, stuffer, pellet, cancellationToken);
     }

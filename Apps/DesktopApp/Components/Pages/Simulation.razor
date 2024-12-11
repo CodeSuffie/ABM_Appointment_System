@@ -4,16 +4,28 @@
 @using Services.ModelServices
 @inject IJSRuntime JSRuntime;
 @inject ModelService ModelService;
+@inject ModelState ModelState;
 
 @inject ModelDbContext ModelDbContext;
 
 <div class="d-flex flex-column h-100">
     <nav class="navbar d-flex flex-row bg-body-tertiary">
-        <form class="container-fluid justify-content-start">
-            <button class="@GetPlayPauseButtonClass()" type="button" @onclick="OnPlayPauseButtonClicked">
-                <i class="@GetPlayPauseButtonIconClass()"></i>
-            </button>
-        </form>
+        <div class="row w-100">
+            <form class="container-fluid justify-content-start col-auto px-4">
+                <button class="@GetPlayPauseButtonClass()" type="button" @onclick="OnPlayPauseButtonClicked">
+                    <i class="@GetPlayPauseButtonIconClass()"></i>
+                </button>
+            </form>
+            <div class="col-auto align-self-center">
+                @ModelState.ModelTime.ToString(@"d\:hh\:mm") / @ModelState.ModelConfig.ModelTotalTime.ToString(@"d\:hh\:mm")
+            </div>
+            @{
+                var value = GetValueNowString();
+            }
+            <div class="progress col p-0 align-self-center" role="progressbar" aria-valuenow="@value" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: @value%">@value%</div>
+            </div>
+        </div>
     </nav>
     
     <div class="d-flex flex-fill" style="flex-direction: row-reverse;">

@@ -55,6 +55,13 @@ public sealed class PickerService
         
         _fetchMissCounter = meter.CreateCounter<int>("fetch-miss", "FetchMiss", "#PickUp Load not fetched yet.");
     }
+    
+    private int GetSpeed()
+    {
+        var averageDeviation = _modelState.AgentConfig.PickerSpeedDeviation;
+        var deviation = _modelState.Random(averageDeviation * 2) - averageDeviation;
+        return _modelState.AgentConfig.PickerAverageSpeed + deviation;
+    }
 
     public async Task<Picker?> GetNewObjectAsync(CancellationToken cancellationToken)
     {
@@ -73,6 +80,8 @@ public sealed class PickerService
         {
             Hub = hub,
             WorkChance = _modelState.AgentConfig.PickerAverageWorkDays,
+            Speed = GetSpeed(),
+            Experience = _modelState.RandomDouble() + 0.5,
             AverageShiftLength = _modelState.AgentConfig.PickerHubShiftAverageLength
         };
         

@@ -55,7 +55,7 @@ public sealed class OperatingHourService(
 
     public async Task GetNewObjectsAsync(Hub hub, CancellationToken cancellationToken)
     {
-        for (var i = 0; i < modelState.ModelConfig.ModelTime.Days; i++)
+        for (var i = 0; i < modelState.ModelConfig.ModelTotalTime.Days; i++)
         {
             var day = TimeSpan.FromDays(i);
             

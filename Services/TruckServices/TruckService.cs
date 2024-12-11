@@ -14,6 +14,13 @@ public sealed class TruckService(
     TripService tripService,
     ModelState modelState)
 {
+    private int GetSpeed()
+    {
+        var averageDeviation = modelState.AgentConfig.TruckSpeedDeviation;
+        var deviation = modelState.Random(averageDeviation * 2) - averageDeviation;
+        return modelState.AgentConfig.TruckAverageSpeed + deviation;
+    }
+    
     public async Task<Truck?> GetNewObjectAsync(CancellationToken cancellationToken)
     {
         var truckCompany = await truckCompanyService.SelectTruckCompanyAsync(cancellationToken);
@@ -30,7 +37,7 @@ public sealed class TruckService(
         var truck = new Truck
         {
             TruckCompany = truckCompany,
-            Speed = modelState.AgentConfig.TruckAverageSpeed,
+            Speed = GetSpeed(),
             Capacity = modelState.AgentConfig.TruckAverageCapacity
         };
 

@@ -38,7 +38,7 @@ public sealed class LoadStepper : IStepperService
         
         // TODO: Refactor to runtime counter
         // var droppedOff = await _loadRepository.CountDroppedOffAsync(cancellationToken);
-        // _droppedOffLoadsHistogram.Record(droppedOff, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        // _droppedOffLoadsHistogram.Record(droppedOff, new KeyValuePair<string, object?>("Step", _modelState.ModelTotalTime));
         
         _logger.LogDebug("Finished handling Data Collection for Load in this Step \n({Step})",
             _modelState.ModelTime);

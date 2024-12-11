@@ -8,6 +8,7 @@ public class AdminStaff : IStaff<HubShift>
     
     // IStaff<HubShift>
     public double WorkChance { get; set; }
+    public int Speed { get; set; }
     public TimeSpan AverageShiftLength { get; set; }
 
     public List<HubShift> Shifts { get; set; } = [];
