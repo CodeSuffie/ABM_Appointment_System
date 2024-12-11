@@ -1,6 +1,7 @@
 ﻿using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using SQLitePCL;
 
 namespace DesktopApp.Components.Pages;
 
@@ -13,10 +14,12 @@ public sealed partial class Simulation
     private Timer? _timer;
     private SemaphoreSlim _semaphore = new(1, 1);
     private List<Truck> _currentTrucks = [];
+    private List<Bay> _currentBays = [];
 
     private bool _isRunning = false;
     private bool _sidebarVisible = false;
     private Truck? _selectedTruck = null;
+    private Bay? _selectedBay = null;
     
     private bool Disposed { get; set; }
 
@@ -59,7 +62,28 @@ public sealed partial class Simulation
         
         // show truck information
         _sidebarVisible = true;
+        _selectedBay = null;
         _selectedTruck = truck;
+        
+        // update state
+        await InvokeAsync(StateHasChanged);
+        await ResizeRendererAsync();
+    }
+    
+    [JSInvokable]
+    public async Task ShowBayInformationAsync(long bayId)
+    {
+        // attempt to find bay by bay id
+        var bay = _currentBays.FirstOrDefault(x => x.Id == bayId);
+        if (bay == null)
+        {
+            return;
+        }
+        
+        // show bay information
+        _sidebarVisible = true;
+        _selectedTruck = null;
+        _selectedBay = bay;
         
         // update state
         await InvokeAsync(StateHasChanged);
@@ -71,6 +95,7 @@ public sealed partial class Simulation
         // hide sidebar
         _sidebarVisible = false;
         _selectedTruck = null;
+        _selectedBay = null;
         
         // update state
         await InvokeAsync(StateHasChanged);
@@ -174,6 +199,9 @@ public sealed partial class Simulation
         {
             await AddBayAsync(bay);
         }
+        
+        // add new bay to list
+        _currentBays.AddRange(bays);
     }
     
     private async ValueTask AddBoundariesAsync(long id, long minX, long maxX, long minY, long maxY)
@@ -299,6 +327,7 @@ public sealed partial class Simulation
         
         // update 3d state
         var trucks = await ModelDbContext.Trucks.Where(x => x.Trip != null).ToArrayAsync();
+        _currentBays = await ModelDbContext.Bays.ToListAsync();
         
         // remove trucks that are no longer visible
         await RemoveTrucksAsync(trucks);

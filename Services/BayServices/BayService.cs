@@ -117,17 +117,17 @@ public sealed class BayService(
     
     public async Task UpdateFlagsAsync(Bay bay, CancellationToken cancellationToken)
     {
-        // var trip = await tripRepository.GetAsync(bay, cancellationToken);
-        // if (trip == null)
-        // {
-        //     logger.LogInformation("Bay ({@Bay}) did not have a Trip assigned.",
-        //         bay);
-        //     
-        //     logger.LogDebug("Removing all BayFlags from thisBay ({@Bay}).",
-        //         bay);
-        //     await bayRepository.RemoveAsync(bay, BayFlags.DroppedOff | BayFlags.Fetched | BayFlags.PickedUp, cancellationToken);
-        //     return;
-        // }
+        var trip = await tripRepository.GetAsync(bay, cancellationToken);
+        if (trip == null)
+        {
+            logger.LogInformation("Bay ({@Bay}) did not have a Trip assigned.",
+                bay);
+            
+            logger.LogDebug("Removing all BayFlags from thisBay ({@Bay}).",
+                bay);
+            await bayRepository.RemoveAsync(bay, BayFlags.DroppedOff | BayFlags.Fetched | BayFlags.PickedUp, cancellationToken);
+            return;
+        }
 
         if (! await pelletService.HasDropOffPelletsAsync(bay, cancellationToken))
         {

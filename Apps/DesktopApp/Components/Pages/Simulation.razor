@@ -35,11 +35,6 @@
 
                             <table class="table">
                                 <tbody>
-
-                                <tr>
-                                    <th scope="row" style="width: 150px">#</th>
-                                    <td>@_selectedTruck.Id</td>
-                                </tr>
                                 
                                 @if (trip != null)
                                 {
@@ -106,6 +101,62 @@
                                 }
                             }
                         </div>
+                    }
+                    @if (_selectedBay != null)
+                    {
+                    <div class="d-flex flex-column flex-fill">
+                        <h1>Bay #@_selectedBay.Id</h1>
+
+                        <table class="table">
+                            <tbody>
+
+                            <tr>
+                                <th scope="row" style="width: 150px">Capacity</th>
+                                <td>@_selectedBay.Capacity</td>
+                            </tr>
+
+                            <tr>
+                                <th scope="row" style="width: 150px">BayStatus</th>
+                                @switch (_selectedBay.BayStatus)
+                                {
+                                    case BayStatus.Closed:
+                                        <td>BayStatus.Closed</td>
+                                        break;
+                                    case BayStatus.Opened:
+                                        <td>BayStatus.Opened</td>
+                                        break;
+                                    default:
+                                        <td>Invalid!</td>
+                                        break;
+                                }
+                            </tr>
+
+                            <tr>
+                                <th rowspan="3" scope="row" style="width: 150px">BayFlags</th>
+                                @{
+                                    var droppedOff = _selectedBay.BayFlags.HasFlag(BayFlags.DroppedOff) ? "text-success" : "text-danger";
+                                    var fetched = _selectedBay.BayFlags.HasFlag(BayFlags.Fetched) ? "text-success" : "text-danger";
+                                    var pickedUp = _selectedBay.BayFlags.HasFlag(BayFlags.PickedUp) ? "text-success" : "text-danger";
+                                }
+                                <td class="@droppedOff">BayFlags.DroppedOff</td>
+                            </tr>
+                            
+                            <tr>
+                                <td class="@fetched">BayFlags.Fetched</td>
+                            </tr>
+
+                            <tr>
+                                <td class="@pickedUp">BayFlags.PickedUp</td>
+                            </tr>
+
+                            <tr>
+                                <th scope="row" style="width: 150px">Inventory</th>
+                                <td>@(string.Join(", ", _selectedBay.Inventory.Select(x => x.Id)))</td>
+                            </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
                     }
                 </div>
             </div>

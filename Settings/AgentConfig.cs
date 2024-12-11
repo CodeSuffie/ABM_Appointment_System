@@ -89,7 +89,7 @@ public class AgentConfig : AgentConfigBase
         1, 0
     ];
 
-    public override int BayAverageCapacity { get; } = 30;
+    public override int BayAverageCapacity { get; } = 8;
     public override int[,] BayLocations { get; } =
     {
         {1, 1},

@@ -358,6 +358,17 @@ export function addBay(id, locationX, locationY, sizeX, sizeY) {
         id: id,
         plane: ground,
     };
+
+    model.cursor = 'pointer';
+    model.on('click', function(event) {
+        if (window.simulationView === null ||
+            window.simulationView === undefined ||
+            window.simulationView.dotNetObjectRef === null ||
+            window.simulationView.dotNetObjectRef === undefined) {
+            return;
+        }
+        window.simulationView.dotNetObjectRef.invokeMethodAsync("ShowBayInformationAsync", id);
+    });
 }
 
 function addFence(locationX, locationY, onXAxis) {
