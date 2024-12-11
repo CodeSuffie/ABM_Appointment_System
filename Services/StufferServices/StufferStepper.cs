@@ -100,6 +100,11 @@ public sealed class StufferStepper : IStepperService<Stuffer>
                 stuffer,
                 _modelState.ModelTime);
             await _stufferService.AlertWorkCompleteAsync(stuffer, cancellationToken);
+            
+            _logger.LogDebug("Removing old Work \n({@Work})\n for this Stuffer \n({@Stuffer})",
+                work,
+                stuffer);
+            await _workRepository.RemoveAsync(work, cancellationToken);
         }
     }
 

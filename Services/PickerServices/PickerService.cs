@@ -179,7 +179,7 @@ public sealed class PickerService
             return;
         }
         
-        _logger.LogDebug("Adding Work for this BayStaff \n({@Picker})\n at this Bay \n({@Bay}) to Fetch this Pellet \n({@Pellet})",
+        _logger.LogDebug("Adding Work for this Picker \n({@Picker})\n at this Bay \n({@Bay}) to Fetch this Pellet \n({@Pellet})",
             picker,
             bay,
             pellet);

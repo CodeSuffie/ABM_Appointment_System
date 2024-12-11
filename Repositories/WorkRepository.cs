@@ -186,13 +186,13 @@ public sealed class WorkRepository(
     
     public async Task RemoveAsync(Work work, CancellationToken cancellationToken)
     {
-        var dbWork = await Get()
-            .FirstOrDefaultAsync(w => w.Id == work.Id,
-                cancellationToken);
-        if (dbWork == null)
-        {
-            return;
-        }
+        // var dbWork = await Get()
+        //     .FirstOrDefaultAsync(w => w.Id == work.Id,
+        //         cancellationToken);
+        // if (dbWork == null)
+        // {
+        //     return;
+        // }
         
         var trip = await tripRepository.GetAsync(work, cancellationToken);
         if (trip != null)
