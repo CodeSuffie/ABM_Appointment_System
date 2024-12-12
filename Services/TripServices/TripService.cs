@@ -2,8 +2,11 @@ using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
+using Services.AppointmentServices;
 using Services.LoadServices;
+using Services.ModelServices;
 using Services.PelletServices;
+using Services.TruckServices;
 
 namespace Services.TripServices;
 
@@ -22,6 +25,9 @@ public sealed class TripService
     private readonly TruckCompanyRepository _truckCompanyRepository;
     private readonly WorkService _workService;
     private readonly PelletService _pelletService;
+    private readonly TruckService _truckService;
+    private readonly AppointmentService _appointmentService;
+    private readonly ModelState _modelState;
 
     public TripService(ILogger<TripService> logger,
         LoadService loadService,
@@ -35,7 +41,10 @@ public sealed class TripService
         LocationService locationService,
         TruckCompanyRepository truckCompanyRepository,
         WorkService workService,
-        PelletService pelletService)
+        PelletService pelletService,
+        TruckService truckService,
+        AppointmentService appointmentService,
+        ModelState modelState)
     {
         _logger = logger;
         _loadService = loadService;
@@ -50,6 +59,9 @@ public sealed class TripService
         _truckCompanyRepository = truckCompanyRepository;
         _workService = workService;
         _pelletService = pelletService;
+        _truckService = truckService;
+        _appointmentService = appointmentService;
+        _modelState = modelState;
     }
 
     public async Task<Trip?> GetNextAsync(Truck truck, CancellationToken cancellationToken)
@@ -59,6 +71,7 @@ public sealed class TripService
             var dropOff = await _loadService.GetNewDropOffAsync(truck, cancellationToken);
             Load? pickUp;
             Trip? trip = null;
+            Hub? hub = null;
     
             if (dropOff != null)
             {
@@ -71,8 +84,8 @@ public sealed class TripService
                 await _tripRepository.SetDropOffAsync(trip, dropOff, cancellationToken);
                 await _pelletService.LoadPelletsAsync(truck, dropOff, cancellationToken);
     
-                var dropOffHub = await _hubRepository.GetAsync(dropOff, cancellationToken);
-                if (dropOffHub == null)
+                hub = await _hubRepository.GetAsync(dropOff, cancellationToken);
+                if (hub == null)
                 {
                     _logger.LogError("Drop-Off Load \n({@Load})\n for this Truck \n({@Truck})\n did not have a Hub assigned.",
                         dropOff,
@@ -81,7 +94,7 @@ public sealed class TripService
                     continue;
                 }
                 
-                pickUp = await _loadService.GetNewPickUpAsync(truck, dropOffHub, cancellationToken);
+                pickUp = await _loadService.GetNewPickUpAsync(truck, hub, cancellationToken);
 
                 if (pickUp != null)
                 {
@@ -97,6 +110,16 @@ public sealed class TripService
                     {
                         Completed = false
                     };
+                    
+                    hub = await _hubRepository.GetAsync(pickUp, cancellationToken);
+                    if (hub == null)
+                    {
+                        _logger.LogError("Pick-Up Load \n({@Load})\n for this Truck \n({@Truck})\n did not have a Hub assigned.",
+                            pickUp,
+                            truck);
+    
+                        continue;
+                    }
                     
                     await _tripRepository.AddAsync(trip, cancellationToken);
                     await _tripRepository.SetPickUpAsync(trip, pickUp, cancellationToken);
@@ -118,6 +141,16 @@ public sealed class TripService
                 truckCompany,
                 trip);
             await _locationService.SetAsync(trip, truckCompany, cancellationToken);
+        
+            if (hub == null)
+            {
+                _logger.LogError("No Hub was assigned to the Trip to create.");
+
+                return null;
+            }
+
+            var earliestArrivalTime = _modelState.ModelTime + _truckService.GetTravelTime(truck, truckCompany, hub);
+            await _appointmentService.SetAsync(trip, hub, earliestArrivalTime);
 
             return trip;
         }
@@ -175,9 +208,9 @@ public sealed class TripService
         await _tripRepository.SetAsync(trip, truck, cancellationToken);
         
         _logger.LogDebug("Adding Work of type {WorkType} to this Trip \n({@Trip})",
-            WorkType.TravelHub,
+            WorkType.WaitTravelHub,
             trip);
-        await _workService.AddAsync(trip, WorkType.TravelHub, cancellationToken);
+        await _workService.AddAsync(trip, WorkType.WaitTravelHub, cancellationToken);
         
         _logger.LogInformation("Truck \n({@Truck})\n successfully linked to this Trip \n({@Trip})",
             truck,

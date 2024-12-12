@@ -70,14 +70,6 @@ public sealed class BayRepository(ModelDbContext context)
         
         await context.SaveChangesAsync(cancellationToken);
     }
-
-    public async Task<int> CountAsync(Hub hub, CancellationToken cancellationToken)
-    {
-        var bayCount = await Get()
-            .CountAsync(b => b.HubId == hub.Id, cancellationToken);
-
-        return bayCount;
-    }
     
     public async Task SetAsync(Bay bay, Hub hub, CancellationToken cancellationToken)
     {
@@ -99,6 +91,14 @@ public sealed class BayRepository(ModelDbContext context)
         bay.BayFlags = flags;
         
         await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task<int> CountAsync(Hub hub, CancellationToken cancellationToken)
+    {
+        var bayCount = await Get()
+            .CountAsync(b => b.HubId == hub.Id, cancellationToken);
+
+        return bayCount;
     }
 
     public Task<int> CountAsync(bool hasTrip, CancellationToken cancellationToken)

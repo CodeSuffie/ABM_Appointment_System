@@ -11,6 +11,8 @@ using Serilog;
 using Services;
 using Services.Abstractions;
 using Services.AdminStaffServices;
+using Services.AppointmentServices;
+using Services.AppointmentSlotServices;
 using Services.BayServices;
 using Services.BayStaffServices;
 using Services.HubServices;
@@ -58,6 +60,16 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPriorityInitializationService,  AdminStaffInitialize>();
         services.AddScoped<IStepperService,                 AdminStaffStepper>();
         services.AddScoped<AdminStaffRepository>();
+        
+        services.AddScoped<AppointmentService>();
+        services.AddScoped<IPriorityInitializationService,  AppointmentInitialize>();
+        services.AddScoped<IStepperService,                 AppointmentStepper>();
+        services.AddScoped<AppointmentRepository>();
+        
+        services.AddScoped<AppointmentSlotService>();
+        services.AddScoped<IPriorityInitializationService,  AppointmentSlotInitialize>();
+        services.AddScoped<IStepperService,                 AppointmentSlotStepper>();
+        services.AddScoped<AppointmentSlotRepository>();
 
         services.AddScoped<BayService>();
         services.AddScoped<IPriorityInitializationService,  BayInitialize>();

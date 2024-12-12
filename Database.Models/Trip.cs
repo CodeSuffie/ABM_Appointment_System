@@ -28,4 +28,8 @@ public class Trip
     
     public Work? Work { get; set; }
     public long? WorkId { get; set; }
+    
+    // Appointment System
+    public Appointment? Appointment { get; set; }
+    public long? AppointmentId { get; set; }
 }

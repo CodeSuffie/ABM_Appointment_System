@@ -32,4 +32,7 @@ public class Hub : IArea, IStaff<OperatingHour>
     public List<Bay> Bays { get; set; } = [];
 
     public List<Trip> Trips { get; set; } = [];
+    
+    // Appointment System
+    public List<AppointmentSlot> AppointmentSlots { get; set; } = [];
 }

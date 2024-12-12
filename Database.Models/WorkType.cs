@@ -2,6 +2,7 @@ namespace Database.Models;
 
 public enum WorkType
 {
+    WaitTravelHub,
     TravelHub,
     WaitParking,
     WaitCheckIn,

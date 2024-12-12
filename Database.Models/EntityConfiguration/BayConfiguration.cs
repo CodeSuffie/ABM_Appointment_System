@@ -22,5 +22,9 @@ public class BayConfiguration : IEntityTypeConfiguration<Bay>
         builder.HasMany(x => x.Works)
             .WithOne(x => x.Bay)
             .HasForeignKey(x => x.BayId);
+        
+        builder.HasMany(x => x.Appointments)
+            .WithOne(x => x.Bay)
+            .HasForeignKey(x => x.BayId);
     }
 }

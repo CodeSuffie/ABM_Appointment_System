@@ -7,6 +7,8 @@ namespace Services;
 
 public sealed class WorkService(
     ILogger<WorkService> logger,
+    AppointmentRepository appointmentRepository,
+    AppointmentSlotRepository appointmentSlotRepository,
     WorkRepository workRepository,
     ModelState modelState)
 {
@@ -56,9 +58,45 @@ public sealed class WorkService(
     {
         return stuffer.Speed * stuffer.Experience * modelState.ModelConfig.ModelStep;
     }
+
+    private async Task AddAsync(Trip trip, CancellationToken cancellationToken)
+    {
+        if (modelState.ModelConfig.AppointmentSystemMode)
+        {
+            var appointment = await appointmentRepository.GetAsync(trip, cancellationToken);
+            if (appointment == null)
+            {
+                logger.LogError("Trip \n({@Trip})\n did not have an Appointment assigned.",
+                    trip);
+
+                return;
+            }
+
+            var appointmentSlot = await appointmentSlotRepository.GetAsync(appointment, cancellationToken);
+            if (appointmentSlot == null)
+            {
+                logger.LogError("Appointment \n({@Appointment})\n for this Trip \n({@Trip})\n did not have an AppointmentSlot assigned.",
+                    appointment,
+                    trip);
+
+                return;
+            }
+
+            var duration = appointmentSlot.StartTime - modelState.ModelTime;
+            var work = GetNew(duration, WorkType.WaitTravelHub);
+
+            await workRepository.AddAsync(work, trip, cancellationToken);
+        }
+    }
     
     public async Task AddAsync(Trip trip, WorkType workType, CancellationToken cancellationToken)
     {
+        if (workType == WorkType.WaitTravelHub)
+        {
+            await AddAsync(trip, cancellationToken);
+            return;
+        }
+        
         var work = GetNew(null, workType);
 
         await workRepository.AddAsync(work, trip, cancellationToken);

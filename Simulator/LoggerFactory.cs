@@ -24,6 +24,22 @@ internal static class LoggerFactory
                         AverageShiftLength = ads.AverageShiftLength,
                         ShiftIds = ads.Shifts.Select(sh => sh.Id),
                     })
+                .Destructure.ByTransforming<Appointment>(
+                    ap => new
+                    {
+                        Id = ap.Id,
+                        AppointmentSlotId = ap.AppointmentSlotId,
+                        TripId = ap.TripId,
+                        BayId = ap.BayId,
+                    })
+                .Destructure.ByTransforming<AppointmentSlot>(
+                    aps => new
+                    {
+                        Id = aps.Id,
+                        StartTime = aps.StartTime,
+                        HubId = aps.HubId,
+                        AppointmentIds = aps.Appointments.Select(ap => ap.Id),
+                    })
                 .Destructure.ByTransforming<Bay>(
                     b => new
                     {

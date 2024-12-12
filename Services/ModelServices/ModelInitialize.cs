@@ -45,6 +45,10 @@ public sealed class ModelInitialize(
         await InitializeByPriorityAsync(Priority.High, cancellationToken);
         await InitializeByPriorityAsync(Priority.Normal, cancellationToken);
         await InitializeByPriorityAsync(Priority.Low, cancellationToken);
+        if (modelState.ModelConfig.AppointmentSystemMode)
+        {
+            await InitializeByPriorityAsync(Priority.Appointment, cancellationToken);
+        }
         
         logger.LogInformation("Initialization Completed.");
     }

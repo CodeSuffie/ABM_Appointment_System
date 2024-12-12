@@ -31,6 +31,10 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
     public DbSet<BayShift> BayShifts { get; set; }
     
     public DbSet<Work> Works { get; set; }
+    
+    // Appointment System
+    public DbSet<AppointmentSlot> AppointmentSlots { get; set; }
+    public DbSet<Appointment> Appointments { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -63,6 +67,10 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
         modelBuilder.ApplyConfiguration(new BayShiftConfiguration());
         
         modelBuilder.ApplyConfiguration(new WorkConfiguration());
+        
+        // Appointment System
+        modelBuilder.ApplyConfiguration(new AppointmentSlotConfiguration());
+        modelBuilder.ApplyConfiguration(new AppointmentConfiguration());
         
         base.OnModelCreating(modelBuilder);
     }

@@ -29,4 +29,7 @@ public class Bay : IArea, IStorage<Pellet>
     public long? TripId { get; set; }
     
     public List<Work> Works { get; set; } = [];
+    
+    // Appointment System
+    public List<Appointment> Appointments { get; set; } = [];
 }
