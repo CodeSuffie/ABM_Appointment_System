@@ -51,7 +51,22 @@ public sealed class AppointmentService(
                 bay,
                 appointmentSlot);
             var appointment = await appointmentRepository.GetAsync(bay, appointmentSlot, cancellationToken);
-            if (appointment == null) return bay;
+            if (appointment == null)
+            {
+                logger.LogInformation("Bay \n({@Bay})\n does not have an Appointment assigned in this " +
+                                      "AppointmentSlot \n({@AppointmentSlot}).",
+                    bay,
+                    appointmentSlot);
+
+                if (bay.BayStatus != BayStatus.Closed) return bay;
+                
+                logger.LogInformation("Bay \n({@Bay})\n is closed during this AppointmentSlot \n({@AppointmentSlot}).",
+                    bay,
+                    appointmentSlot);
+
+                continue;
+
+            }
             
             logger.LogDebug("Bay \n({@Bay})\n had an appointment \n({@Appointment})\n in this AppointmentSlot \n({@AppointmentSlot}).",
                 bay,

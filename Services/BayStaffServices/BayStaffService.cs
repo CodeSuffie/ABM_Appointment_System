@@ -81,6 +81,8 @@ public sealed class BayStaffService
         };
 
         await _bayStaffRepository.AddAsync(bayStaff, cancellationToken);
+
+        if (_modelState.ModelConfig.AppointmentSystemMode) return bayStaff;
         
         _logger.LogDebug("Setting BayShifts for this BayStaff \n({@BayStaff})",
             bayStaff);

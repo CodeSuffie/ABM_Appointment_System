@@ -7,5 +7,5 @@ public abstract class AppointmentConfigBase
 
 public class AppointmentConfig : AppointmentConfigBase
 {
-    public override int AppointmentLength { get; } = 30;
+    public override int AppointmentLength { get; } = 60;
 }

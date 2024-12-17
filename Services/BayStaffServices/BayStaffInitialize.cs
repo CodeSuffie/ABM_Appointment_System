@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Repositories;
 using Services.Abstractions;
 using Services.ModelServices;
 
@@ -7,6 +8,7 @@ namespace Services.BayStaffServices;
 public sealed class BayStaffInitialize(
     ILogger<BayStaffInitialize> logger,
     BayStaffService bayStaffService,
+    BayShiftService bayShiftService,
     ModelState modelState) : IPriorityInitializationService
 {
     public Priority Priority { get; set; } = Priority.Low;
@@ -29,6 +31,11 @@ public sealed class BayStaffInitialize(
         for (var i = 0; i < modelState.AgentConfig.BayStaffCount; i++)
         {
             await InitializeObjectAsync(cancellationToken);
+        }
+
+        if (modelState.ModelConfig.AppointmentSystemMode)
+        {
+            await bayShiftService.GetNewObjectsAsync(cancellationToken);
         }
     }
 }

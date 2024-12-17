@@ -11,6 +11,7 @@ public sealed class BayShiftService(
     ILogger<BayShiftService> logger,
     HubRepository hubRepository,
     OperatingHourRepository operatingHourRepository,
+    BayRepository bayRepository,
     BayService bayService,
     BayStaffRepository bayStaffRepository,
     BayShiftRepository bayShiftRepository,
@@ -87,6 +88,13 @@ public sealed class BayShiftService(
         Hub hub,
         CancellationToken cancellationToken)
     {
+        if (modelState.ModelConfig.AppointmentSystemMode)
+        {
+            logger.LogError("This function cannot be called with Appointment System Mode");
+
+            return null;
+        }
+        
         var bay = await bayService.SelectBayAsync(hub, cancellationToken);
         if (bay == null)
         {
@@ -97,8 +105,6 @@ public sealed class BayShiftService(
 
             return null;
         }
-        if (modelState.ModelConfig.AppointmentSystemMode)
-            return await GetNewObjectAsync(bayStaff, bay, (TimeSpan) operatingHour.StartTime, operatingHour.Duration, cancellationToken);
         
         var startTime = GetStartTime(bayStaff, operatingHour);
         if (startTime != null)
@@ -115,6 +121,13 @@ public sealed class BayShiftService(
 
     public async Task GetNewObjectsAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
+        if (modelState.ModelConfig.AppointmentSystemMode)
+        {
+            logger.LogError("This function cannot be called with Appointment System Mode");
+
+            return;
+        }
+        
         var hub = await hubRepository.GetAsync(bayStaff, cancellationToken);
         if (hub == null)
         {
@@ -169,6 +182,47 @@ public sealed class BayShiftService(
                 bayStaff,
                 operatingHour,
                 bayShift);
+        }
+    }
+
+    public async Task GetNewObjectsAsync(CancellationToken cancellationToken)
+    {
+        if (!modelState.ModelConfig.AppointmentSystemMode)
+        {
+            logger.LogError("This function cannot be called without Appointment System Mode");
+
+            return;
+        }
+        
+        var hubs = hubRepository.Get()
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var hub in hubs)
+        {
+            var operatingHours = operatingHourRepository.Get(hub)
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken);
+
+            await foreach (var operatingHour in operatingHours)
+            {
+                var bayStaffs = await bayStaffRepository.Get(hub).ToListAsync(cancellationToken);
+                var bays = await bayRepository.Get(hub).ToListAsync(cancellationToken);
+
+                for (var i = 0; i < bays.Count; i++)
+                {
+                    var bayStaff = bayStaffs[i % bayStaffs.Count];
+                    
+                    logger.LogDebug("Setting BayShift for this BayStaff \n({@BayStaff})",
+                        bayStaff);
+                    await GetNewObjectAsync(
+                        bayStaff, 
+                        bays[i], 
+                        operatingHour.StartTime, 
+                        operatingHour.Duration, 
+                        cancellationToken);
+                }
+            }
         }
     }
     

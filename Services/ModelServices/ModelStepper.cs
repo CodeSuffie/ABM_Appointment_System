@@ -31,7 +31,7 @@ public sealed class ModelStepper
         
         foreach (var stepperService in _stepperServices)
         {
-            await stepperService.StepAsync(cancellationToken);
+            await stepperService.DataCollectAsync(cancellationToken);
         }
         
         _logger.LogDebug("Completed Data Collection for this Step \n({Step})",

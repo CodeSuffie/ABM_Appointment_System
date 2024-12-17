@@ -122,12 +122,12 @@ public sealed class TripStepper : IStepperService<Trip>
                     trip,
                     work,
                     _modelState.ModelTime);
+                
+                _logger.LogDebug("Alerting Wait for Travel Hub Completed for this Trip \n({@Trip})\n in this Step \n({Step})",
+                    trip,
+                    _modelState.ModelTime);
+                await _tripService.AlertWaitTravelHubCompleteAsync(trip, cancellationToken);
             }
-            
-            _logger.LogDebug("Alerting Wait for Travel Hub Completed for this Trip \n({@Trip})\n in this Step \n({Step})",
-                trip,
-                _modelState.ModelTime);
-            await _tripService.AlertWaitTravelHubCompleteAsync(trip, cancellationToken);
         }
 
         else if (work.WorkType == WorkType.TravelHub)
@@ -137,11 +137,6 @@ public sealed class TripStepper : IStepperService<Trip>
                 work,
                 WorkType.TravelHub,
                 _modelState.ModelTime);
-            
-            _logger.LogDebug("Travelling to the Hub for this Trip \n({@Trip})\n in this Step \n({Step})",
-                trip,
-                _modelState.ModelTime);
-            await _tripService.TravelHubAsync(trip, cancellationToken);
             
             if (await _tripService.IsAtHubAsync(trip, cancellationToken))
             {
@@ -154,6 +149,11 @@ public sealed class TripStepper : IStepperService<Trip>
                     _modelState.ModelTime);
                 await _tripService.AlertTravelHubCompleteAsync(trip, cancellationToken);
             }
+            
+            _logger.LogDebug("Travelling to the Hub for this Trip \n({@Trip})\n in this Step \n({Step})",
+                trip,
+                _modelState.ModelTime);
+            await _tripService.TravelHubAsync(trip, cancellationToken);
         }
 
         else if (work.WorkType == WorkType.TravelHome)

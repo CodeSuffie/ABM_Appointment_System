@@ -12,6 +12,14 @@ public sealed class BayStaffRepository(ModelDbContext context)
 
         return bayStaffs;
     }
+    
+    public IQueryable<BayStaff> Get(Hub hub)
+    {
+        var bayStaffs = Get()
+            .Where(bs => bs.HubId == hub.Id);
+
+        return bayStaffs;
+    }
 
     public async Task<BayStaff?> GetAsync(Work work, CancellationToken cancellationToken)
     {
