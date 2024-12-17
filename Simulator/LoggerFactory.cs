@@ -165,7 +165,9 @@ internal static class LoggerFactory
                         ParkingSpot = tp.ParkingSpot,
                         AdminStaff = tp.AdminStaff,
                         Bay = tp.Bay,
-                        Work = tp.Work
+                        Work = tp.Work,
+                        Appointment = tp.Appointment,
+                        TravelTime = tp.TravelTime
                     })
                 .Destructure.ByTransforming<Truck>(
                     tk => new

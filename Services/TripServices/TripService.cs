@@ -1,5 +1,6 @@
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.AppointmentServices;
@@ -25,6 +26,7 @@ public sealed class TripService
     private readonly TruckCompanyRepository _truckCompanyRepository;
     private readonly WorkService _workService;
     private readonly PelletService _pelletService;
+    private readonly AppointmentSlotRepository _appointmentSlotRepository;
     private readonly AppointmentRepository _appointmentRepository;
     private readonly AppointmentService _appointmentService;
     private readonly ModelState _modelState;
@@ -42,6 +44,7 @@ public sealed class TripService
         TruckCompanyRepository truckCompanyRepository,
         WorkService workService,
         PelletService pelletService,
+        AppointmentSlotRepository appointmentSlotRepository,
         AppointmentRepository appointmentRepository,
         AppointmentService appointmentService,
         ModelState modelState)
@@ -59,6 +62,7 @@ public sealed class TripService
         _truckCompanyRepository = truckCompanyRepository;
         _workService = workService;
         _pelletService = pelletService;
+        _appointmentSlotRepository = appointmentSlotRepository;
         _appointmentRepository = appointmentRepository;
         _appointmentService = appointmentService;
         _modelState = modelState;
@@ -217,7 +221,7 @@ public sealed class TripService
                 hub);
             var travelTime = GetTravelTime(truck, truckCompany, hub);
             
-            _logger.LogDebug("Setting Travel Time ({@Step}) for to this Trip \n({@Trip}).",
+            _logger.LogDebug("Setting Travel Time ({Step}) for to this Trip \n({@Trip}).",
                 travelTime,
                 trip);
             await _tripRepository.SetAsync(trip, travelTime, cancellationToken);
@@ -225,7 +229,7 @@ public sealed class TripService
             var earliestArrivalTime = _modelState.ModelTime + travelTime;
             
             _logger.LogDebug("Setting Appointment at this Hub \n({@Hub})\n for Trip \n({@Trip})\n with the calculated " +
-                             "earliest arrival time ({@Step}).",
+                             "earliest arrival time ({Step}).",
                 hub,
                 trip,
                 earliestArrivalTime);
@@ -241,7 +245,7 @@ public sealed class TripService
         }
     }
 
-    public async Task<Trip?> GetNextAsync(Hub hub, WorkType workType, CancellationToken cancellationToken)
+    private async Task<Trip?> GetNextBaseAsync(Hub hub, WorkType workType, CancellationToken cancellationToken)
     {
         var trips = (_tripRepository.GetCurrent(hub, workType, cancellationToken))
             .AsAsyncEnumerable()
@@ -253,10 +257,11 @@ public sealed class TripService
         await foreach (var trip in trips)
         {
             var work = await _workRepository.GetAsync(trip, cancellationToken);
-            if (nextTrip != null && (work == null ||
-                                     (work.StartTime > earliestStart))) continue;
+            if (work == null) continue;
             
-            _logger.LogDebug("Trip \n({@Trip})\n is now has the earliest StartTime \n({StartTime})\n for its Work \n({@Work})\n with WorkType \n({WorkType})",
+            if (nextTrip != null && work.StartTime > earliestStart) continue;
+            
+            _logger.LogDebug("Trip \n({@Trip})\n is now has the earliest StartTime \n({Step})\n for its Work \n({@Work})\n with WorkType \n({WorkType})",
                 trip,
                 earliestStart,
                 work,
@@ -266,11 +271,157 @@ public sealed class TripService
             earliestStart = work?.StartTime;
         }
         
-        _logger.LogInformation("Trip \n({@Trip})\n has the earliest StartTime \n({StartTime})\n for its Work with WorkType \n({WorkType})",
+        _logger.LogInformation("Trip \n({@Trip})\n has the earliest StartTime \n({Step})\n for its Work with WorkType \n({WorkType})",
             nextTrip,
             earliestStart,
             workType);
         return nextTrip;
+    }
+    
+    private async Task<Trip?> GetNextAppointmentAsync(Hub hub, WorkType workType, CancellationToken cancellationToken)
+    {
+        if (workType == WorkType.WaitBay)
+        {
+            _logger.LogError("Getting next Trip failed due to WorkType ({WorkType}) being of an invalid Type ({WorkType}).",
+                workType,
+                WorkType.WaitBay);
+
+            return null;
+        }
+        
+        var trips = (_tripRepository.GetCurrent(hub, workType, cancellationToken))
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        Trip? nextTrip = null;
+        TimeSpan? earliestAppointmentTime = null;
+        
+        await foreach (var trip in trips)
+        {
+            var appointment = await _appointmentRepository.GetAsync(trip, cancellationToken);
+            if (appointment == null)
+            {
+                _logger.LogError("Trip \n({@Trip})\n at this Hub \n({@Hub})\n did not have an Appointment assigned.",
+                    trip,
+                    hub);
+
+                continue;
+            }
+            
+            var appointmentSlot = await _appointmentSlotRepository.GetAsync(appointment, cancellationToken);
+            if (appointmentSlot == null)
+            {
+                _logger.LogError("Appointment \n({@Appointment})\n at this Hub \n({@Hub})\n did not have an AppointmentSlot assigned.",
+                    appointment,
+                    hub);
+
+                continue;
+            }
+
+            if (nextTrip != null && appointmentSlot.StartTime > earliestAppointmentTime) continue;
+            
+            _logger.LogDebug("Trip \n({@Trip})\n is now has the earliest Appointment Time \n({Step})\n for " +
+                             "its Appointment \n({@Appointment})\n assigned to this AppointmentSlot " +
+                             "\n({@AppointmentSlot})",
+                trip,
+                earliestAppointmentTime,
+                appointment,
+                appointmentSlot);
+                        
+            nextTrip = trip;
+            earliestAppointmentTime = appointmentSlot.StartTime;
+        }
+        
+        _logger.LogInformation("Trip \n({@Trip})\n has the earliest Appointment Time \n({Step})\n for its Work with WorkType \n({WorkType})",
+            nextTrip,
+            earliestAppointmentTime,
+            workType);
+        return nextTrip;
+    }
+
+    public Task<Trip?> GetNextAsync(Hub hub, WorkType workType, CancellationToken cancellationToken)
+    {
+        return !_modelState.ModelConfig.AppointmentSystemMode ? 
+            GetNextBaseAsync(hub, workType, cancellationToken) : 
+            GetNextAppointmentAsync(hub, workType, cancellationToken);
+    }
+    
+    public async Task<Trip?> GetNextAsync(Hub hub, Bay bay, CancellationToken cancellationToken)
+    {
+        if (!_modelState.ModelConfig.AppointmentSystemMode)
+        {
+            _logger.LogError("Getting next Trip failed due to this function not being available without " +
+                             "AppointmentSystemMode.");
+
+            return null;
+        }
+        
+        var trips = (_tripRepository.GetCurrent(hub, WorkType.WaitBay, cancellationToken))
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+        
+        await foreach (var trip in trips)
+        {
+            var appointment = await _appointmentRepository.GetAsync(trip, cancellationToken);
+            if (appointment == null)
+            {
+                _logger.LogError("Trip \n({@Trip})\n at this Hub \n({@Hub})\n did not have an Appointment assigned.",
+                    trip,
+                    hub);
+
+                continue;
+            }
+
+            if (appointment.BayId != bay.Id)
+            {
+                _logger.LogDebug("Appointment \n({@Appointment})\n at this Hub \n({@Hub})\n is not assigned to this Bay " +
+                                 "\n({@Bay})\n, checking next.",
+                    appointment,
+                    hub,
+                    bay);
+                
+                continue;
+            }
+            
+            var appointmentSlot = await _appointmentSlotRepository.GetAsync(appointment, cancellationToken);
+            if (appointmentSlot == null)
+            {
+                _logger.LogError("Appointment \n({@Appointment})\n at this Hub \n({@Hub})\n did not have an " +
+                                 "AppointmentSlot assigned.",
+                    appointment,
+                    hub);
+
+                continue;
+            }
+
+            if (appointmentSlot.StartTime > _modelState.ModelTime)
+            {
+                _logger.LogError("Trip \n({@Trip})\n with this Appointment \n({@Appointment})\n in AppointmentSlot " +
+                                 "\n({@AppointmentSlot})\n for this Bay \n({@Bay})\n is too early in this Step ({Step})",
+                    trip,
+                    appointment,
+                    appointmentSlot,
+                    bay,
+                    _modelState.ModelTime);
+
+                continue;
+            }
+            
+            _logger.LogInformation("Trip \n({@Trip})\n with this Appointment \n({@Appointment})\n in AppointmentSlot " +
+                                   "\n({@AppointmentSlot})\n for this Bay \n({@Bay})\n is active in this Step ({Step}).",
+                trip,
+                appointment,
+                appointmentSlot,
+                bay,
+                _modelState.ModelTime);
+            return trip;
+        }
+        
+        _logger.LogInformation("Hub \n({@Hub})\n has no active Appointment assigned to this \n({@Bay})\n in this Step ({Step})",
+            hub,
+            bay,
+            _modelState.ModelTime);
+        return null;
     }
     
     public async Task AlertFreeAsync(Trip trip, Truck truck, CancellationToken cancellationToken)

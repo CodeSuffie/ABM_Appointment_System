@@ -96,7 +96,9 @@ public sealed class BayService(
             return;
         }
 
-        var trip = await tripService.GetNextAsync(hub, WorkType.WaitBay, cancellationToken);
+        var trip = !modelState.ModelConfig.AppointmentSystemMode ?
+            await tripService.GetNextAsync(hub, WorkType.Bay, cancellationToken) :
+            await tripService.GetNextAsync(hub, bay, cancellationToken);
         if (trip == null)
         {
             logger.LogInformation("Hub \n({@Hub})\n did not have a Trip for this Bay \n({@Bay})\n to assign Bay Work for.",

@@ -68,7 +68,7 @@ public sealed class AppointmentService(
         if (appointmentSlot == null)
         {
             logger.LogError("Hub \n({@Hub})\n did not have any AppointmentSlot with available Appointments after this " +
-                            "Step \n({@Step})\n for this Trip \n({@Trip}).",
+                            "Step \n({Step})\n for this Trip \n({@Trip}).",
                 hub, 
                 startTime, 
                 trip);
@@ -80,7 +80,7 @@ public sealed class AppointmentService(
         if (bay == null)
         {
             logger.LogError("Hub \n({@Hub})\n with this AppointmentSlot \n({@AppointmentSlot})\n had no Bay " +
-                            "available for an Appointment after this Step \n({@Step})\n for this Trip \n({@Trip}).",
+                            "available for an Appointment after this Step \n({Step})\n for this Trip \n({@Trip}).",
                 hub, 
                 appointmentSlot,
                 startTime, 
