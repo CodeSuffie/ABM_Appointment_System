@@ -95,10 +95,14 @@ public sealed class WorkService(
             }
 
             var duration = appointmentSlot.StartTime - (modelState.ModelTime + trip.TravelTime);
-            var work = GetNew(duration, WorkType.WaitTravelHub);
+            var appointmentWork = GetNew(duration, WorkType.WaitTravelHub);
 
-            await workRepository.AddAsync(work, trip, cancellationToken);
+            await workRepository.AddAsync(appointmentWork, trip, cancellationToken);
+            return;
         }
+        
+        var work = GetNew(null, WorkType.TravelHub);
+        await workRepository.AddAsync(work, trip, cancellationToken);
     }
     
     public async Task AddAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
