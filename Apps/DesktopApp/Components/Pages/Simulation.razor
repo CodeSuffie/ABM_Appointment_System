@@ -216,34 +216,31 @@
                             {
                                 
                                 if (appointment.AppointmentSlot != null && 
-                                    ( _selectedBay.TripId == appointment.TripId ||
+                                    (_selectedBay.TripId == appointment.TripId ||
                                       ModelState.ModelTime <= 
                                         appointment.AppointmentSlot.StartTime + 
                                         ModelState.AppointmentConfig!.AppointmentLength * 
                                         ModelState.ModelConfig.ModelStep))
                                 {
-                                    if (ModelState.ModelTime <= appointment.AppointmentSlot.StartTime)
-                                    {
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="row" style="width: 150px">Appointment #@appointment.Id</th>
-                                                </tr>
-                                            </thead>
-                                            
-                                            <tbody>
-                                                <tr>
-                                                    <th scope="row" style="width: 150px">AppointmentSlot</th>
-                                                    <td>StartTime: @appointment.AppointmentSlot.StartTime.ToString(@"d\:hh\:mm")</td>
-                                                </tr>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="row" style="width: 150px">Appointment #@appointment.Id</th>
+                                            </tr>
+                                        </thead>
+                                        
+                                        <tbody>
+                                            <tr>
+                                                <th scope="row" style="width: 150px">AppointmentSlot</th>
+                                                <td>StartTime: @appointment.AppointmentSlot.StartTime.ToString(@"d\:hh\:mm")</td>
+                                            </tr>
 
-                                                <tr>
-                                                    <th scope="row" style="width: 150px">Trip</th>
-                                                    <td>#@appointment.TripId</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    }
+                                            <tr>
+                                                <th scope="row" style="width: 150px">Trip</th>
+                                                <td>#@appointment.TripId</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 }
                             }
                         }

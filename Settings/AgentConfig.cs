@@ -118,13 +118,13 @@ public class AgentConfig : AgentConfigBase
     public override double AdminStaffAverageWorkDays { get; } = 1;
     public override TimeSpan AdminHubShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
-    public override int BayStaffCount { get; } = 25;
+    public override int BayStaffCount { get; } = 40;
     public override int BayStaffAverageSpeed { get; } = 3;
     public override int BayStaffSpeedDeviation { get; } = 1;
     public override double BayStaffAverageWorkDays { get; } = 1;
     public override TimeSpan BayShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
-    public override int PickerCount { get; } = 25;
+    public override int PickerCount { get; } = 5;
     public override int PickerAverageSpeed { get; } = 4;
     public override int PickerSpeedDeviation { get; } = 3;
     public override double PickerAverageWorkDays { get; } = 1;

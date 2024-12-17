@@ -19,13 +19,14 @@ public class AppointmentSlotInitialize(
     private async Task InitializeObjectsAsync(Hub hub, OperatingHour operatingHour, CancellationToken cancellationToken)
     {
         var appointmentSlotLength = modelState.AppointmentConfig!.AppointmentLength * modelState.ModelConfig.ModelStep;
+        var appointmentSlotInitialDelay = modelState.AppointmentConfig!.AppointmentSlotInitialDelay * modelState.ModelConfig.ModelStep;
         var appointmentSlotCount = (int)(operatingHour.Duration / appointmentSlotLength);
         if (appointmentSlotCount <= 0) return;
 
         var appointmentSlots = Enumerable.Range(0, appointmentSlotCount - 1)
             .Select(x => new AppointmentSlot
             {
-                StartTime = x * appointmentSlotLength + operatingHour.StartTime,
+                StartTime = x * appointmentSlotLength + appointmentSlotInitialDelay + operatingHour.StartTime,
                 Hub = hub
             })
             .ToList();
