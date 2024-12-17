@@ -214,6 +214,8 @@ public sealed class TripService
                 return null;
             }
 
+            if (!_modelState.ModelConfig.AppointmentSystemMode) return trip;
+            
             _logger.LogDebug("Getting Travel Time for this Truck \n({@Truck})\n from this TruckCompany " +
                              "\n({@TruckCompany})\n location to this Hub \n({@Hub})\n location.",
                 truck,
@@ -242,6 +244,7 @@ public sealed class TripService
             
             _logger.LogError("No Appointment was assigned to the Trip to create.");
             return null;
+
         }
     }
 
