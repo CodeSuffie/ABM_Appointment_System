@@ -13,10 +13,12 @@ public sealed class TripStepper : IStepperService<Trip>
     private readonly ILogger<TripStepper> _logger;
     private readonly TripRepository _tripRepository;
     private readonly WorkRepository _workRepository;
+    private readonly WorkService _workService;
     private readonly TripService _tripService;
     private readonly ModelState _modelState;
     private readonly Histogram<int> _unclaimedTripsHistogram;
     private readonly Histogram<int> _claimedTripsHistogram;
+    private readonly Histogram<int> _waitTravelHubTripsHistogram;
     private readonly Histogram<int> _travelHubTripsHistogram;
     private readonly Histogram<int> _arrivedTripsHistogram;
     private readonly Histogram<int> _parkedTripsHistogram;
@@ -29,6 +31,7 @@ public sealed class TripStepper : IStepperService<Trip>
     public TripStepper(ILogger<TripStepper> logger,
         TripRepository tripRepository,
         WorkRepository workRepository,
+        WorkService workService,
         TripService tripService,
         ModelState modelState,
         Meter meter)
@@ -36,11 +39,13 @@ public sealed class TripStepper : IStepperService<Trip>
         _logger = logger;
         _tripRepository = tripRepository;
         _workRepository = workRepository;
+        _workService = workService;
         _tripService = tripService;
         _modelState = modelState;
         
         _unclaimedTripsHistogram = meter.CreateHistogram<int>("unclaimed-trip", "Trip", "#Trips Unclaimed (excl. Completed).");
         _claimedTripsHistogram = meter.CreateHistogram<int>("claimed-trip", "Trip", "#Trips Claimed (excl. Completed).");
+        _waitTravelHubTripsHistogram = meter.CreateHistogram<int>("wait-travel-hub-trip", "Trip", "#Trips Waiting to Travel to the Hub.");
         _travelHubTripsHistogram = meter.CreateHistogram<int>("travel-hub-trip", "Trip", "#Trips Travelling to the Hub.");
         _arrivedTripsHistogram = meter.CreateHistogram<int>("arrived-hub-trip", "Trip", "#Trips Arrived at the Hub but not yet parking.");
         _parkedTripsHistogram = meter.CreateHistogram<int>("parking-trip", "Trip", "#Trips Parking but not yet Checked-In.");
@@ -61,6 +66,9 @@ public sealed class TripStepper : IStepperService<Trip>
 
         var claimed = await _tripRepository.CountAsync(true, cancellationToken);
         _claimedTripsHistogram.Record(claimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        
+        var waitTravelHub = await _tripRepository.CountAsync(WorkType.WaitTravelHub, cancellationToken);
+        _waitTravelHubTripsHistogram.Record(waitTravelHub, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
         var travelHub = await _tripRepository.CountAsync(WorkType.TravelHub, cancellationToken);
         _travelHubTripsHistogram.Record(travelHub, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
@@ -106,7 +114,23 @@ public sealed class TripStepper : IStepperService<Trip>
             return;
         }
 
-        if (work.WorkType == WorkType.TravelHub)
+        if (work.WorkType == WorkType.WaitTravelHub)
+        {
+            if (_workService.IsWorkCompleted(work))
+            {
+                _logger.LogInformation("Trip \n({@Trip})\n just completed assigned Work \n({@Work})\n in this Step \n({Step})",
+                    trip,
+                    work,
+                    _modelState.ModelTime);
+            }
+            
+            _logger.LogDebug("Alerting Wait for Travel Hub Completed for this Trip \n({@Trip})\n in this Step \n({Step})",
+                trip,
+                _modelState.ModelTime);
+            await _tripService.AlertWaitTravelHubCompleteAsync(trip, cancellationToken);
+        }
+
+        else if (work.WorkType == WorkType.TravelHub)
         {
             _logger.LogInformation("Trip \n({@Trip})\n has Work \n({@Work})\n assigned of Type {WorkType} in this Step \n({Step})",
                 trip,

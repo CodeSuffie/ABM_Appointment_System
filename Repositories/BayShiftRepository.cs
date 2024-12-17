@@ -20,4 +20,27 @@ public sealed class BayShiftRepository(ModelDbContext context)
 
         return shifts;
     }
+
+    public async Task AddAsync(BayShift bayShift, CancellationToken cancellationToken)
+    {
+        await context.BayShifts.AddAsync(bayShift, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task SetAsync(BayShift bayShift, BayStaff bayStaff, CancellationToken cancellationToken)
+    {
+        bayShift.BayStaff = bayStaff;
+        bayStaff.Shifts.Remove(bayShift);
+        bayStaff.Shifts.Add(bayShift);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task SetAsync(BayShift bayShift, Bay bay, CancellationToken cancellationToken)
+    {
+        bayShift.Bay = bay;
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
 }

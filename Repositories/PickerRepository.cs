@@ -31,6 +31,7 @@ public sealed class PickerRepository(ModelDbContext context)
 
     public async Task AddAsync(Picker picker, HubShift hubShift, CancellationToken cancellationToken)
     {
+        picker.Shifts.Remove(hubShift);
         picker.Shifts.Add(hubShift);
         hubShift.Picker = picker;
         

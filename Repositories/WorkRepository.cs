@@ -128,6 +128,7 @@ public sealed class WorkRepository(
         trip.Work = work;
 
         work.Bay = bay;
+        bay.Works.Remove(work);
         bay.Works.Add(work);
 
         await context.SaveChangesAsync(cancellationToken);
@@ -136,6 +137,7 @@ public sealed class WorkRepository(
     public async Task AddAsync(Work work, Bay bay, BayStaff bayStaff, Pellet pellet, CancellationToken cancellationToken)
     {
         work.Bay = bay;
+        bay.Works.Remove(work);
         bay.Works.Add(work);
 
         work.BayStaff = bayStaff;
@@ -153,6 +155,7 @@ public sealed class WorkRepository(
     public async Task AddAsync(Work work, Bay bay, Picker picker, Pellet pellet, CancellationToken cancellationToken)
     {
         work.Bay = bay;
+        bay.Works.Remove(work);
         bay.Works.Add(work);
         
         work.Picker = picker;
@@ -170,6 +173,7 @@ public sealed class WorkRepository(
     public async Task AddAsync(Work work, Bay bay, Stuffer stuffer, Pellet pellet, CancellationToken cancellationToken)
     {
         work.Bay = bay;
+        bay.Works.Remove(work);
         bay.Works.Add(work);
         
         work.Stuffer = stuffer;

@@ -31,6 +31,7 @@ public sealed class BayStaffRepository(ModelDbContext context)
 
     public async Task AddAsync(BayStaff bayStaff, BayShift bayShift, CancellationToken cancellationToken)
     {
+        bayStaff.Shifts.Remove(bayShift);
         bayStaff.Shifts.Add(bayShift);
         bayShift.BayStaff = bayStaff;
         

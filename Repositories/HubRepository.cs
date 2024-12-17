@@ -70,6 +70,7 @@ public sealed class HubRepository(ModelDbContext context)
 
     public Task AddAsync(Hub hub, OperatingHour operatingHour, CancellationToken cancellationToken)
     {
+        hub.Shifts.Remove(operatingHour);
         hub.Shifts.Add(operatingHour);
         operatingHour.Hub = hub;
         

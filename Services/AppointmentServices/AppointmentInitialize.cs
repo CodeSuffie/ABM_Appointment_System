@@ -8,6 +8,8 @@ public sealed class AppointmentInitialize : IPriorityInitializationService
     
     public Task InitializeObjectsAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        // throw new NotImplementedException();
+        // TODO: 
+        return Task.CompletedTask;
     }
 }

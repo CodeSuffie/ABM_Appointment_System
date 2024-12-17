@@ -12,6 +12,22 @@ public sealed class AppointmentSlotRepository(ModelDbContext context)
 
         return appointmentSlots;
     }
+
+    public IQueryable<AppointmentSlot> Get(Hub hub)
+    {
+        var appointmentSlots = Get()
+            .Where(aps => aps.HubId == hub.Id);
+
+        return appointmentSlots;
+    }
+    
+    public IQueryable<AppointmentSlot> GetAfter(Hub hub, TimeSpan time)
+    {
+        var appointmentSlots = Get(hub)
+            .Where(aps => aps.StartTime >= time);
+
+        return appointmentSlots;
+    }
     
     public async Task<AppointmentSlot?> GetAsync(Appointment appointment, CancellationToken cancellationToken)
     {
@@ -32,6 +48,7 @@ public sealed class AppointmentSlotRepository(ModelDbContext context)
     public async Task SetAsync(AppointmentSlot appointmentSlot, Hub hub, CancellationToken cancellationToken)
     {
         appointmentSlot.Hub = hub;
+        hub.AppointmentSlots.Remove(appointmentSlot);
         hub.AppointmentSlots.Add(appointmentSlot);
 
         await context.SaveChangesAsync(cancellationToken);

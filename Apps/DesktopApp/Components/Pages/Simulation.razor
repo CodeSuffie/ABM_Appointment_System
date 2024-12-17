@@ -44,6 +44,10 @@
                         
                         <div class="d-flex flex-column flex-fill">
                             <h1>Truck #@_selectedTruck.Id</h1>
+                            @if (trip != null)
+                            {
+                                <h6>Trip #@trip.Id</h6>
+                            }
 
                             <table class="table">
                                 <tbody>
@@ -70,7 +74,7 @@
                                     <th scope="row" style="width: 150px">Inventory</th>
                                     <td>@(string.Join(", ", _selectedTruck.Inventory.Select(x => x.Id)))</td>
                                 </tr>
-                        
+
                                 </tbody>
                             </table>
 
@@ -80,37 +84,75 @@
                                 {
                                     <table class="table">
                                         <thead>
-                                        <tr>
-                                            <th scope="row" style="width: 150px">Load</th>
-                                            <td>@load.Id</td>
-                                        </tr>
+                                            <tr>
+                                                <th scope="row" style="width: 150px">Load #@load.Id</th>
+                                            </tr>
                                         </thead>
                                         
                                         <tbody>
-                                        <tr>
-                                            <th scope="row" style="width: 150px">LoadType</th>
-                                            @switch (load.LoadType)
-                                            {
-                                                case LoadType.DropOff:
-                                                    <td>LoadType.DropOff</td>
-                                                    break;
-                                                case LoadType.PickUp:
-                                                    <td>LoadType.PickUp</td>
-                                                    break;
-                                                default:
-                                                    <td>Invalid!</td>
-                                                    break;
-                                            }
-                                        </tr>
+                                            <tr>
+                                                <th scope="row" style="width: 150px">LoadType</th>
+                                                @{
+                                                    var loadType = "Invalid!";
+                                                    @switch (load.LoadType)
+                                                    {
+                                                        case LoadType.DropOff:
+                                                            loadType = "LoadType.DropOff";
+                                                            break;
+                                                        case LoadType.PickUp:
+                                                            loadType = "LoadType.PickUp";
+                                                            break;
+                                                    }
+                                                }
+                                                <td>@loadType</td>
+                                            </tr>
 
-                                        <tr>
-                                            <th scope="row" style="width: 150px">Pellets</th>
-                                            <td>@(string.Join(", ", load.Pellets.Select(x => x.Id)))</td>
-                                        </tr>
+                                            <tr>
+                                                <th scope="row" style="width: 150px">Pellets</th>
+                                                <td>@(string.Join(", ", load.Pellets.Select(x => x.Id)))</td>
+                                            </tr>
 
                                         </tbody>
                                     </table>
                                 }
+                            }
+
+                            @if (trip != null && ModelState.ModelConfig.AppointmentSystemMode)
+                            {
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            @{
+                                                long appointmentId = -1;
+                                                if (trip.Appointment != null)
+                                                {
+                                                    appointmentId = trip.Appointment.Id;
+                                                }
+                                            }
+                                            <th scope="row" style="width: 150px">Appointment #@appointmentId</th>
+                                        </tr>
+                                    </thead>
+                                    
+                                    @if (trip.Appointment != null)
+                                    {
+                                        
+                                        <tbody>
+                                        @if (trip.Appointment.AppointmentSlot != null)
+                                        {
+                                            <tr>
+                                                <th scope="row" style="width: 150px">AppointmentSlot</th>
+                                                <td>StartTime: @trip.Appointment.AppointmentSlot.StartTime.ToString(@"d\:hh\:mm")</td>
+                                            </tr>
+                                        }
+                                        
+                                        <tr>
+                                            <th scope="row" style="width: 150px">Bay</th>
+                                            <td>#@trip.Appointment.BayId</td>
+                                        </tr>
+
+                                        </tbody>
+                                    }
+                                </table>
                             }
                         </div>
                     }
@@ -168,6 +210,41 @@
 
                             </tbody>
                         </table>
+                        @{
+                            foreach (var appointment in _selectedBay.Appointments)
+                            {
+                                
+                                if (appointment.AppointmentSlot != null && 
+                                    ModelState.ModelTime <= 
+                                        appointment.AppointmentSlot.StartTime + 
+                                        ModelState.AppointmentConfig!.AppointmentLength * 
+                                        ModelState.ModelConfig.ModelStep)
+                                {
+                                    if (ModelState.ModelTime <= appointment.AppointmentSlot.StartTime)
+                                    {
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="row" style="width: 150px">Appointment #@appointment.Id</th>
+                                                </tr>
+                                            </thead>
+                                            
+                                            <tbody>
+                                                <tr>
+                                                    <th scope="row" style="width: 150px">AppointmentSlot</th>
+                                                    <td>StartTime: @appointment.AppointmentSlot.StartTime.ToString(@"d\:hh\:mm")</td>
+                                                </tr>
+
+                                                <tr>
+                                                    <th scope="row" style="width: 150px">Trip</th>
+                                                    <td>#@appointment.TripId</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    }
+                                }
+                            }
+                        }
                     </div>
                     }
                 </div>

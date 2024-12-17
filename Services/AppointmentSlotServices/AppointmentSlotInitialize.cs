@@ -33,7 +33,13 @@ public class AppointmentSlotInitialize(
         foreach (var appointmentSlot in appointmentSlots)
         {
             await appointmentSlotRepository.AddAsync(appointmentSlot, cancellationToken);
+            
+            logger.LogDebug("Setting AppointmentSlot \n({@AppointmentSlot})\n to this Hub \n({@Hub})",
+                appointmentSlot,
+                hub);
             await appointmentSlotRepository.SetAsync(appointmentSlot, hub, cancellationToken);
+        
+            logger.LogInformation("New AppointmentSlot created: AppointmentSlot={@AppointmentSlot}", appointmentSlot);
         }
     }
     

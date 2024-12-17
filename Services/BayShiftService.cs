@@ -40,7 +40,7 @@ public sealed class BayShiftService(
         return operatingHour.StartTime + new TimeSpan(shiftHour, 0, 0);
     }
     
-    public async Task<double?> GetWorkChanceAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    private async Task<double?> GetWorkChanceAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var hub = await hubRepository.GetAsync(bayStaff, cancellationToken);
         
@@ -51,8 +51,37 @@ public sealed class BayShiftService(
 
         return null;
     }
+
+    private async Task<BayShift?> GetNewObjectAsync(
+        BayStaff bayStaff,
+        Bay bay,
+        TimeSpan startTime,
+        TimeSpan duration,
+        CancellationToken cancellationToken)
+    {
+        var bayShift = new BayShift {
+            BayStaff = bayStaff,
+            Bay = bay,
+            StartTime = startTime,
+            Duration = duration,
+        };
+
+        await bayShiftRepository.AddAsync(bayShift, cancellationToken);
+        
+        logger.LogDebug("Setting this BayStaff \n({@BayStaff})\n for this BayShift \n({@BayShift})",
+            bayStaff,
+            bayShift);
+        await bayShiftRepository.SetAsync(bayShift, bayStaff, cancellationToken);
+        
+        logger.LogDebug("Setting this Bay \n({@Bay})\n for this BayShift \n({@BayShift})",
+            bay,
+            bayShift);
+        await bayShiftRepository.SetAsync(bayShift, bay, cancellationToken);
+
+        return bayShift;
+    }
     
-    public async Task<BayShift?> GetNewObjectAsync(
+    private async Task<BayShift?> GetNewObjectAsync(
         BayStaff bayStaff, 
         OperatingHour operatingHour,
         Hub hub,
@@ -68,26 +97,20 @@ public sealed class BayShiftService(
 
             return null;
         }
+        if (modelState.ModelConfig.AppointmentSystemMode)
+            return await GetNewObjectAsync(bayStaff, bay, (TimeSpan) operatingHour.StartTime, operatingHour.Duration, cancellationToken);
         
         var startTime = GetStartTime(bayStaff, operatingHour);
-        if (startTime == null)
-        {
-            logger.LogError("No start time could be assigned to the new BayShift for this " +
-                            "BayStaff \n({@BayStaff})\n during this OperatingHour \n({@OperatingHour})",
-                bayStaff,
-                operatingHour);
-
-            return null;
-        }
+        if (startTime != null)
+            return await GetNewObjectAsync(bayStaff, bay, (TimeSpan)startTime, bayStaff.AverageShiftLength, cancellationToken);
         
-        var bayShift = new BayShift {
-            BayStaff = bayStaff,
-            Bay = bay,
-            StartTime = (TimeSpan) startTime,
-            Duration = bayStaff.AverageShiftLength,
-        };
+        logger.LogError("No start time could be assigned to the new BayShift for this " +
+                        "BayStaff \n({@BayStaff})\n during this OperatingHour \n({@OperatingHour})",
+            bayStaff,
+            operatingHour);
 
-        return bayShift;
+        return null;
+
     }
 
     public async Task GetNewObjectsAsync(BayStaff bayStaff, CancellationToken cancellationToken)

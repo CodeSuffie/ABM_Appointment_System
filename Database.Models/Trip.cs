@@ -32,4 +32,6 @@ public class Trip
     // Appointment System
     public Appointment? Appointment { get; set; }
     public long? AppointmentId { get; set; }
+    
+    public TimeSpan TravelTime { get; set; }
 }

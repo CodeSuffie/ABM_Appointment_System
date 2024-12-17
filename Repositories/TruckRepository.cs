@@ -31,6 +31,7 @@ public sealed class TruckRepository(ModelDbContext context)
     
     public async Task AddAsync(Truck truck, Pellet pellet, CancellationToken cancellationToken)
     {
+        truck.Inventory.Remove(pellet);
         truck.Inventory.Add(pellet);
         pellet.Truck = truck;
 

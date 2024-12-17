@@ -16,7 +16,8 @@ public sealed class TripRepository(
 {
     public IQueryable<Trip> Get()
     {
-        var trips = context.Trips;
+        var trips = context.Trips
+            .Include(t => t.Appointment);
 
         return trips;
     }
@@ -170,7 +171,13 @@ public sealed class TripRepository(
         
         return context.SaveChangesAsync(cancellationToken);
     }
-    
+
+    public async Task SetAsync(Trip trip, TimeSpan travelTime, CancellationToken cancellationToken)
+    {
+        trip.TravelTime = travelTime;
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
     
     public async Task SetAsync(Trip trip, bool completed, CancellationToken cancellationToken)
     {
@@ -178,7 +185,6 @@ public sealed class TripRepository(
         
         await context.SaveChangesAsync(cancellationToken);
     }
-    
     
     public async Task SetDropOffAsync(Trip trip, Load dropOff, CancellationToken cancellationToken)
     {
@@ -195,6 +201,7 @@ public sealed class TripRepository(
         if (trip.Hub == null)
         {
             trip.Hub = hub;
+            hub.Trips.Remove(trip);
             hub.Trips.Add(trip);
         }
         else if (trip.HubId != hub.Id)
@@ -212,6 +219,8 @@ public sealed class TripRepository(
 
         trip.Loads.RemoveAll(l => l.LoadType == LoadType.DropOff);
         
+        
+        trip.Loads.Remove(dropOff);
         trip.Loads.Add(dropOff);
         dropOff.Trip = trip;
 
@@ -233,6 +242,7 @@ public sealed class TripRepository(
         if (trip.Hub == null)
         {
             trip.Hub = hub;
+            hub.Trips.Remove(trip);
             hub.Trips.Add(trip);
         }
         else if (trip.HubId != hub.Id)

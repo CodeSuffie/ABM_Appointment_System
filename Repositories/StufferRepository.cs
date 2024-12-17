@@ -31,6 +31,7 @@ public sealed class StufferRepository(ModelDbContext context)
 
     public async Task AddAsync(Stuffer stuffer, HubShift hubShift, CancellationToken cancellationToken)
     {
+        stuffer.Shifts.Remove(hubShift);
         stuffer.Shifts.Add(hubShift);
         hubShift.Stuffer = stuffer;
         

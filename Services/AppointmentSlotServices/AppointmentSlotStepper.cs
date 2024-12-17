@@ -7,16 +7,22 @@ public sealed class AppointmentSlotStepper : IStepperService<AppointmentSlot>
 {
     public Task DataCollectAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        // throw new NotImplementedException();
+        // TODO: 
+        return Task.CompletedTask;
     }
     
-    public Task StepAsync(AppointmentSlot entity, CancellationToken cancellationToken)
+    public Task StepAsync(AppointmentSlot appointmentSlot, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        // throw new NotImplementedException();
+        // TODO: 
+        return Task.CompletedTask;
     }
 
     public Task StepAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        // throw new NotImplementedException();
+        // TODO: 
+        return Task.CompletedTask;
     }
 }

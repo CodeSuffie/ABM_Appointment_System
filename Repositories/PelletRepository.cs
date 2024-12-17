@@ -94,6 +94,7 @@ public sealed class PelletRepository(ModelDbContext context)
     public Task SetAsync(Pellet pellet, Load load, CancellationToken cancellationToken)
     {
         pellet.Load = load;
+        load.Pellets.Remove(pellet);
         load.Pellets.Add(pellet);
         
         return context.SaveChangesAsync(cancellationToken);
@@ -102,6 +103,7 @@ public sealed class PelletRepository(ModelDbContext context)
     public Task SetAsync(Pellet pellet, TruckCompany truckCompany, CancellationToken cancellationToken)
     {
         pellet.TruckCompany = truckCompany;
+        truckCompany.Inventory.Remove(pellet);
         truckCompany.Inventory.Add(pellet);
         
         return context.SaveChangesAsync(cancellationToken);
@@ -110,6 +112,7 @@ public sealed class PelletRepository(ModelDbContext context)
     public Task SetAsync(Pellet pellet, Truck truck, CancellationToken cancellationToken)
     {
         pellet.Truck = truck;
+        truck.Inventory.Remove(pellet);
         truck.Inventory.Add(pellet);
         
         return context.SaveChangesAsync(cancellationToken);
@@ -118,6 +121,7 @@ public sealed class PelletRepository(ModelDbContext context)
     public Task SetAsync(Pellet pellet, Bay bay, CancellationToken cancellationToken)
     {
         pellet.Bay = bay;
+        bay.Inventory.Remove(pellet);
         bay.Inventory.Add(pellet);
         
         return context.SaveChangesAsync(cancellationToken);
@@ -126,6 +130,7 @@ public sealed class PelletRepository(ModelDbContext context)
     public Task SetAsync(Pellet pellet, Warehouse warehouse, CancellationToken cancellationToken)
     {
         pellet.Warehouse = warehouse;
+        warehouse.Inventory.Remove(pellet);
         warehouse.Inventory.Add(pellet);
         
         return context.SaveChangesAsync(cancellationToken);

@@ -39,6 +39,7 @@ public sealed class ParkingSpotRepository(ModelDbContext context)
     public async Task SetAsync(ParkingSpot parkingSpot, Hub hub, CancellationToken cancellationToken)
     {
         parkingSpot.Hub = hub;
+        hub.ParkingSpots.Remove(parkingSpot);
         hub.ParkingSpots.Add(parkingSpot);
         
         await context.SaveChangesAsync(cancellationToken);

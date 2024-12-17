@@ -8,22 +8,20 @@ using Services.TruckCompanyServices;
 
 namespace Services.PelletServices;
 
-public sealed class PelletCreation
+public sealed class PelletFactory
 {
-    private readonly ILogger<PelletCreation> _logger;
+    private readonly ILogger<PelletFactory> _logger;
     private readonly PelletRepository _pelletRepository;
     private readonly TruckCompanyService _truckCompanyService;
-    private readonly TruckCompanyRepository _truckCompanyRepository;
     private readonly HubService _hubService;
     private readonly WarehouseRepository _warehouseRepository;
     private readonly ModelState _modelState;
     private readonly UpDownCounter<int> _unclaimedPellets;
     
-    public PelletCreation(
-        ILogger<PelletCreation> logger,
+    public PelletFactory(
+        ILogger<PelletFactory> logger,
         PelletRepository pelletRepository,
         TruckCompanyService truckCompanyService,
-        TruckCompanyRepository truckCompanyRepository,
         HubService hubService,
         WarehouseRepository warehouseRepository,
         ModelState modelState,
@@ -32,7 +30,6 @@ public sealed class PelletCreation
         _logger = logger;
         _pelletRepository = pelletRepository;
         _truckCompanyService = truckCompanyService;
-        _truckCompanyRepository = truckCompanyRepository;
         _hubService = hubService;
         _warehouseRepository = warehouseRepository;
         _modelState = modelState;    

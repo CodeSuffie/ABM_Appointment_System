@@ -8,17 +8,17 @@ namespace Services.PelletServices;
 public sealed class PelletStepper : IStepperService
 {
     private readonly ILogger<PelletStepper> _logger;
-    private readonly PelletCreation _pelletCreation;
+    private readonly PelletFactory _pelletFactory;
     private readonly ModelState _modelState;
     
     public PelletStepper(
         ILogger<PelletStepper> logger,
-        PelletCreation pelletCreation,
+        PelletFactory pelletFactory,
         ModelState modelState,
         Meter meter)
     {
         _logger = logger;
-        _pelletCreation = pelletCreation;
+        _pelletFactory = pelletFactory;
         _modelState = modelState;
     }
     
@@ -29,6 +29,6 @@ public sealed class PelletStepper : IStepperService
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        await _pelletCreation.AddNewTruckCompanyPelletsAsync(_modelState.ModelConfig.PelletsPerStep, cancellationToken);
+        await _pelletFactory.AddNewTruckCompanyPelletsAsync(_modelState.ModelConfig.PelletsPerStep, cancellationToken);
     }
 }

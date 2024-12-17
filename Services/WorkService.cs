@@ -12,6 +12,8 @@ public sealed class WorkService(
     WorkRepository workRepository,
     ModelState modelState)
 {
+    // TODO: Add timer for Appointment mode for how long BayStaff is working
+    
     public bool IsWorkCompleted(Work work)
     {
         if (work.Duration == null)
@@ -29,6 +31,9 @@ public sealed class WorkService(
     
     private Work GetNew(TimeSpan? duration, WorkType workType)
     {
+        var minDuration = new TimeSpan(0, 0, 0);
+        duration = duration != null && duration < minDuration ? minDuration : duration;
+        
         var work = new Work
         {
             StartTime = modelState.ModelTime,
@@ -58,8 +63,15 @@ public sealed class WorkService(
     {
         return stuffer.Speed * stuffer.Experience * modelState.ModelConfig.ModelStep;
     }
+    
+    public async Task AddAsync(Trip trip, WorkType workType, CancellationToken cancellationToken)
+    {
+        var work = GetNew(null, workType);
 
-    private async Task AddAsync(Trip trip, CancellationToken cancellationToken)
+        await workRepository.AddAsync(work, trip, cancellationToken);
+    }
+    
+    public async Task AddAsync(Trip trip, CancellationToken cancellationToken)
     {
         if (modelState.ModelConfig.AppointmentSystemMode)
         {
@@ -82,24 +94,11 @@ public sealed class WorkService(
                 return;
             }
 
-            var duration = appointmentSlot.StartTime - modelState.ModelTime;
+            var duration = appointmentSlot.StartTime - (modelState.ModelTime + trip.TravelTime);
             var work = GetNew(duration, WorkType.WaitTravelHub);
 
             await workRepository.AddAsync(work, trip, cancellationToken);
         }
-    }
-    
-    public async Task AddAsync(Trip trip, WorkType workType, CancellationToken cancellationToken)
-    {
-        if (workType == WorkType.WaitTravelHub)
-        {
-            await AddAsync(trip, cancellationToken);
-            return;
-        }
-        
-        var work = GetNew(null, workType);
-
-        await workRepository.AddAsync(work, trip, cancellationToken);
     }
     
     public async Task AddAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)

@@ -8,7 +8,9 @@ public sealed class BayRepository(ModelDbContext context)
 {
     public IQueryable<Bay> Get()
     {
-        var bays = context.Bays;
+        var bays = context.Bays
+            .Include(t => t.Inventory)
+            .Include(t => t.Appointments);
         
         return bays;
     }
@@ -74,6 +76,7 @@ public sealed class BayRepository(ModelDbContext context)
     public async Task SetAsync(Bay bay, Hub hub, CancellationToken cancellationToken)
     {
         bay.Hub = hub;
+        hub.Bays.Remove(bay);
         hub.Bays.Add(bay);
         
         await context.SaveChangesAsync(cancellationToken);
