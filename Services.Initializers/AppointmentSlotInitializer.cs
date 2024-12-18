@@ -11,7 +11,6 @@ public class AppointmentSlotInitializer(
     ILogger<AppointmentSlotInitializer> logger,
     HubRepository hubRepository,
     OperatingHourRepository operatingHourRepository,
-    AppointmentSlotRepository appointmentSlotRepository,
     AppointmentSlotFactory appointmentSlotFactory,
     ModelState modelState) : IPriorityInitializerService
 {

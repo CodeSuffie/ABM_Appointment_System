@@ -7,7 +7,7 @@ namespace Services.Factories;
 
 public sealed class BayStaffFactory(
     ILogger<BayStaffFactory> logger,
-    HubService hubService,
+    HubFactory hubFactory,
     BayShiftFactory bayShiftFactory,
     BayStaffRepository bayStaffRepository,
     ModelState modelState) : IFactoryService<BayStaff>
@@ -21,7 +21,7 @@ public sealed class BayStaffFactory(
     
     public async Task<BayStaff?> GetNewObjectAsync(CancellationToken cancellationToken)
     {
-        var hub = await hubService.SelectHubAsync(cancellationToken);
+        var hub = await hubFactory.SelectHubAsync(cancellationToken);
         if (hub == null)
         {
             logger.LogError("No Hub could be selected for the new BayStaff");

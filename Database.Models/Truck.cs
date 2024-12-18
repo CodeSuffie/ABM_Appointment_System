@@ -13,8 +13,8 @@ public class Truck : IStorage<Pellet>
     // Truck
     public long Speed { get; set; }
 
-    public TruckCompany TruckCompany { get; set; } = new();
-    public long TruckCompanyId { get; set; }
+    public TruckCompany? TruckCompany { get; set; }
+    public long? TruckCompanyId { get; set; }
     
     public Trip? Trip { get; set; }
     public long? TripId { get; set; }

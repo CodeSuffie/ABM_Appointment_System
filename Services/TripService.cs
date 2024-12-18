@@ -2,6 +2,7 @@ using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
+using Services.Abstractions;
 using Services.Factories;
 
 namespace Services;
@@ -18,13 +19,12 @@ public sealed class TripService
     private readonly HubRepository _hubRepository;
     private readonly BayRepository _bayRepository;
     private readonly TruckRepository _truckRepository;
-    private readonly LocationService _locationService;
+    private readonly LocationFactory _locationFactory;
     private readonly TruckCompanyRepository _truckCompanyRepository;
     private readonly WorkFactory _workFactory;
     private readonly PelletService _pelletService;
     private readonly AppointmentSlotRepository _appointmentSlotRepository;
     private readonly AppointmentRepository _appointmentRepository;
-    private readonly AppointmentService _appointmentService;
     private readonly ModelState _modelState;
 
     public TripService(ILogger<TripService> logger,
@@ -37,13 +37,12 @@ public sealed class TripService
         HubRepository hubRepository,
         BayRepository bayRepository,
         TruckRepository truckRepository,
-        LocationService locationService,
+        LocationFactory locationFactory,
         TruckCompanyRepository truckCompanyRepository,
         WorkFactory workFactory,
         PelletService pelletService,
         AppointmentSlotRepository appointmentSlotRepository,
         AppointmentRepository appointmentRepository,
-        AppointmentService appointmentService,
         ModelState modelState)
     {
         _logger = logger;
@@ -56,13 +55,12 @@ public sealed class TripService
         _hubRepository = hubRepository;
         _bayRepository = bayRepository;
         _truckRepository = truckRepository;
-        _locationService = locationService;
+        _locationFactory = locationFactory;
         _truckCompanyRepository = truckCompanyRepository;
         _workFactory = workFactory;
         _pelletService = pelletService;
         _appointmentSlotRepository = appointmentSlotRepository;
         _appointmentRepository = appointmentRepository;
-        _appointmentService = appointmentService;
         _modelState = modelState;
     }
 
@@ -430,7 +428,7 @@ public sealed class TripService
         _logger.LogDebug("Setting ParkingSpot \n({@ParkingSpot})\n location to this Trip \n({@Trip})",
             parkingSpot,
             trip);
-        await _locationService.SetAsync(trip, parkingSpot, cancellationToken);
+        await _locationFactory.SetAsync(trip, parkingSpot, cancellationToken);
         
         _logger.LogDebug("Adding Work of type {WorkType} to this Trip \n({@Trip})",
             WorkType.WaitCheckIn,
@@ -523,7 +521,7 @@ public sealed class TripService
         _logger.LogDebug("Setting Bay \n({@Bay})\n location to this Trip \n({@Trip})",
             bay,
             trip);
-        await _locationService.SetAsync(trip, bay, cancellationToken);
+        await _locationFactory.SetAsync(trip, bay, cancellationToken);
         
         _logger.LogDebug("Adding Work for this Bay \n({@Bay})\n to this Trip \n({@Trip})",
             bay,
@@ -743,7 +741,7 @@ public sealed class TripService
             newXLocation,
             newYLocation,
             trip);
-        await _locationService.SetAsync(trip, newXLocation, newYLocation, cancellationToken);
+        await _locationFactory.SetAsync(trip, newXLocation, newYLocation, cancellationToken);
     }
     
     public async Task TravelAsync(Trip trip, Truck truck, Hub hub, CancellationToken cancellationToken)

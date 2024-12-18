@@ -14,8 +14,8 @@ public class AdminStaff : IStaff<HubShift>
     public List<HubShift> Shifts { get; set; } = [];
     
     // AdminStaff
-    public Hub Hub { get; set; } = new();
-    public long HubId { get; set; }
+    public Hub? Hub { get; set; }
+    public long? HubId { get; set; }
     
     public Work? Work { get; set; }
     public long? WorkId { get; set; }

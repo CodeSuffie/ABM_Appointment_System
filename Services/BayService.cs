@@ -2,6 +2,7 @@ using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
+using Services.Abstractions;
 
 namespace Services;
 
@@ -16,23 +17,6 @@ public sealed class BayService(
     WorkRepository workRepository,
     ModelState modelState)
 {
-    public async Task<Bay?> SelectBayAsync(Hub hub, CancellationToken cancellationToken)
-    {
-        var bays = await (bayRepository.Get(hub))
-            .ToListAsync(cancellationToken);
-
-        if (bays.Count <= 0)
-        {
-            logger.LogError("Hub \n({@Hub})\n did not have a Bay assigned.",
-                hub);
-
-            return null;
-        }
-
-        var bay = bays[modelState.Random(bays.Count)];
-        return bay;
-    }
-    
     public async Task AlertWorkCompleteAsync(Bay bay, CancellationToken cancellationToken)
     {
         var trip = await tripRepository.GetAsync(bay, cancellationToken);

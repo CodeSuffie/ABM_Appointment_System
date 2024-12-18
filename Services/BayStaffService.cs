@@ -2,6 +2,7 @@ using System.Diagnostics.Metrics;
 using Database.Models;
 using Microsoft.Extensions.Logging;
 using Repositories;
+using Services.Abstractions;
 using Services.Factories;
 
 namespace Services;
@@ -12,13 +13,10 @@ public sealed class BayStaffService
     private readonly ModelState _modelState;
     private readonly PelletService _pelletService;
     private readonly PelletRepository _pelletRepository;
-    private readonly HubService _hubService;
     private readonly BayRepository _bayRepository;
     private readonly WorkFactory _workFactory;
     private readonly TripRepository _tripRepository;
-    private readonly BayShiftService _bayShiftService;
     private readonly BayService _bayService;
-    private readonly BayStaffRepository _bayStaffRepository;
     private readonly Counter<int> _dropOffMissCounter;
 
     public BayStaffService(
@@ -26,26 +24,20 @@ public sealed class BayStaffService
         ModelState modelState,
         PelletService pelletService,
         PelletRepository pelletRepository,
-        HubService hubService,
         BayRepository bayRepository,
         WorkFactory workFactory,
         TripRepository tripRepository,
-        BayShiftService bayShiftService,
         BayService bayService,
-        BayStaffRepository bayStaffRepository,
         Meter meter)
     {
         _logger = logger;
         _modelState = modelState;
         _pelletService = pelletService;
         _pelletRepository = pelletRepository;
-        _hubService = hubService;
         _bayRepository = bayRepository;
         _workFactory = workFactory;
         _tripRepository = tripRepository;
-        _bayShiftService = bayShiftService;
         _bayService = bayService;
-        _bayStaffRepository = bayStaffRepository;
 
         _dropOffMissCounter = meter.CreateCounter<int>("drop-off-miss", "DropOffMiss", "#Drop Off Pellets Unable to place at Bay.");
     }

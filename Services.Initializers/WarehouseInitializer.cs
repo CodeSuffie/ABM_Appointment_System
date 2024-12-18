@@ -2,12 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
+using Services.Factories;
 
 namespace Services.Initializers;
 
 public sealed class WarehouseInitializer(
     ILogger<WarehouseInitializer> logger,
-    WarehouseService warehouseService,
+    WarehouseFactory warehouseFactory,
     HubRepository hubRepository,
     ModelState modelState) : IPriorityInitializerService
 {
@@ -21,7 +22,7 @@ public sealed class WarehouseInitializer(
         
         await foreach (var hub in hubs)
         {
-            var warehouse = await warehouseService.GetNewObjectAsync(hub, cancellationToken);
+            var warehouse = await warehouseFactory.GetNewObjectAsync(hub, cancellationToken);
             logger.LogInformation("New Warehouse created: Warehouse={@Warehouse}", warehouse);
         }
     }

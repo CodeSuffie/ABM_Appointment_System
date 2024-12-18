@@ -1,8 +1,7 @@
 using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging;
-using Services.Abstractions;
 
-namespace Services.Steppers;
+namespace Services.Abstractions;
 
 public sealed class ModelStepper
 {

@@ -1,5 +1,3 @@
-using Database.Models;
-
 namespace Services.Abstractions;
 
 public interface IShiftFactoryService<in TStaff, TShift, TParentShift> : IFactoryService<TShift>

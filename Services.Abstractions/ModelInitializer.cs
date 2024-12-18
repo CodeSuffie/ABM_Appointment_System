@@ -1,8 +1,7 @@
 using Microsoft.Extensions.Logging;
-using Services.Abstractions;
 using Settings;
 
-namespace Services.Initializers;
+namespace Services.Abstractions;
 
 public sealed class ModelInitializer(
     ILogger<ModelInitializer> logger,

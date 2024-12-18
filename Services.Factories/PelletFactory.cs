@@ -1,5 +1,6 @@
 using System.Diagnostics.Metrics;
 using Database.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
@@ -10,8 +11,10 @@ public sealed class PelletFactory : IFactoryService<Pellet>
 {
     private readonly ILogger<PelletFactory> _logger;
     private readonly PelletRepository _pelletRepository;
-    private readonly TruckCompanyService _truckCompanyService;
-    private readonly HubService _hubService;
+    private readonly TruckCompanyRepository _truckCompanyRepository;
+    private readonly TruckCompanyFactory _truckCompanyFactory;
+    private readonly HubRepository _hubRepository;
+    private readonly HubFactory _hubFactory;
     private readonly WarehouseRepository _warehouseRepository;
     private readonly ModelState _modelState;
     private readonly UpDownCounter<int> _unclaimedPellets;
@@ -19,16 +22,20 @@ public sealed class PelletFactory : IFactoryService<Pellet>
     public PelletFactory(
         ILogger<PelletFactory> logger,
         PelletRepository pelletRepository,
-        TruckCompanyService truckCompanyService,
-        HubService hubService,
+        TruckCompanyRepository truckCompanyRepository,
+        TruckCompanyFactory truckCompanyFactory,
+        HubRepository hubRepository,
+        HubFactory hubFactory,
         WarehouseRepository warehouseRepository,
         ModelState modelState,
         Meter meter)
     {
         _logger = logger;
         _pelletRepository = pelletRepository;
-        _truckCompanyService = truckCompanyService;
-        _hubService = hubService;
+        _truckCompanyRepository = truckCompanyRepository;
+        _truckCompanyFactory = truckCompanyFactory;
+        _hubRepository = hubRepository;
+        _hubFactory = hubFactory;
         _warehouseRepository = warehouseRepository;
         _modelState = modelState;    
         
@@ -59,7 +66,7 @@ public sealed class PelletFactory : IFactoryService<Pellet>
     {
         for (var i = 0; i < count; i++)
         {
-            var truckCompany = await _truckCompanyService.SelectTruckCompanyAsync(cancellationToken);
+            var truckCompany = await _truckCompanyFactory.SelectTruckCompanyAsync(cancellationToken);
             if (truckCompany == null)
             {
                 _logger.LogError("Could not select a TruckCompany for this new Pellet.");
@@ -96,7 +103,7 @@ public sealed class PelletFactory : IFactoryService<Pellet>
             };
             await _pelletRepository.AddAsync(pellet, cancellationToken);
 
-            var hub = await _hubService.SelectHubAsync(cancellationToken);
+            var hub = await _hubFactory.SelectHubAsync(cancellationToken);
             if (hub == null)
             {
                 _logger.LogError("Could not select a Hub for this new Pellet.");
@@ -121,6 +128,137 @@ public sealed class PelletFactory : IFactoryService<Pellet>
             _logger.LogInformation("New Pellet created: Pellet={@Pellet}", pellet);
 
             _unclaimedPellets.Add(1);
+        }
+    }
+    
+    public async Task<List<Pellet>> GetUnclaimedAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
+    {
+        var allPellets = await (_pelletRepository
+                .GetUnclaimed(truckCompany))
+            .ToListAsync(cancellationToken);
+
+        return allPellets;
+    }
+
+    public async Task<List<Pellet>> GetUnclaimedAsync(Hub hub, CancellationToken cancellationToken)
+    {
+        List<Pellet> allPellets = [];
+
+        var warehouse = await _warehouseRepository.GetAsync(hub, cancellationToken);
+        if (warehouse != null)
+        {
+            allPellets.AddRange(
+                await (_pelletRepository
+                    .GetUnclaimed(warehouse)
+                    .ToListAsync(cancellationToken))
+            );
+        }
+        else
+        {
+            _logger.LogError("Hub \n({@Hub})\n did not have a Warehouse assigned.",
+                hub);
+        }
+        
+        return allPellets;
+    }
+
+    private async Task SetPelletsAsync(Load load, long count, TruckCompany truckCompany, CancellationToken cancellationToken)
+    {
+        var allPellets = await GetUnclaimedAsync(truckCompany, cancellationToken);
+            
+        if (allPellets.Count <= 0)
+        {
+            _logger.LogInformation("TruckCompany ({@TruckCompany}) did not have any unclaimed pellets assigned.",
+                truckCompany);
+
+            return;
+        }
+            
+        if (allPellets.Count <= count)
+        {
+            _logger.LogInformation("TruckCompany ({@TruckCompany}) to fetch Pellets from had less than or an equal number ({@Count}) of unclaimed pellets assigned as the given count ({@Count}).",
+                truckCompany,
+                allPellets.Count,
+                count);
+
+            count = allPellets.Count;
+        }
+            
+        var pellets = allPellets
+            .OrderBy(_ => _modelState
+                .Random())
+            .Take((int) count)
+            .ToList();
+
+        foreach (var pellet in pellets)
+        {
+            await _pelletRepository.SetAsync(pellet, load, cancellationToken);
+            await _pelletRepository.UnsetAsync(pellet, truckCompany, cancellationToken);
+            // Removing pellets from truckCompany since they will leave for the hub now
+        }
+    }
+    
+    private async Task SetPelletsAsync(Load load, long count, Hub hub, CancellationToken cancellationToken)
+    {
+        var allPellets = await GetUnclaimedAsync(hub, cancellationToken);
+            
+        if (allPellets.Count <= 0)
+        {
+            _logger.LogInformation("Hub ({@Hub}) did not have any unclaimed pellets assigned.",
+                hub);
+
+            return;
+        }
+            
+        if (allPellets.Count <= count)
+        {
+            _logger.LogInformation("Hub ({@Hub}) to fetch Pellets from had less than or an equal number ({@Count}) of unclaimed pellets assigned as the given count ({@Count}).",
+                hub,
+                allPellets.Count,
+                count);
+
+            count = allPellets.Count;
+        }
+            
+        var pellets = allPellets
+            .OrderBy(_ => _modelState
+                .Random())
+            .Take((int) count)
+            .ToList();
+
+        foreach (var pellet in pellets)
+        {
+            await _pelletRepository.SetAsync(pellet, load, cancellationToken);
+        }
+    }
+    
+    public async Task SetPelletsAsync(Load load, long count, CancellationToken cancellationToken)
+    {
+        if (load.LoadType == LoadType.DropOff)
+        {
+            var truckCompany = await _truckCompanyRepository.GetAsync(load, cancellationToken);
+            if (truckCompany == null)
+            {
+                _logger.LogError("Load ({@Load}) did not have a Truck Company assigned.",
+                    load);
+
+                return;
+            }
+            
+            await SetPelletsAsync(load, count, truckCompany, cancellationToken);
+        }
+        else
+        {
+            var hub = await _hubRepository.GetAsync(load, cancellationToken);
+            if (hub == null)
+            {
+                _logger.LogError("Load ({@Load}) did not have a Hub assigned.",
+                    load);
+
+                return;
+            }
+            
+            await SetPelletsAsync(load, count, hub, cancellationToken);
         }
     }
 }

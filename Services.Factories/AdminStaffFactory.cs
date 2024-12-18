@@ -7,7 +7,7 @@ namespace Services.Factories;
 
 public sealed class AdminStaffFactory(
     ILogger<AdminStaffFactory> logger,
-    HubService hubService,
+    HubFactory hubFactory,
     AdminShiftFactory adminShiftFactory,
     AdminStaffRepository adminStaffRepository,
     ModelState modelState) : IFactoryService<AdminStaff>
@@ -21,7 +21,7 @@ public sealed class AdminStaffFactory(
     
     public async Task<AdminStaff?> GetNewObjectAsync(CancellationToken cancellationToken)
     {
-        var hub = await hubService.SelectHubAsync(cancellationToken);
+        var hub = await hubFactory.SelectHubAsync(cancellationToken);
         if (hub == null)
         {
             logger.LogError("No Hub could be selected for the new AdminStaff.");

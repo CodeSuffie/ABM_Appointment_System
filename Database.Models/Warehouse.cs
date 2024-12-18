@@ -19,6 +19,6 @@ public class Warehouse : IArea, IStorage<Pellet>
     public List<Pellet> Inventory { get; set; } = [];
     
     // Warehouse
-    public Hub Hub { get; set; } = new();
-    public long HubId { get; set; }
+    public Hub? Hub { get; set; }
+    public long? HubId { get; set; }
 }

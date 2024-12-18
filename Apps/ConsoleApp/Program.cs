@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Services;
+using Services.Abstractions;
 using Simulator.Extensions;
 
 var hostBuilder = new HostApplicationBuilder(args);

@@ -10,6 +10,6 @@ public class OperatingHour : IShift
     public TimeSpan Duration { get; set; }
     
     // OperatingHour
-    public Hub Hub { get; set; } = new();
-    public long HubId { get; set; }
+    public Hub? Hub { get; set; }
+    public long? HubId { get; set; }
 }

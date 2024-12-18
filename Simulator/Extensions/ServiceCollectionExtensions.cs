@@ -55,49 +55,48 @@ public static class ServiceCollectionExtensions
         services.AddScoped<WarehouseRepository>();
         services.AddScoped<WorkRepository>();
         
+        
+        
+        
+        // Factories
+        services.AddScoped<AdminShiftFactory>();
+        services.AddScoped<AdminStaffFactory>();
+        services.AddScoped<AppointmentFactory>();
+        services.AddScoped<AppointmentSlotFactory>();
+        services.AddScoped<BayFactory>();
+        services.AddScoped<BayShiftFactory>();
+        services.AddScoped<BayStaffFactory>();
+        services.AddScoped<HubFactory>();
+        services.AddScoped<LoadFactory>();
+        services.AddScoped<OperatingHourFactory>();
+        services.AddScoped<ParkingSpotFactory>();
+        services.AddScoped<PelletFactory>();
+        services.AddScoped<PickerFactory>();
+        services.AddScoped<PickerShiftFactory>();
+        services.AddScoped<StufferFactory>();
+        services.AddScoped<StufferShiftFactory>();
+        services.AddScoped<TripFactory>();
+        services.AddScoped<TruckCompanyFactory>();
+        services.AddScoped<TruckFactory>();
+        services.AddScoped<WarehouseFactory>();
+        services.AddScoped<WorkFactory>();
+        services.AddScoped<LocationFactory>();
+        
 
         // Services
         services.AddScoped<AdminStaffService>();
-        services.AddScoped<AppointmentService>();
-        services.AddScoped<AppointmentSlotService>();
         services.AddScoped<BayService>();
         services.AddScoped<BayShiftService>();
         services.AddScoped<BayStaffService>();
-        services.AddScoped<HubService>();
         services.AddScoped<HubShiftService>();
-        services.AddScoped<LocationService>();
         services.AddScoped<ParkingSpotService>();
         services.AddScoped<PelletService>();
         services.AddScoped<PickerService>();
         services.AddScoped<StufferService>();
         services.AddScoped<TripService>();
-        services.AddScoped<TruckCompanyService>();
         services.AddScoped<TruckService>();
         services.AddScoped<WorkService>();
         
-        
-        // Factories
-        services.AddScoped<IFactoryService,                 AdminShiftFactory>();
-        services.AddScoped<IFactoryService,                 AdminStaffFactory>();
-        services.AddScoped<IFactoryService,                 AppointmentFactory>();
-        services.AddScoped<IFactoryService,                 AppointmentSlotFactory>();
-        services.AddScoped<IFactoryService,                 BayFactory>();
-        services.AddScoped<IFactoryService,                 BayShiftFactory>();
-        services.AddScoped<IFactoryService,                 BayStaffFactory>();
-        services.AddScoped<IFactoryService,                 HubFactory>();
-        services.AddScoped<IFactoryService,                 LoadFactory>();
-        services.AddScoped<IFactoryService,                 OperatingHourFactory>();
-        services.AddScoped<IFactoryService,                 ParkingSpotFactory>();
-        services.AddScoped<IFactoryService,                 PelletFactory>();
-        services.AddScoped<IFactoryService,                 PickerFactory>();
-        services.AddScoped<IFactoryService,                 PickerShiftFactory>();
-        services.AddScoped<IFactoryService,                 StufferFactory>();
-        services.AddScoped<IFactoryService,                 StufferShiftFactory>();
-        services.AddScoped<IFactoryService,                 TripFactory>();
-        services.AddScoped<IFactoryService,                 TruckCompanyFactory>();
-        services.AddScoped<IFactoryService,                 TruckFactory>();
-        services.AddScoped<IFactoryService,                 WarehouseFactory>();
-        services.AddScoped<IFactoryService,                 WorkFactory>();
         
         
         // Initializers

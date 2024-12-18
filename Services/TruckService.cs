@@ -1,6 +1,6 @@
 using Database.Models;
 using Microsoft.Extensions.Logging;
-using Repositories;
+using Services.Abstractions;
 
 namespace Services;
 

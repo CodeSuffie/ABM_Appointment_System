@@ -1,4 +1,3 @@
-using System.Diagnostics.Metrics;
 using Database.Models;
 using Microsoft.Extensions.Logging;
 using Repositories;
@@ -10,23 +9,23 @@ public sealed class LoadFactory : IFactoryService<Load>
 {
     private readonly ILogger<LoadFactory> _logger;
     private readonly TruckCompanyRepository _truckCompanyRepository;
-    private readonly HubService _hubService;
-    private readonly PelletService _pelletService;
+    private readonly HubFactory _hubFactory;
+    private readonly PelletFactory _pelletFactory;
     private readonly LoadRepository _loadRepository;
     private readonly ModelState _modelState;
     
     public LoadFactory(
         ILogger<LoadFactory> logger,
         TruckCompanyRepository truckCompanyRepository,
-        HubService hubService,
-        PelletService pelletService,
+        HubFactory hubFactory,
+        PelletFactory pelletFactory,
         LoadRepository loadRepository,
         ModelState modelState)
     {
         _logger = logger;
         _truckCompanyRepository = truckCompanyRepository;
-        _hubService = hubService;
-        _pelletService = pelletService;
+        _hubFactory = hubFactory;
+        _pelletFactory = pelletFactory;
         _loadRepository = loadRepository;
         _modelState = modelState;
     }
@@ -51,7 +50,7 @@ public sealed class LoadFactory : IFactoryService<Load>
             return null;
         }
         
-        var hub = await _hubService.SelectHubAsync(cancellationToken);
+        var hub = await _hubFactory.SelectHubAsync(cancellationToken);
         if (hub == null)
         {
             _logger.LogError("No Hub could be selected for the new Load.");
@@ -86,11 +85,11 @@ public sealed class LoadFactory : IFactoryService<Load>
             load,
             truck,
             hub);
-        await _pelletService.SetPelletsAsync(load, truck.Capacity, cancellationToken);
+        await _pelletFactory.SetPelletsAsync(load, truck.Capacity, cancellationToken);
 
         if (load.Pellets.Count != 0) return load;
         
-        _logger.LogError("Load \n({@Load})\n could not be assigned any Pellets.",
+        _logger.LogInformation("Load \n({@Load})\n could not be assigned any Pellets.",
             load);
         
         _logger.LogDebug("Removing this Load \n({@Load}).",
@@ -138,11 +137,11 @@ public sealed class LoadFactory : IFactoryService<Load>
             load,
             truck,
             hub);
-        await _pelletService.SetPelletsAsync(load, truck.Capacity, cancellationToken);
+        await _pelletFactory.SetPelletsAsync(load, truck.Capacity, cancellationToken);
 
         if (load.Pellets.Count != 0) return load;
         
-        _logger.LogError("Load \n({@Load})\n could not be assigned any Pellets.",
+        _logger.LogInformation("Load \n({@Load})\n could not be assigned any Pellets.",
             load);
         
         _logger.LogDebug("Removing this Load \n({@Load}).",
@@ -154,7 +153,7 @@ public sealed class LoadFactory : IFactoryService<Load>
     
     public async Task<Load?> GetNewPickUpAsync(Truck truck, CancellationToken cancellationToken)
     {
-        var hub = await _hubService.SelectHubAsync(cancellationToken);
+        var hub = await _hubFactory.SelectHubAsync(cancellationToken);
         
         if (hub != null) return await GetNewPickUpAsync(truck, hub, cancellationToken);
         

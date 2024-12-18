@@ -1,8 +1,6 @@
 using Database;
-using Services.Initializers;
-using Services.Steppers;
 
-namespace Services;
+namespace Services.Abstractions;
 
 public sealed class ModelService(
     ModelDbContext context,

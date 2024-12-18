@@ -70,6 +70,12 @@ public sealed class TripRepository(
         return context.Trips
             .FirstOrDefaultAsync(t=> t.Id == load.TripId, cancellationToken);
     }
+
+    public Task<Trip?> GetAsync(Appointment appointment, CancellationToken cancellationToken)
+    {
+        return context.Trips
+            .FirstOrDefaultAsync(t=> t.Id == appointment.TripId, cancellationToken);
+    }
     
     public IQueryable<Trip> GetCurrent(Hub hub, WorkType workType, CancellationToken cancellationToken)
     {
@@ -91,7 +97,7 @@ public sealed class TripRepository(
     public async Task SetAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
         var oldParkingSpot = await parkingSpotRepository.GetAsync(trip, cancellationToken);
-        if (oldParkingSpot != null)
+        if (oldParkingSpot != null && oldParkingSpot.Id != parkingSpot.Id)
         {
             logger.LogError("Trip ({@Trip}) already has an assigned ParkingSpot ({@ParkingSpot}), it cannot move to the new ParkingSpot ({@ParkingSpot}).",
                 trip,
@@ -110,7 +116,7 @@ public sealed class TripRepository(
     public async Task SetAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var oldAdminStaff = await adminStaffRepository.GetAsync(trip, cancellationToken);
-        if (oldAdminStaff != null)
+        if (oldAdminStaff != null && oldAdminStaff.Id != adminStaff.Id)
         {
             logger.LogError("Trip ({@Trip}) already has an assigned AdminStaff ({@AdminStaff}), it cannot move to the new AdminStaff ({@AdminStaff}).",
                 trip,
@@ -129,7 +135,7 @@ public sealed class TripRepository(
     public async Task SetAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
     {
         var oldBay = await bayRepository.GetAsync(trip, cancellationToken);
-        if (oldBay != null)
+        if (oldBay != null && oldBay.Id != bay.Id)
         {
             logger.LogError("Trip ({@Trip}) already has an assigned Bay ({@Bay}), it cannot move to the new Bay ({@Bay}).",
                 trip,
@@ -148,7 +154,7 @@ public sealed class TripRepository(
     public async Task SetAsync(Trip trip, Truck truck, CancellationToken cancellationToken)
     {
         var oldTruck = await truckRepository.GetAsync(trip, cancellationToken);
-        if (oldTruck != null)
+        if (oldTruck != null && oldTruck.Id != truck.Id)
         {
             logger.LogError("Trip ({@Trip}) already has an assigned Truck ({@Truck}), it cannot move to the new Truck ({@Truck}).",
                 trip,

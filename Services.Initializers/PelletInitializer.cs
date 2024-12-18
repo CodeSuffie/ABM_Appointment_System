@@ -1,4 +1,3 @@
-using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging;
 using Services.Abstractions;
 using Services.Factories;
@@ -16,8 +15,7 @@ public sealed class PelletInitializer  : IPriorityInitializerService
     public PelletInitializer(
         ILogger<PelletInitializer> logger,
         ModelState modelState,
-        PelletFactory pelletFactory,
-        Meter meter)
+        PelletFactory pelletFactory)
     {
         _logger = logger;
         _modelState = modelState;

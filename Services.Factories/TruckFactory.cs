@@ -8,7 +8,7 @@ namespace Services.Factories;
 public sealed class TruckFactory(
     ILogger<TruckFactory> logger,
     TruckRepository truckRepository,
-    TruckCompanyService truckCompanyService,
+    TruckCompanyFactory truckCompanyFactory,
     ModelState modelState) : IFactoryService<Truck>
 {
     private int GetSpeed()
@@ -20,7 +20,7 @@ public sealed class TruckFactory(
     
     public async Task<Truck?> GetNewObjectAsync(CancellationToken cancellationToken)
     {
-        var truckCompany = await truckCompanyService.SelectTruckCompanyAsync(cancellationToken);
+        var truckCompany = await truckCompanyFactory.SelectTruckCompanyAsync(cancellationToken);
         if (truckCompany == null)
         {
             logger.LogError("No TruckCompany could be selected for the new Truck");

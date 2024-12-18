@@ -1,6 +1,6 @@
 using Settings;
 
-namespace Services;
+namespace Services.Abstractions;
 
 public sealed class ModelState
 {

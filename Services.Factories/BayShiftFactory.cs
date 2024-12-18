@@ -8,12 +8,12 @@ namespace Services.Factories;
 
 public sealed class BayShiftFactory(
     ILogger<BayShiftFactory> logger,
-    BayService bayService,
     HubRepository hubRepository,
     OperatingHourRepository operatingHourRepository,
     BayStaffRepository bayStaffRepository,
     BayShiftRepository bayShiftRepository,
     BayRepository bayRepository,
+    BayFactory bayFactory,
     ModelState modelState) : IShiftFactoryService<BayStaff, BayShift, OperatingHour>
 {
     public TimeSpan? GetStartTime(BayStaff bayStaff, OperatingHour operatingHour)
@@ -111,7 +111,7 @@ public sealed class BayShiftFactory(
             return null;
         }
         
-        var bay = await bayService.SelectBayAsync(hub, cancellationToken);
+        var bay = await bayFactory.SelectBayAsync(hub, cancellationToken);
         if (bay == null)
         {
             logger.LogError("The Hub \n({@Hub})\n did not have a Bay to assign " +
@@ -215,15 +215,19 @@ public sealed class BayShiftFactory(
 
         await foreach (var hub in hubs)
         {
+            var bayStaffs = await bayStaffRepository.Get(hub).ToListAsync(cancellationToken);
+            
+            if (bayStaffs.Count == 0) continue;
+            
             var operatingHours = operatingHourRepository.Get(hub)
                 .AsAsyncEnumerable()
                 .WithCancellation(cancellationToken);
 
             await foreach (var operatingHour in operatingHours)
             {
-                var bayStaffs = await bayStaffRepository.Get(hub).ToListAsync(cancellationToken);
                 var bays = await bayRepository.Get(hub).ToListAsync(cancellationToken);
 
+                
                 for (var i = 0; i < bays.Count; i++)
                 {
                     var bayStaff = bayStaffs[i % bayStaffs.Count];

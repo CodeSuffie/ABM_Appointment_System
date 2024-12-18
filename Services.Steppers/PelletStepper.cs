@@ -1,4 +1,3 @@
-using System.Diagnostics.Metrics;
 using Microsoft.Extensions.Logging;
 using Services.Abstractions;
 using Services.Factories;
@@ -14,8 +13,7 @@ public sealed class PelletStepper : IStepperService
     public PelletStepper(
         ILogger<PelletStepper> logger,
         PelletFactory pelletFactory,
-        ModelState modelState,
-        Meter meter)
+        ModelState modelState)
     {
         _logger = logger;
         _pelletFactory = pelletFactory;

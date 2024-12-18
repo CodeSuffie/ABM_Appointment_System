@@ -2,6 +2,7 @@ using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
+using Services.Abstractions;
 using Services.Factories;
 
 namespace Services;

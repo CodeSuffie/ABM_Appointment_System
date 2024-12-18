@@ -12,6 +12,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Database.Models\Database.Models.csproj" />
+      <ProjectReference Include="..\Database\Database.csproj" />
+      <ProjectReference Include="..\Settings\Settings.csproj" />
     </ItemGroup>
 
 </Project>

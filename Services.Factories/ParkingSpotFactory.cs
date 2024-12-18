@@ -8,7 +8,7 @@ namespace Services.Factories;
 public sealed class ParkingSpotFactory(
     ILogger<ParkingSpotFactory> logger,
     ParkingSpotRepository parkingSpotRepository,
-    LocationService locationService,
+    LocationFactory locationFactory,
     ModelState modelState) : IFactoryService<ParkingSpot>
 {
     public async Task<ParkingSpot?> GetNewObjectAsync(CancellationToken cancellationToken)
@@ -37,7 +37,7 @@ public sealed class ParkingSpotFactory(
         
         logger.LogDebug("Setting location for this ParkingSpot \n({@ParkingSpot})",
             parkingSpot);
-        await locationService.InitializeObjectAsync(parkingSpot, cancellationToken);
+        await locationFactory.InitializeObjectAsync(parkingSpot, cancellationToken);
 
         return parkingSpot;
     }

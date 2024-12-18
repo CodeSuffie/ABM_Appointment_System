@@ -9,9 +9,9 @@ public sealed class TripFactory(
     ILogger<TripFactory> logger,
     TripRepository tripRepository,
     TruckCompanyRepository truckCompanyRepository,
-    LocationService locationService,
+    LocationFactory locationFactory,
     AppointmentRepository appointmentRepository,
-    AppointmentService appointmentService,
+    AppointmentFactory appointmentFactory,
     ModelState modelState) : IFactoryService<Trip>
 {
     private TimeSpan GetTravelTime(Truck truck, TruckCompany truckCompany, Hub hub)
@@ -85,7 +85,7 @@ public sealed class TripFactory(
         logger.LogDebug("Setting TruckCompany \n({@TruckCompany})\n location to this Trip \n({@Trip})",
             truckCompany,
             trip);
-        await locationService.SetAsync(trip, truckCompany, cancellationToken);
+        await locationFactory.SetAsync(trip, truckCompany, cancellationToken);
 
         if (!modelState.ModelConfig.AppointmentSystemMode) return trip;
         
@@ -108,7 +108,7 @@ public sealed class TripFactory(
             hub,
             trip,
             earliestArrivalTime);
-        await appointmentService.SetAsync(trip, hub, earliestArrivalTime, cancellationToken);
+        await appointmentFactory.SetAsync(trip, hub, earliestArrivalTime, cancellationToken);
 
         logger.LogDebug("Getting created Appointment for this Trip \n({@Trip}).",
             trip);

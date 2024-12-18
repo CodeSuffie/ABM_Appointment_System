@@ -1,7 +1,6 @@
 ﻿using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
-using SQLitePCL;
 
 namespace DesktopApp.Components.Pages;
 

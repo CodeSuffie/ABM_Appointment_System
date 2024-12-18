@@ -8,7 +8,7 @@ namespace Services.Factories;
 public sealed class PickerFactory(
     ILogger<PickerFactory> logger,
     PickerRepository pickerRepository,
-    HubService hubService,
+    HubFactory hubFactory,
     PickerShiftFactory pickerShiftFactory,
     ModelState modelState) : IFactoryService<Picker>
 {
@@ -21,7 +21,7 @@ public sealed class PickerFactory(
 
     public async Task<Picker?> GetNewObjectAsync(CancellationToken cancellationToken)
     {
-        var hub = await hubService.SelectHubAsync(cancellationToken);
+        var hub = await hubFactory.SelectHubAsync(cancellationToken);
         if (hub == null)
         {
             logger.LogError("No Hub could be selected for the new Picker.");

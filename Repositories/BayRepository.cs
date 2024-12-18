@@ -59,6 +59,14 @@ public sealed class BayRepository(ModelDbContext context)
         return bay;
     }
 
+    public async Task<Bay?> GetAsync(Appointment appointment, CancellationToken cancellationToken)
+    {
+        var bay = await Get()
+            .FirstOrDefaultAsync(b => b.Id == appointment.BayId, cancellationToken);
+
+        return bay;
+    }
+
     public async Task AddAsync(Bay bay, CancellationToken cancellationToken)
     {
         await context.Bays.AddAsync(bay, cancellationToken);

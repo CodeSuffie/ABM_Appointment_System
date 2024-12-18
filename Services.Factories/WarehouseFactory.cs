@@ -7,7 +7,7 @@ namespace Services.Factories;
 
 public sealed class WarehouseFactory(
     ILogger<WarehouseFactory> logger,
-    LocationService locationService,
+    LocationFactory locationFactory,
     WarehouseRepository warehouseRepository,
     ModelState modelState) : IFactoryService<Warehouse>
 {
@@ -42,7 +42,7 @@ public sealed class WarehouseFactory(
         
         logger.LogDebug("Setting location for this Warehouse \n({@Warehouse})",
             warehouse);
-        locationService.InitializeObject(warehouse, cancellationToken);
+        locationFactory.InitializeObject(warehouse, cancellationToken);
 
         return warehouse;
     }

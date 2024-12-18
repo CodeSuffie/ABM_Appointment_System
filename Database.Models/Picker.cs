@@ -15,8 +15,8 @@ public class Picker : IStaff<HubShift>
     // Picker
     public double Experience { get; set; }
     
-    public Hub Hub { get; set; } = new();
-    public long HubId { get; set; }
+    public Hub? Hub { get; set; }
+    public long? HubId { get; set; }
     
     public Work? Work { get; set; }
     public long? WorkId { get; set; }

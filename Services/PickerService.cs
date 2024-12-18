@@ -3,6 +3,7 @@ using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
+using Services.Abstractions;
 using Services.Factories;
 
 namespace Services;
@@ -16,6 +17,8 @@ public sealed class PickerService
     private readonly BayRepository _bayRepository;
     private readonly BayService _bayService;
     private readonly WorkRepository _workRepository;
+    private readonly AppointmentSlotRepository _appointmentSlotRepository;
+    private readonly AppointmentRepository _appointmentRepository;
     private readonly WorkFactory _workFactory;
     private readonly ModelState _modelState;
     private readonly Counter<int> _fetchMissCounter;
@@ -27,6 +30,8 @@ public sealed class PickerService
         BayRepository bayRepository,
         BayService bayService,
         WorkRepository workRepository,
+        AppointmentSlotRepository appointmentSlotRepository,
+        AppointmentRepository appointmentRepository,
         WorkFactory workFactory,
         ModelState modelState,
         Meter meter)
@@ -38,6 +43,8 @@ public sealed class PickerService
         _bayRepository = bayRepository;
         _bayService = bayService;
         _workRepository = workRepository;
+        _appointmentSlotRepository = appointmentSlotRepository;
+        _appointmentRepository = appointmentRepository;
         _workFactory = workFactory;
         _modelState = modelState;
         
@@ -79,8 +86,79 @@ public sealed class PickerService
         await _pelletService.AlertFetchedAsync(pellet, bay, cancellationToken);
     }
 
+    public async Task AlertFreeAppointmentAsync(Picker picker, CancellationToken cancellationToken)
+    {
+        var hub = await _hubRepository.GetAsync(picker, cancellationToken);
+        if (hub == null)
+        {
+            _logger.LogError("Picker \n({@Picker})\n did not have a Hub assigned to alert free for.",
+                picker);
+
+            return;
+        }
+
+        var appointmentSlots = _appointmentSlotRepository.GetAfter(hub,
+                _modelState.ModelTime -
+                _modelState.AppointmentConfig!.AppointmentLength * _modelState.ModelConfig.ModelStep)
+            .Where(aps => aps.Appointments.Count != 0)
+            .OrderBy(aps => aps.StartTime)
+            .Take(2);
+
+        foreach (var appointmentSlot in appointmentSlots)
+        {
+            var appointments = _appointmentRepository.Get(appointmentSlot)
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken);
+
+
+            Bay? bestBay = null;
+            Appointment? bestAppointment = null;
+            var fetchPelletCount = 0;
+            await foreach (var appointment in appointments)
+            {
+                var bay = await _bayRepository.GetAsync(appointment, cancellationToken);
+                if (bay == null)
+                {
+                    _logger.LogError("Appointment \n({@Appointment})\n did not have a Bay assigned.",
+                        appointment);
+
+                    continue;
+                }
+                
+                if (! await _bayService.HasRoomForPelletAsync(bay, cancellationToken))
+                {
+                    continue;
+                }
+
+                var bayFetchPelletCount = (await _pelletService
+                        .GetAvailableFetchPelletsAsync(bay, appointment, cancellationToken))
+                    .Count;
+                
+                if (bestBay != null && bayFetchPelletCount <= fetchPelletCount)
+                {
+                    continue;
+                }
+        
+                fetchPelletCount = bayFetchPelletCount;
+                bestBay = bay;
+                bestAppointment = appointment;
+            }
+            
+            if (bestBay != null && bestAppointment != null)
+            {
+                await StartFetchAsync(picker, bestBay, bestAppointment, cancellationToken);
+            }
+        }
+    }
+
     public async Task AlertFreeAsync(Picker picker, CancellationToken cancellationToken)
     {
+        if (_modelState.ModelConfig.AppointmentSystemMode)
+        {
+            await AlertFreeAppointmentAsync(picker, cancellationToken);
+            return;
+        }
+        
         var hub = await _hubRepository.GetAsync(picker, cancellationToken);
         if (hub == null)
         {
@@ -138,6 +216,29 @@ public sealed class PickerService
     private async Task StartFetchAsync(Picker picker, Bay bay, CancellationToken cancellationToken)
     {
         var pellet = await _pelletService.GetNextFetchAsync(bay, cancellationToken);
+        if (pellet == null)
+        {
+            _logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Fetch.",
+                bay);
+            
+            _logger.LogInformation("Fetch Work could not be started for this Bay \n({@Bay}).",
+                bay);
+            
+            return;
+        }
+        
+        _logger.LogDebug("Adding Work for this Picker \n({@Picker})\n at this Bay \n({@Bay}) to Fetch this Pellet \n({@Pellet})",
+            picker,
+            bay,
+            pellet);
+        await _workFactory.GetNewObjectAsync(bay, picker, pellet, cancellationToken);
+        
+        _fetchMissCounter.Add(1, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+    }
+    
+    private async Task StartFetchAsync(Picker picker, Bay bay, Appointment appointment, CancellationToken cancellationToken)
+    {
+        var pellet = await _pelletService.GetNextFetchAsync(bay, appointment, cancellationToken);
         if (pellet == null)
         {
             _logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Fetch.",

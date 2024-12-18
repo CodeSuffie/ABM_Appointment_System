@@ -1,11 +1,12 @@
 using Database.Models;
 using Microsoft.Extensions.Logging;
 using Repositories;
+using Services.Abstractions;
 
-namespace Services;
+namespace Services.Factories;
 
-public sealed class LocationService(
-    ILogger<LocationService> logger,
+public sealed class LocationFactory(
+    ILogger<LocationFactory> logger,
     TripRepository tripRepository,
     HubRepository hubRepository,
     TruckCompanyRepository truckCompanyRepository,

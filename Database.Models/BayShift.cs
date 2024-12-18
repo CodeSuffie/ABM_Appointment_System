@@ -10,9 +10,9 @@ public class BayShift : IShift
     public TimeSpan Duration { get; set; }
     
     // BayShift
-    public Bay Bay { get; set; } = new();
-    public long BayId { get; set; }
+    public Bay? Bay { get; set; }
+    public long? BayId { get; set; }
     
-    public BayStaff BayStaff { get; set; } = new();
-    public long BayStaffId { get; set; }
+    public BayStaff? BayStaff { get; set; }
+    public long? BayStaffId { get; set; }
 }

@@ -11,8 +11,8 @@ public class ParkingSpot : ILocation
     public long YLocation { get; set; }
     
     // ParkingSpot
-    public Hub Hub { get; set; } = new();
-    public long HubId { get; set; }
+    public Hub? Hub { get; set; }
+    public long? HubId { get; set; }
     
     public Trip? Trip { get; set; }
     public long? TripId { get; set; }

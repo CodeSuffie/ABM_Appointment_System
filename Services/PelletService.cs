@@ -2,6 +2,7 @@ using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
+using Services.Abstractions;
 
 namespace Services;
 
@@ -43,137 +44,6 @@ public sealed class PelletService
         _workRepository = workRepository;
         _loadRepository = loadRepository;
         _modelState = modelState;
-    }
-    
-    public async Task<List<Pellet>> GetUnclaimedAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
-    {
-        var allPellets = await (_pelletRepository
-                .GetUnclaimed(truckCompany))
-            .ToListAsync(cancellationToken);
-
-        return allPellets;
-    }
-
-    public async Task<List<Pellet>> GetUnclaimedAsync(Hub hub, CancellationToken cancellationToken)
-    {
-        List<Pellet> allPellets = [];
-
-        var warehouse = await _warehouseRepository.GetAsync(hub, cancellationToken);
-        if (warehouse != null)
-        {
-            allPellets.AddRange(
-                await (_pelletRepository
-                    .GetUnclaimed(warehouse)
-                    .ToListAsync(cancellationToken))
-            );
-        }
-        else
-        {
-            _logger.LogError("Hub \n({@Hub})\n did not have a Warehouse assigned.",
-                hub);
-        }
-        
-        return allPellets;
-    }
-
-    private async Task SetPelletsAsync(Load load, long count, TruckCompany truckCompany, CancellationToken cancellationToken)
-    {
-        var allPellets = await GetUnclaimedAsync(truckCompany, cancellationToken);
-            
-        if (allPellets.Count <= 0)
-        {
-            _logger.LogInformation("TruckCompany ({@TruckCompany}) did not have any unclaimed pellets assigned.",
-                truckCompany);
-
-            return;
-        }
-            
-        if (allPellets.Count <= count)
-        {
-            _logger.LogInformation("TruckCompany ({@TruckCompany}) to fetch Pellets from had less than or an equal number ({@Count}) of unclaimed pellets assigned as the given count ({@Count}).",
-                truckCompany,
-                allPellets.Count,
-                count);
-
-            count = allPellets.Count;
-        }
-            
-        var pellets = allPellets
-            .OrderBy(_ => _modelState
-                .Random())
-            .Take((int) count)
-            .ToList();
-
-        foreach (var pellet in pellets)
-        {
-            await _pelletRepository.SetAsync(pellet, load, cancellationToken);
-            await _pelletRepository.UnsetAsync(pellet, truckCompany, cancellationToken);
-            // Removing pellets from truckCompany since they will leave for the hub now
-        }
-    }
-    
-    private async Task SetPelletsAsync(Load load, long count, Hub hub, CancellationToken cancellationToken)
-    {
-        var allPellets = await GetUnclaimedAsync(hub, cancellationToken);
-            
-        if (allPellets.Count <= 0)
-        {
-            _logger.LogInformation("Hub ({@Hub}) did not have any unclaimed pellets assigned.",
-                hub);
-
-            return;
-        }
-            
-        if (allPellets.Count <= count)
-        {
-            _logger.LogInformation("Hub ({@Hub}) to fetch Pellets from had less than or an equal number ({@Count}) of unclaimed pellets assigned as the given count ({@Count}).",
-                hub,
-                allPellets.Count,
-                count);
-
-            count = allPellets.Count;
-        }
-            
-        var pellets = allPellets
-            .OrderBy(_ => _modelState
-                .Random())
-            .Take((int) count)
-            .ToList();
-
-        foreach (var pellet in pellets)
-        {
-            await _pelletRepository.SetAsync(pellet, load, cancellationToken);
-        }
-    }
-    
-    public async Task SetPelletsAsync(Load load, long count, CancellationToken cancellationToken)
-    {
-        if (load.LoadType == LoadType.DropOff)
-        {
-            var truckCompany = await _truckCompanyRepository.GetAsync(load, cancellationToken);
-            if (truckCompany == null)
-            {
-                _logger.LogError("Load ({@Load}) did not have a Truck Company assigned.",
-                    load);
-
-                return;
-            }
-            
-            await SetPelletsAsync(load, count, truckCompany, cancellationToken);
-        }
-        else
-        {
-            var hub = await _hubRepository.GetAsync(load, cancellationToken);
-            if (hub == null)
-            {
-                _logger.LogError("Load ({@Load}) did not have a Hub assigned.",
-                    load);
-
-                return;
-            }
-            
-            await SetPelletsAsync(load, count, hub, cancellationToken);
-        }
     }
 
     private async Task<bool> HasPelletAsync(Bay bay, Pellet pellet, CancellationToken cancellationToken)
@@ -511,6 +381,58 @@ public sealed class PelletService
 
         return fetchPellets;
     }
+    
+    public async Task<List<Pellet>> GetFetchPelletsAsync(Bay bay, Appointment appointment, CancellationToken cancellationToken)
+    {
+        if (!_modelState.ModelConfig.AppointmentSystemMode)
+        {
+            _logger.LogError("This function cannot be called without Appointment System Mode.");
+
+            return [];
+        }
+        
+        var trip = await _tripRepository.GetAsync(appointment, cancellationToken);
+        if (trip == null)
+        {
+            _logger.LogInformation("Appointment \n({@Appointment})\n did not have a Trip assigned.",
+                appointment);
+            
+            return [];
+        }
+        
+        var pickUpLoad = await _loadRepository.GetAsync(trip, LoadType.PickUp, cancellationToken);
+        if (pickUpLoad == null)
+        {
+            _logger.LogInformation("Trip \n({@Trip})\n assigned to this Appointment \n({@Appointment})\n at Bay \n({@Bay})\n did not have a Load assigned to Pick-Up.",
+                trip,
+                appointment,
+                bay);
+            
+            return [];
+        }
+        
+        var truck = await _truckRepository.GetAsync(trip, cancellationToken);
+        if (truck == null)
+        {
+            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned.",
+                trip);
+            
+            return [];
+        }
+        
+        var fetchPellets = new List<Pellet>();
+
+        foreach (var pickUpPellet in pickUpLoad.Pellets)
+        {
+            if (!await HasPelletAsync(truck, pickUpPellet, cancellationToken) &&
+                !await HasPelletAsync(bay, pickUpPellet, cancellationToken))   // TODO: Check if Bay Hub matches Warehouse Hub
+            {
+                fetchPellets.Add(pickUpPellet);
+            }
+        }
+
+        return fetchPellets;
+    }
 
     public async Task<List<Pellet>> GetPickUpPelletsAsync(Bay bay, CancellationToken cancellationToken)
     {
@@ -608,6 +530,31 @@ public sealed class PelletService
         return fetchPellets;
     }
     
+    public async Task<List<Pellet>> GetAvailableFetchPelletsAsync(Bay bay, Appointment appointment, CancellationToken cancellationToken)
+    {
+        if (!_modelState.ModelConfig.AppointmentSystemMode)
+        {
+            _logger.LogError("This function cannot be called without Appointment System Mode.");
+
+            return [];
+        }
+        
+        var pellets = await GetFetchPelletsAsync(bay, appointment, cancellationToken);
+        var fetchPellets = new List<Pellet>();
+        
+        foreach (var pellet in pellets)
+        {
+            var work = await _workRepository
+                .GetAsync(pellet, cancellationToken);
+            if (work == null)
+            {
+                fetchPellets.Add(pellet);
+            }
+        }
+
+        return fetchPellets;
+    }
+    
     public async Task<List<Pellet>> GetAvailablePickUpPelletsAsync(Bay bay, CancellationToken cancellationToken)
     {
         var pellets = await GetPickUpPelletsAsync(bay, cancellationToken);
@@ -646,6 +593,12 @@ public sealed class PelletService
     public async Task<Pellet?> GetNextFetchAsync(Bay bay, CancellationToken cancellationToken)
     {
         var pellets = await GetAvailableFetchPelletsAsync(bay, cancellationToken);
+        return pellets.Count <= 0 ? null : pellets[0];
+    }
+
+    public async Task<Pellet?> GetNextFetchAsync(Bay bay, Appointment appointment, CancellationToken cancellationToken)
+    {
+        var pellets = await GetAvailableFetchPelletsAsync(bay, appointment, cancellationToken);
         return pellets.Count <= 0 ? null : pellets[0];
     }
     

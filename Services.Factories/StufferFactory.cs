@@ -7,7 +7,7 @@ namespace Services.Factories;
 
 public sealed class StufferFactory(
     ILogger<StufferFactory> logger,
-    HubService hubService,
+    HubFactory hubFactory,
     StufferShiftFactory stufferShiftFactory,
     StufferRepository stufferRepository,
     ModelState modelState) : IFactoryService<Stuffer>
@@ -21,7 +21,7 @@ public sealed class StufferFactory(
     
     public async Task<Stuffer?> GetNewObjectAsync(CancellationToken cancellationToken)
     {
-        var hub = await hubService.SelectHubAsync(cancellationToken);
+        var hub = await hubFactory.SelectHubAsync(cancellationToken);
         if (hub == null)
         {
             logger.LogError("No Hub could be selected for the new Picker.");

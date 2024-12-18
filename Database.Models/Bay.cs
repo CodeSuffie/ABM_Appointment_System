@@ -22,8 +22,8 @@ public class Bay : IArea, IStorage<Pellet>
     public BayStatus BayStatus { get; set; }
     public BayFlags BayFlags { get; set; } = 0;
     
-    public Hub Hub { get; set; } = new();
-    public long HubId { get; set; }
+    public Hub? Hub { get; set; }
+    public long? HubId { get; set; }
     
     public Trip? Trip { get; set; }
     public long? TripId { get; set; }
