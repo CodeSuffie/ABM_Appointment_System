@@ -21,6 +21,13 @@ public sealed class ParkingSpotRepository(ModelDbContext context)
         return parkingSpot;
     }
 
+    public async Task AddAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
+    {
+        await context.ParkingSpots.AddAsync(parkingSpot, cancellationToken);
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<int> CountAsync(Hub hub, CancellationToken cancellationToken)
     {
         var bayCount = await context.ParkingSpots

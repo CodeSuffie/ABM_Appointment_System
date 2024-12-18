@@ -53,4 +53,11 @@ public sealed class AppointmentSlotRepository(ModelDbContext context)
 
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task SetAsync(AppointmentSlot appointmentSlot, TimeSpan startTime, CancellationToken cancellationToken)
+    {
+        appointmentSlot.StartTime = startTime;
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
 }

@@ -14,6 +14,8 @@
       <ProjectReference Include="..\Database\Database.csproj" />
       <ProjectReference Include="..\Repositories\Repositories.csproj" />
       <ProjectReference Include="..\Services.Abstractions\Services.Abstractions.csproj" />
+        <ProjectReference Include="..\Services.Initializers\Services.Initializers.csproj" />
+        <ProjectReference Include="..\Services.Steppers\Services.Steppers.csproj" />
     </ItemGroup>
 
 </Project>

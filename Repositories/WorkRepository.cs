@@ -90,100 +90,74 @@ public sealed class WorkRepository(
         
         return work;
     }
-    
-    public async Task AddAsync(Work work, Trip trip, CancellationToken cancellationToken)
+
+    public async Task AddAsync(Work work, CancellationToken cancellationToken)
     {
-        await context.Works
-            .AddAsync(work, cancellationToken);
-        
+        await context.Works.AddAsync(work, cancellationToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task SetAsync(Work work, WorkType workType, CancellationToken cancellationToken)
+    {
+        work.WorkType = workType;
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task SetAsync(Work work, Trip trip, CancellationToken cancellationToken)
+    {
         work.Trip = trip;
         trip.Work = work;
 
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task AddAsync(Work work, Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
+    public async Task SetAsync(Work work, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        await context.Works
-            .AddAsync(work, cancellationToken);
-        
-        work.Trip = trip;
-        trip.Work = work;
-
         work.AdminStaff = adminStaff;
         adminStaff.Work = work;
 
-        context.Trips.Update(trip);
-        context.AdminStaffs.Update(adminStaff);
-
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task AddAsync(Work work, Trip trip, Bay bay, CancellationToken cancellationToken)
+    public async Task SetAsync(Work work, BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        await context.Works
-            .AddAsync(work, cancellationToken);
-        
-        work.Trip = trip;
-        trip.Work = work;
-
-        work.Bay = bay;
-        bay.Works.Remove(work);
-        bay.Works.Add(work);
-
-        await context.SaveChangesAsync(cancellationToken);
-    }
-    
-    public async Task AddAsync(Work work, Bay bay, BayStaff bayStaff, Pellet pellet, CancellationToken cancellationToken)
-    {
-        work.Bay = bay;
-        bay.Works.Remove(work);
-        bay.Works.Add(work);
-
         work.BayStaff = bayStaff;
         bayStaff.Work = work;
 
-        work.Pellet = pellet;
-        pellet.Work = work;
-        
-        await context.Works
-            .AddAsync(work, cancellationToken);
-
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task AddAsync(Work work, Bay bay, Picker picker, Pellet pellet, CancellationToken cancellationToken)
+    public async Task SetAsync(Work work, Picker picker, CancellationToken cancellationToken)
     {
-        work.Bay = bay;
-        bay.Works.Remove(work);
-        bay.Works.Add(work);
-        
         work.Picker = picker;
         picker.Work = work;
 
-        work.Pellet = pellet;
-        pellet.Work = work;
-        
-        await context.Works
-            .AddAsync(work, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task SetAsync(Work work, Stuffer stuffer, CancellationToken cancellationToken)
+    {
+        work.Stuffer = stuffer;
+        stuffer.Work = work;
 
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task AddAsync(Work work, Bay bay, Stuffer stuffer, Pellet pellet, CancellationToken cancellationToken)
+    public async Task SetAsync(Work work, Bay bay, CancellationToken cancellationToken)
     {
         work.Bay = bay;
         bay.Works.Remove(work);
         bay.Works.Add(work);
-        
-        work.Stuffer = stuffer;
-        stuffer.Work = work;
 
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task SetAsync(Work work, Pellet pellet, CancellationToken cancellationToken)
+    {
         work.Pellet = pellet;
         pellet.Work = work;
-        
-        await context.Works
-            .AddAsync(work, cancellationToken);
 
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -243,7 +217,7 @@ public sealed class WorkRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task SetDurationAsync(Work work, TimeSpan duration, CancellationToken cancellationToken)
+    public async Task SetDurationAsync(Work work, TimeSpan? duration, CancellationToken cancellationToken)
     {
         work.Duration = duration;
         

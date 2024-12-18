@@ -58,6 +58,13 @@ public sealed class BayRepository(ModelDbContext context)
 
         return bay;
     }
+
+    public async Task AddAsync(Bay bay, CancellationToken cancellationToken)
+    {
+        await context.Bays.AddAsync(bay, cancellationToken);
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
     
     public async Task AddAsync(Bay bay, BayFlags flag, CancellationToken cancellationToken)
     {

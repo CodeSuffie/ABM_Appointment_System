@@ -27,6 +27,20 @@ public sealed class BayShiftRepository(ModelDbContext context)
 
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task SetStartAsync(BayShift bayShift, TimeSpan startTime, CancellationToken cancellationToken)
+    {
+        bayShift.StartTime = startTime;
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SetDurationAsync(BayShift bayShift, TimeSpan duration, CancellationToken cancellationToken)
+    {
+        bayShift.Duration = duration;
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
     
     public async Task SetAsync(BayShift bayShift, BayStaff bayStaff, CancellationToken cancellationToken)
     {

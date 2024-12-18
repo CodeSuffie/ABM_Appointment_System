@@ -53,6 +53,15 @@ public sealed class AppointmentRepository(ModelDbContext context)
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task SetAsync(Appointment appointment, AppointmentSlot appointmentSlot, CancellationToken cancellationToken)
+    {
+        appointment.AppointmentSlot = appointmentSlot;
+        appointmentSlot.Appointments.Remove(appointment);
+        appointmentSlot.Appointments.Add(appointment);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task SetAsync(Appointment appointment, Bay bay, CancellationToken cancellationToken)
     {
         appointment.Bay = bay;

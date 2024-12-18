@@ -10,22 +10,9 @@ using Repositories;
 using Serilog;
 using Services;
 using Services.Abstractions;
-using Services.AdminStaffServices;
-using Services.AppointmentServices;
-using Services.AppointmentSlotServices;
-using Services.BayServices;
-using Services.BayStaffServices;
-using Services.HubServices;
-using Services.LoadServices;
-using Services.ModelServices;
-using Services.ParkingSpotServices;
-using Services.PelletServices;
-using Services.PickerServices;
-using Services.StufferServices;
-using Services.TripServices;
-using Services.TruckCompanyServices;
-using Services.TruckServices;
-using Services.WarehouseServices;
+using Services.Factories;
+using Services.Initializers;
+using Services.Steppers;
 
 namespace Simulator.Extensions;
 
@@ -46,94 +33,107 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddDbContext<ModelDbContext>();
-
-        services.AddScoped<HubService>();
-        services.AddScoped<IPriorityInitializationService,  HubInitialize>();
-        services.AddScoped<IStepperService,                 HubStepper>();
-        services.AddScoped<HubRepository>();
-
-        services.AddScoped<TruckCompanyService>();
-        services.AddScoped<IPriorityInitializationService,  TruckCompanyInitialize>();
-        services.AddScoped<TruckCompanyRepository>();
-
-        services.AddScoped<AdminStaffService>();
-        services.AddScoped<IPriorityInitializationService,  AdminStaffInitialize>();
-        services.AddScoped<IStepperService,                 AdminStaffStepper>();
+        
+        // Repositories
         services.AddScoped<AdminStaffRepository>();
-        
-        services.AddScoped<AppointmentService>();
-        services.AddScoped<IPriorityInitializationService,  AppointmentInitialize>();
-        services.AddScoped<IStepperService,                 AppointmentStepper>();
         services.AddScoped<AppointmentRepository>();
-        
-        services.AddScoped<AppointmentSlotService>();
-        services.AddScoped<IPriorityInitializationService,  AppointmentSlotInitialize>();
-        services.AddScoped<IStepperService,                 AppointmentSlotStepper>();
         services.AddScoped<AppointmentSlotRepository>();
-
-        services.AddScoped<BayService>();
-        services.AddScoped<IPriorityInitializationService,  BayInitialize>();
-        services.AddScoped<IStepperService,                 BayStepper>();
         services.AddScoped<BayRepository>();
-
-        services.AddScoped<BayStaffService>();
-        services.AddScoped<IPriorityInitializationService,  BayStaffInitialize>();
-        services.AddScoped<IStepperService,                 BayStaffStepper>();
-        services.AddScoped<BayStaffRepository>();
-
-        services.AddScoped<ParkingSpotService>();
-        services.AddScoped<IPriorityInitializationService,  ParkingSpotInitialize>();
-        services.AddScoped<IStepperService,                 ParkingSpotStepper>();
-        services.AddScoped<ParkingSpotRepository>();
-        
-        services.AddScoped<PelletFactory>();
-        services.AddScoped<PelletService>();
-        services.AddScoped<IPriorityInitializationService,  PelletInitialize>();
-        services.AddScoped<IStepperService,                 PelletStepper>();
-        services.AddScoped<PelletRepository>();
-        
-        services.AddScoped<PickerService>();
-        services.AddScoped<IPriorityInitializationService,  PickerInitialize>();
-        services.AddScoped<IStepperService,                 PickerStepper>();
-        services.AddScoped<PickerRepository>();
-        
-        services.AddScoped<StufferService>();
-        services.AddScoped<IPriorityInitializationService,  StufferInitialize>();
-        services.AddScoped<IStepperService,                 StufferStepper>();
-        services.AddScoped<StufferRepository>();
-        
-        services.AddScoped<TripService>();
-        services.AddScoped<IStepperService,                 TripStepper>();
-        services.AddScoped<TripRepository>();
-
-        services.AddScoped<TruckService>();
-        services.AddScoped<IPriorityInitializationService,  TruckInitialize>();
-        services.AddScoped<IStepperService,                 TruckStepper>();
-        services.AddScoped<TruckRepository>();
-        
-        services.AddScoped<WarehouseService>();
-        services.AddScoped<IPriorityInitializationService,  WarehouseInitialize>();
-        services.AddScoped<WarehouseRepository>();
-
-        services.AddScoped<LoadService>();
-        services.AddScoped<IStepperService,                 LoadStepper>();
-        services.AddScoped<LoadRepository>();
-
-        services.AddScoped<HubShiftService>();
-        services.AddScoped<HubShiftRepository>();
-
-        services.AddScoped<BayShiftService>();
         services.AddScoped<BayShiftRepository>();
-
-        services.AddScoped<OperatingHourService>();
+        services.AddScoped<BayStaffRepository>();
+        services.AddScoped<HubRepository>();
+        services.AddScoped<HubShiftRepository>();
+        services.AddScoped<LoadRepository>();
         services.AddScoped<OperatingHourRepository>();
-
-        services.AddScoped<WorkService>();
+        services.AddScoped<ParkingSpotRepository>();
+        services.AddScoped<PelletRepository>();
+        services.AddScoped<PickerRepository>();
+        services.AddScoped<StufferRepository>();
+        services.AddScoped<TripRepository>();
+        services.AddScoped<TruckCompanyRepository>();
+        services.AddScoped<TruckRepository>();
+        services.AddScoped<WarehouseRepository>();
         services.AddScoped<WorkRepository>();
+        
 
+        // Services
+        services.AddScoped<AdminStaffService>();
+        services.AddScoped<AppointmentService>();
+        services.AddScoped<AppointmentSlotService>();
+        services.AddScoped<BayService>();
+        services.AddScoped<BayShiftService>();
+        services.AddScoped<BayStaffService>();
+        services.AddScoped<HubService>();
+        services.AddScoped<HubShiftService>();
         services.AddScoped<LocationService>();
+        services.AddScoped<ParkingSpotService>();
+        services.AddScoped<PelletService>();
+        services.AddScoped<PickerService>();
+        services.AddScoped<StufferService>();
+        services.AddScoped<TripService>();
+        services.AddScoped<TruckCompanyService>();
+        services.AddScoped<TruckService>();
+        services.AddScoped<WorkService>();
+        
+        
+        // Factories
+        services.AddScoped<IFactoryService,                 AdminShiftFactory>();
+        services.AddScoped<IFactoryService,                 AdminStaffFactory>();
+        services.AddScoped<IFactoryService,                 AppointmentFactory>();
+        services.AddScoped<IFactoryService,                 AppointmentSlotFactory>();
+        services.AddScoped<IFactoryService,                 BayFactory>();
+        services.AddScoped<IFactoryService,                 BayShiftFactory>();
+        services.AddScoped<IFactoryService,                 BayStaffFactory>();
+        services.AddScoped<IFactoryService,                 HubFactory>();
+        services.AddScoped<IFactoryService,                 LoadFactory>();
+        services.AddScoped<IFactoryService,                 OperatingHourFactory>();
+        services.AddScoped<IFactoryService,                 ParkingSpotFactory>();
+        services.AddScoped<IFactoryService,                 PelletFactory>();
+        services.AddScoped<IFactoryService,                 PickerFactory>();
+        services.AddScoped<IFactoryService,                 PickerShiftFactory>();
+        services.AddScoped<IFactoryService,                 StufferFactory>();
+        services.AddScoped<IFactoryService,                 StufferShiftFactory>();
+        services.AddScoped<IFactoryService,                 TripFactory>();
+        services.AddScoped<IFactoryService,                 TruckCompanyFactory>();
+        services.AddScoped<IFactoryService,                 TruckFactory>();
+        services.AddScoped<IFactoryService,                 WarehouseFactory>();
+        services.AddScoped<IFactoryService,                 WorkFactory>();
+        
+        
+        // Initializers
+        services.AddScoped<IPriorityInitializerService,     AdminStaffInitializer>();
+        services.AddScoped<IPriorityInitializerService,     AppointmentInitializer>();
+        services.AddScoped<IPriorityInitializerService,     AppointmentSlotInitializer>();
+        services.AddScoped<IPriorityInitializerService,     BayInitializer>();
+        services.AddScoped<IPriorityInitializerService,     BayStaffInitializer>();
+        services.AddScoped<IPriorityInitializerService,     HubInitializer>();
+        services.AddScoped<IPriorityInitializerService,     ParkingSpotInitializer>();
+        services.AddScoped<IPriorityInitializerService,     PelletInitializer>();
+        services.AddScoped<IPriorityInitializerService,     PickerInitializer>();
+        services.AddScoped<IPriorityInitializerService,     StufferInitializer>();
+        services.AddScoped<IPriorityInitializerService,     TruckCompanyInitializer>();
+        services.AddScoped<IPriorityInitializerService,     TruckInitializer>();
+        services.AddScoped<IPriorityInitializerService,     WarehouseInitializer>();
+        
+        
+        
+        // Steppers
+        services.AddScoped<IStepperService,                 AdminStaffStepper>();
+        services.AddScoped<IStepperService,                 AppointmentStepper>();
+        services.AddScoped<IStepperService,                 AppointmentSlotStepper>();
+        services.AddScoped<IStepperService,                 BayStepper>();
+        services.AddScoped<IStepperService,                 BayStaffStepper>();
+        services.AddScoped<IStepperService,                 HubStepper>();
+        services.AddScoped<IStepperService,                 LoadStepper>();
+        services.AddScoped<IStepperService,                 ParkingSpotStepper>();
+        services.AddScoped<IStepperService,                 PelletStepper>();
+        services.AddScoped<IStepperService,                 PickerStepper>();
+        services.AddScoped<IStepperService,                 StufferStepper>();
+        services.AddScoped<IStepperService,                 TripStepper>();
+        services.AddScoped<IStepperService,                 TruckStepper>();
+        
 
-        services.AddScoped<ModelInitialize>();
+        services.AddScoped<ModelInitializer>();
         services.AddScoped<ModelStepper>();
         services.AddScoped<ModelState>();
         services.AddScoped<ModelService>();

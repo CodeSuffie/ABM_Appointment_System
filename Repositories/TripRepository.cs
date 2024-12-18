@@ -185,6 +185,15 @@ public sealed class TripRepository(
         
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task SetAsync(Trip trip, Hub hub, CancellationToken cancellationToken)
+    {
+        trip.Hub = hub;
+        hub.Trips.Remove(trip);
+        hub.Trips.Add(trip);
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
     
     public async Task SetDropOffAsync(Trip trip, Load dropOff, CancellationToken cancellationToken)
     {
