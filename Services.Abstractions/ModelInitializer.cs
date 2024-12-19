@@ -13,7 +13,7 @@ public sealed class ModelInitializer(
         modelState.Initialize(
             new TimeSpan(0, 0, 0),
             new AppointmentModelConfig(),
-            new AgentConfig(),
+            new AppointmentAgentConfig(),
             new AppointmentConfig());
             
         logger.LogInformation("New ModelState created: ModelState={@ModelState}", modelState);

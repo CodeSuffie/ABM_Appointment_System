@@ -88,6 +88,13 @@ public sealed class PickerService
 
     public async Task AlertFreeAppointmentAsync(Picker picker, CancellationToken cancellationToken)
     {
+        if (!_modelState.ModelConfig.AppointmentSystemMode)
+        {
+            _logger.LogError("This function cannot be called without Appointment System Mode.");
+
+            return;
+        }
+        
         var hub = await _hubRepository.GetAsync(picker, cancellationToken);
         if (hub == null)
         {
@@ -153,12 +160,6 @@ public sealed class PickerService
 
     public async Task AlertFreeAsync(Picker picker, CancellationToken cancellationToken)
     {
-        if (_modelState.ModelConfig.AppointmentSystemMode)
-        {
-            await AlertFreeAppointmentAsync(picker, cancellationToken);
-            return;
-        }
-        
         var hub = await _hubRepository.GetAsync(picker, cancellationToken);
         if (hub == null)
         {
@@ -170,8 +171,8 @@ public sealed class PickerService
 
         var bays = _bayRepository.Get(hub)
             .Where(b => b.BayStatus == BayStatus.Opened &&
-                            b.Trip != null &&
-                            !b.BayFlags.HasFlag(BayFlags.Fetched))
+                        b.Trip != null &&
+                        !b.BayFlags.HasFlag(BayFlags.Fetched))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
 
@@ -185,7 +186,7 @@ public sealed class PickerService
             }
             
             var bayFetchPelletCount = (await _pelletService
-                .GetAvailableFetchPelletsAsync(bay, cancellationToken))
+                    .GetAvailableFetchPelletsAsync(bay, cancellationToken))
                 .Count;
 
             if (bestBay != null && bayFetchPelletCount <= fetchPelletCount)
@@ -203,9 +204,19 @@ public sealed class PickerService
                                    "Bay with more Pellets assigned to Fetch.",
                 picker,
                 hub);
-            
-            _logger.LogDebug("Picker \n({@Picker})\n will remain idle...",
-                picker);
+
+            if (!_modelState.ModelConfig.AppointmentSystemMode)
+            {
+                _logger.LogDebug("Picker \n({@Picker})\n will remain idle...",
+                    picker);
+            }
+            else
+            {
+                _logger.LogDebug("Picker \n({@Picker})\n will try to fetch for next appointments...",
+                    picker);
+                
+                await AlertFreeAppointmentAsync(picker, cancellationToken);
+            }
 
             return;
         }
@@ -255,7 +266,19 @@ public sealed class PickerService
             bay,
             pellet);
         await _workFactory.GetNewObjectAsync(bay, picker, pellet, cancellationToken);
-        
-        _fetchMissCounter.Add(1, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+
+        var appointmentSlot = await _appointmentSlotRepository.GetAsync(appointment, cancellationToken);
+        if (appointmentSlot == null)
+        {
+            _logger.LogError("Appointment \n({@Appointment})\n did not have an AppointmentSlot assigned to pick for.",
+                picker);
+
+            return;
+        }
+
+        if (appointmentSlot.StartTime <= _modelState.ModelTime)
+        {
+            _fetchMissCounter.Add(1, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        }
     }
 }

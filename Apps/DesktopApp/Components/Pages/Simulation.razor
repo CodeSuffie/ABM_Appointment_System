@@ -31,7 +31,7 @@
     <div class="d-flex flex-fill" style="flex-direction: row-reverse;">
         @if (_sidebarVisible)
         {
-            <div class="d-flex flex-column p-1" style="width: 350px">
+            <div class="d-flex flex-column p-1 w-25">
                 <div class="d-flex flex-row">
                     <div class="ms-auto">
                         <button type="button" class="btn-close" aria-label="Close" @onclick="CloseSidebarAsync"></button>
@@ -55,24 +55,24 @@
                                 @if (trip != null)
                                 {
                                     <tr>
-                                        <th scope="row" style="width: 150px">Location</th>
-                                        <td>X: @trip.XLocation, Y: @trip.YLocation</td>
+                                        <th scope="row">Location</th>
+                                        <td class="flex-grow-1">X: @trip.XLocation, Y: @trip.YLocation</td>
                                     </tr>
                                 }
 
                                 <tr>
-                                    <th scope="row" style="width: 150px">Speed</th>
-                                    <td>@_selectedTruck.Speed</td>
+                                    <th scope="row">Speed</th>
+                                    <td class="flex-grow-1">@_selectedTruck.Speed</td>
                                 </tr>
 
                                 <tr>
-                                    <th scope="row" style="width: 150px">Capacity</th>
-                                    <td>@_selectedTruck.Capacity</td>
+                                    <th scope="row">Capacity</th>
+                                    <td class="flex-grow-1">@_selectedTruck.Capacity</td>
                                 </tr>
 
                                 <tr>
-                                    <th scope="row" style="width: 150px">Inventory</th>
-                                    <td>@(string.Join(", ", _selectedTruck.Inventory.Select(x => x.Id)))</td>
+                                    <th scope="row">Inventory</th>
+                                    <td class="flex-wrap">@(string.Join(", ", _selectedTruck.Inventory.Select(x => x.Id)))</td>
                                 </tr>
 
                                 </tbody>
@@ -85,13 +85,13 @@
                                     <table class="table">
                                         <thead>
                                             <tr>
-                                                <th scope="row" style="width: 150px">Load #@load.Id</th>
+                                                <th scope="row">Load #@load.Id</th>
                                             </tr>
                                         </thead>
                                         
                                         <tbody>
                                             <tr>
-                                                <th scope="row" style="width: 150px">LoadType</th>
+                                                <th scope="row">LoadType</th>
                                                 @{
                                                     var loadType = "Invalid!";
                                                     @switch (load.LoadType)
@@ -104,12 +104,12 @@
                                                             break;
                                                     }
                                                 }
-                                                <td>@loadType</td>
+                                                <td class="flex-grow-1">@loadType</td>
                                             </tr>
 
                                             <tr>
-                                                <th scope="row" style="width: 150px">Pellets</th>
-                                                <td>@(string.Join(", ", load.Pellets.Select(x => x.Id)))</td>
+                                                <th scope="row">Pellets</th>
+                                                <td class="flex-wrap flex-grow-1">@(string.Join(", ", load.Pellets.Select(x => x.Id)))</td>
                                             </tr>
 
                                         </tbody>
@@ -129,7 +129,7 @@
                                                     appointmentId = trip.Appointment.Id;
                                                 }
                                             }
-                                            <th scope="row" style="width: 150px">Appointment #@appointmentId</th>
+                                            <th scope="row">Appointment #@appointmentId</th>
                                         </tr>
                                     </thead>
                                     
@@ -140,14 +140,14 @@
                                         @if (trip.Appointment.AppointmentSlot != null)
                                         {
                                             <tr>
-                                                <th scope="row" style="width: 150px">AppointmentSlot</th>
-                                                <td>StartTime: @trip.Appointment.AppointmentSlot.StartTime.ToString(@"d\:hh\:mm")</td>
+                                                <th scope="row">AppointmentSlot</th>
+                                                <td class="flex-grow-1">StartTime: @trip.Appointment.AppointmentSlot.StartTime.ToString(@"d\:hh\:mm")</td>
                                             </tr>
                                         }
                                         
                                         <tr>
-                                            <th scope="row" style="width: 150px">Bay</th>
-                                            <td>#@trip.Appointment.BayId</td>
+                                            <th scope="row">Bay</th>
+                                            <td class="flex-grow-1">#@trip.Appointment.BayId</td>
                                         </tr>
 
                                         </tbody>
@@ -165,47 +165,47 @@
                             <tbody>
 
                             <tr>
-                                <th scope="row" style="width: 150px">Capacity</th>
-                                <td>@_selectedBay.Capacity</td>
+                                <th scope="row">Capacity</th>
+                                <td class="flex-grow-1">@_selectedBay.Capacity</td>
                             </tr>
 
                             <tr>
-                                <th scope="row" style="width: 150px">BayStatus</th>
+                                <th scope="row">BayStatus</th>
                                 @switch (_selectedBay.BayStatus)
                                 {
                                     case BayStatus.Closed:
-                                        <td>BayStatus.Closed</td>
+                                        <td class="flex-grow-1">BayStatus.Closed</td>
                                         break;
                                     case BayStatus.Opened:
-                                        <td>BayStatus.Opened</td>
+                                        <td class="flex-grow-1">BayStatus.Opened</td>
                                         break;
                                     default:
-                                        <td>Invalid!</td>
+                                        <td class="flex-grow-1">Invalid!</td>
                                         break;
                                 }
                             </tr>
 
                             <tr>
-                                <th rowspan="3" scope="row" style="width: 150px">BayFlags</th>
+                                <th rowspan="3" scope="row">BayFlags</th>
                                 @{
                                     var droppedOff = _selectedBay.BayFlags.HasFlag(BayFlags.DroppedOff) ? "text-success" : "text-danger";
                                     var fetched = _selectedBay.BayFlags.HasFlag(BayFlags.Fetched) ? "text-success" : "text-danger";
                                     var pickedUp = _selectedBay.BayFlags.HasFlag(BayFlags.PickedUp) ? "text-success" : "text-danger";
                                 }
-                                <td class="@droppedOff">BayFlags.DroppedOff</td>
+                                <td class="flex-grow-1 @droppedOff">BayFlags.DroppedOff</td>
                             </tr>
                             
                             <tr>
-                                <td class="@fetched">BayFlags.Fetched</td>
+                                <td class="flex-grow-1 @fetched">BayFlags.Fetched</td>
                             </tr>
 
                             <tr>
-                                <td class="@pickedUp">BayFlags.PickedUp</td>
+                                <td class="flex-grow-1 @pickedUp">BayFlags.PickedUp</td>
                             </tr>
 
                             <tr>
-                                <th scope="row" style="width: 150px">Inventory</th>
-                                <td>@(string.Join(", ", _selectedBay.Inventory.Select(x => x.Id)))</td>
+                                <th scope="row">Inventory</th>
+                                <td class="flex-wrap flex-grow-1">@(string.Join(", ", _selectedBay.Inventory.Select(x => x.Id)))</td>
                             </tr>
 
                             </tbody>
@@ -225,19 +225,19 @@
                                     <table class="table">
                                         <thead>
                                             <tr>
-                                                <th scope="row" style="width: 150px">Appointment #@appointment.Id</th>
+                                                <th scope="row">Appointment #@appointment.Id</th>
                                             </tr>
                                         </thead>
                                         
                                         <tbody>
                                             <tr>
-                                                <th scope="row" style="width: 150px">AppointmentSlot</th>
-                                                <td>StartTime: @appointment.AppointmentSlot.StartTime.ToString(@"d\:hh\:mm")</td>
+                                                <th scope="row">AppointmentSlot</th>
+                                                <td class="flex-grow-1">StartTime: @appointment.AppointmentSlot.StartTime.ToString(@"d\:hh\:mm")</td>
                                             </tr>
 
                                             <tr>
-                                                <th scope="row" style="width: 150px">Trip</th>
-                                                <td>#@appointment.TripId</td>
+                                                <th scope="row">Trip</th>
+                                                <td class="flex-grow-1">#@appointment.TripId</td>
                                             </tr>
                                         </tbody>
                                     </table>

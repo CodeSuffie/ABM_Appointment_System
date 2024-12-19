@@ -26,8 +26,8 @@ public class ModelConfig : ModelConfigBase
     public override TimeSpan ModelTotalTime { get; } = TimeSpan.FromDays(1);
     public override TimeSpan ModelStep { get; } = TimeSpan.FromMinutes(1);
     
-    public override int InitialTruckCompanyPellets { get; } = 300;
-    public override int InitialWarehousePellets { get; } = 300;
+    public override int InitialTruckCompanyPellets { get; } = 100;
+    public override int InitialWarehousePellets { get; } = 100;
     public override int PelletsPerStep { get; } = 0;
     public override int PelletAverageDifficulty { get; } = 1;
     public override int PelletDifficultyDeviation { get; } = 1;

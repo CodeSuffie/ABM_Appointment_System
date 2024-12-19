@@ -19,6 +19,9 @@ public sealed class PelletService
     private readonly TripRepository _tripRepository;
     private readonly WorkRepository _workRepository;
     private readonly LoadRepository _loadRepository;
+    private readonly AppointmentRepository _appointmentRepository;
+    private readonly PickerRepository _pickerRepository;
+    private readonly BayStaffRepository _bayStaffRepository;
 
     public PelletService(
         ILogger<PelletService> logger,
@@ -31,7 +34,10 @@ public sealed class PelletService
         BayRepository bayRepository,
         TripRepository tripRepository,
         WorkRepository workRepository,
-        LoadRepository loadRepository)
+        LoadRepository loadRepository,
+        AppointmentRepository appointmentRepository,
+        PickerRepository pickerRepository,
+        BayStaffRepository bayStaffRepository)
     {
         _logger = logger;
         _pelletRepository = pelletRepository;
@@ -43,6 +49,9 @@ public sealed class PelletService
         _tripRepository = tripRepository;
         _workRepository = workRepository;
         _loadRepository = loadRepository;
+        _appointmentRepository = appointmentRepository;
+        _pickerRepository = pickerRepository;
+        _bayStaffRepository = bayStaffRepository;
         _modelState = modelState;
     }
 
@@ -337,6 +346,81 @@ public sealed class PelletService
 
         return stuffPellets;
     }
+
+    public async Task<List<Pellet>> GetStuffPelletsAsync(Bay bay, IQueryable<AppointmentSlot> appointmentSlots, CancellationToken cancellationToken)
+    {
+        if (!_modelState.ModelConfig.AppointmentSystemMode)
+        {
+            _logger.LogError("This function cannot be called without Appointment System Mode.");
+
+            return [];
+        }
+        
+        var stuffPellets = _pelletRepository.Get(bay)
+            .AsEnumerable();
+        
+        foreach (var appointmentSlot in appointmentSlots)
+        {
+            var appointment = await _appointmentRepository.GetAsync(bay, appointmentSlot, cancellationToken);
+            if (appointment == null)
+            {
+                _logger.LogInformation("Bay \n({@Bay})\n did not have an Appointment assigned during this AppointmentSlot \n({@AppointmentSlot}).",
+                    bay,
+                    appointmentSlot);
+
+                continue;
+            }
+            
+            var trip = await _tripRepository.GetAsync(appointment, cancellationToken);
+            if (trip == null)
+            {
+                _logger.LogError("Appointment \n{@Appointment}\n assigned to this Bay \n({@Bay})\n during this " +
+                                 "AppointmentSlot \n({@AppointmentSlot}) did not have a Trip assigned.",
+                    appointment,
+                    bay,
+                    appointmentSlot);
+
+                continue;
+            }
+
+            var pickUpLoad = await _loadRepository.GetAsync(trip, LoadType.PickUp, cancellationToken);
+            if (pickUpLoad == null)
+            {
+                _logger.LogInformation("Trip \n({@Trip})\n did not have a Load assigned to Pick-Up.",
+                    trip);
+
+                continue;
+            }
+
+            stuffPellets = stuffPellets
+                .Where(stuffPellet => 
+                    pickUpLoad.Pellets.All(p => p.Id != stuffPellet.Id));
+        }
+
+        var tripCurrent = await _tripRepository.GetAsync(bay, cancellationToken);
+        if (tripCurrent == null)
+        {
+            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned.",
+                bay);
+
+            return stuffPellets.ToList();
+        }
+        
+        var pickUpLoadCurrent = await _loadRepository.GetAsync(tripCurrent, LoadType.PickUp, cancellationToken);
+        if (pickUpLoadCurrent == null)
+        {
+            _logger.LogInformation("Trip \n({@Trip})\n did not have a Load assigned to Pick-Up.",
+                tripCurrent);
+
+            return stuffPellets.ToList();
+        }
+        
+        stuffPellets = stuffPellets
+            .Where(stuffPellet => 
+                pickUpLoadCurrent.Pellets.All(p => p.Id != stuffPellet.Id));
+
+        return stuffPellets.ToList();
+    }
     
     public async Task<List<Pellet>> GetFetchPelletsAsync(Bay bay, CancellationToken cancellationToken)
     {
@@ -512,6 +596,31 @@ public sealed class PelletService
         return stuffPellets;
     }
     
+    public async Task<List<Pellet>> GetAvailableStuffPelletsAsync(Bay bay, IQueryable<AppointmentSlot> appointmentSlots, CancellationToken cancellationToken)
+    {
+        if (!_modelState.ModelConfig.AppointmentSystemMode)
+        {
+            _logger.LogError("This function cannot be called without Appointment System Mode.");
+
+            return [];
+        }
+        
+        var pellets = await GetStuffPelletsAsync(bay, appointmentSlots, cancellationToken);
+        var stuffPellets = new List<Pellet>();
+        
+        foreach (var pellet in pellets)
+        {
+            var work = await _workRepository
+                .GetAsync(pellet, cancellationToken);
+            if (work == null)
+            {
+                stuffPellets.Add(pellet);
+            }
+        }
+
+        return stuffPellets;
+    }
+
     public async Task<List<Pellet>> GetAvailableFetchPelletsAsync(Bay bay, CancellationToken cancellationToken)
     {
         var pellets = await GetFetchPelletsAsync(bay, cancellationToken);
@@ -521,9 +630,20 @@ public sealed class PelletService
         {
             var work = await _workRepository
                 .GetAsync(pellet, cancellationToken);
+            // TODO: Work does not get removed from Pellets correctly
             if (work == null)
             {
                 fetchPellets.Add(pellet);
+            }
+            else
+            {
+                var picker = await _pickerRepository.GetAsync(work, cancellationToken);
+                var bayStaff = await _bayStaffRepository.GetAsync(work, cancellationToken);
+                if (picker == null && bayStaff == null)
+                {
+                    await _workRepository.RemoveAsync(work, cancellationToken);
+                    fetchPellets.Add(pellet);
+                }
             }
         }
 
@@ -587,6 +707,12 @@ public sealed class PelletService
     public async Task<Pellet?> GetNextStuffAsync(Bay bay, CancellationToken cancellationToken)
     {
         var pellets = await GetAvailableStuffPelletsAsync(bay, cancellationToken);
+        return pellets.Count <= 0 ? null : pellets[0];
+    }
+    
+    public async Task<Pellet?> GetNextStuffAsync(Bay bay, IQueryable<AppointmentSlot> appointmentSlots, CancellationToken cancellationToken)
+    {
+        var pellets = await GetAvailableStuffPelletsAsync(bay, appointmentSlots, cancellationToken);
         return pellets.Count <= 0 ? null : pellets[0];
     }
 

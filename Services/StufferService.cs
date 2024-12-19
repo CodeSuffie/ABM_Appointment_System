@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,8 @@ public sealed class StufferService(
     BayRepository bayRepository,
     HubRepository hubRepository,
     PelletService pelletService,
+    AppointmentSlotRepository appointmentSlotRepository,
+    AppointmentRepository appointmentRepository,
     ModelState modelState)
 {
     public async Task AlertWorkCompleteAsync(Stuffer stuffer, CancellationToken cancellationToken)
@@ -51,9 +54,67 @@ public sealed class StufferService(
         
         await pelletService.AlertStuffedAsync(pellet, bay, cancellationToken);
     }
+    
+    public async Task AlertFreeAppointmentAsync(Stuffer stuffer, CancellationToken cancellationToken)
+    {
+        if (!modelState.ModelConfig.AppointmentSystemMode)
+        {
+            logger.LogError("This function cannot be called without Appointment System Mode.");
 
+            return;
+        }
+        
+        var hub = await hubRepository.GetAsync(stuffer, cancellationToken);
+        if (hub == null)
+        {
+            logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to alert free for.",
+                stuffer);
+
+            return;
+        }
+
+        var bays = bayRepository.Get(hub)
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        var appointmentSlots = appointmentSlotRepository.GetAfter(hub,
+                modelState.ModelTime -
+                modelState.AppointmentConfig!.AppointmentLength * modelState.ModelConfig.ModelStep)
+            .Where(aps => aps.Appointments.Count != 0)
+            .OrderBy(aps => aps.StartTime)
+            .Take(2);
+        
+        Bay? bestBay = null;
+        var stuffPelletCount = 0;
+        await foreach (var bay in bays)
+        {
+            var bayStuffPelletCount = (await pelletService
+                    .GetAvailableStuffPelletsAsync(bay, appointmentSlots, cancellationToken))
+                .Count;
+            
+            if (bestBay != null && bayStuffPelletCount <= stuffPelletCount)
+            {
+                continue;
+            }
+            
+            stuffPelletCount = bayStuffPelletCount;
+            bestBay = bay;
+        }
+
+        if (bestBay != null)
+        {
+            await StartStuffAsync(stuffer, bestBay, appointmentSlots, cancellationToken);
+        }
+    }
     public async Task AlertFreeAsync(Stuffer stuffer, CancellationToken cancellationToken)
     {
+        if (modelState.ModelConfig.AppointmentSystemMode)
+        {
+            await AlertFreeAppointmentAsync(stuffer, cancellationToken);
+            
+            return;
+        }
+        
         var hub = await hubRepository.GetAsync(stuffer, cancellationToken);
         if (hub == null)
         {
@@ -120,4 +181,26 @@ public sealed class StufferService(
             pellet);
         await workFactory.GetNewObjectAsync(bay, stuffer, pellet, cancellationToken);
     }
+    
+    private async Task StartStuffAsync(Stuffer stuffer, Bay bay, IQueryable<AppointmentSlot> appointmentSlots, CancellationToken cancellationToken)
+    {
+        var pellet = await pelletService.GetNextStuffAsync(bay, appointmentSlots, cancellationToken);
+        if (pellet == null)
+        {
+            logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Stuff.",
+                bay);
+            
+            logger.LogInformation("Stuff Work could not be started for this Bay \n({@Bay}).",
+                bay);
+            
+            return;
+        }
+        
+        logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pellet \n({@Pellet})",
+            stuffer,
+            bay,
+            pellet);
+        await workFactory.GetNewObjectAsync(bay, stuffer, pellet, cancellationToken);
+    }
+
 }

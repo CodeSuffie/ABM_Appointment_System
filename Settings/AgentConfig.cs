@@ -64,10 +64,10 @@ public class AgentConfig : AgentConfigBase
         {20, 100}
     };
     
-    public override int TruckCount { get; } = 10;
+    public override int TruckCount { get; } = 20;
     public override int TruckAverageSpeed { get; } = 5;
     public override int TruckSpeedDeviation { get; } = 2;
-    public override int TruckAverageCapacity { get; } = 10;
+    public override int TruckAverageCapacity { get; } = 5;
     
     public override double HubAverageWorkDays { get; } = 1;
     public override TimeSpan OperatingHourAverageLength { get; } = TimeSpan.FromHours(24);
@@ -99,40 +99,47 @@ public class AgentConfig : AgentConfigBase
         1, 0
     ];
 
-    public override int BayAverageCapacity { get; } = 8;
+    public override int BayAverageCapacity { get; } = 20;
     public override int[,] BayLocations { get; } =
     {
         {1, 1},
         {2, 1},
         {3, 1},
         {4, 1},
-        {5, 1},
-        {6, 1},
-        {7, 1},
-        {8, 1}
+        // {5, 1},
+        // {6, 1},
+        // {7, 1},
+        // {8, 1}
     };
     
     public override int AdminStaffCount { get; } = 2;
-    public override int AdminStaffAverageSpeed { get; } = 3;
+    public override int AdminStaffAverageSpeed { get; } = 2;
     public override int AdminStaffSpeedDeviation { get; } = 1;
     public override double AdminStaffAverageWorkDays { get; } = 1;
     public override TimeSpan AdminHubShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
-    public override int BayStaffCount { get; } = 40;
-    public override int BayStaffAverageSpeed { get; } = 3;
+    public override int BayStaffCount { get; } = 20;
+    public override int BayStaffAverageSpeed { get; } = 2;
     public override int BayStaffSpeedDeviation { get; } = 1;
     public override double BayStaffAverageWorkDays { get; } = 1;
     public override TimeSpan BayShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
-    public override int PickerCount { get; } = 5;
-    public override int PickerAverageSpeed { get; } = 4;
-    public override int PickerSpeedDeviation { get; } = 3;
+    public override int PickerCount { get; } = 10;
+    public override int PickerAverageSpeed { get; } = 3;
+    public override int PickerSpeedDeviation { get; } = 2;
     public override double PickerAverageWorkDays { get; } = 1;
     public override TimeSpan PickerHubShiftAverageLength { get; } = TimeSpan.FromHours(24);
     
     public override int StufferCount { get; } = 10;
-    public override int StufferAverageSpeed { get; } = 4;
-    public override int StufferSpeedDeviation { get; } = 3;
+    public override int StufferAverageSpeed { get; } = 3;
+    public override int StufferSpeedDeviation { get; } = 2;
     public override double StufferAverageWorkDays { get; } = 1;
     public override TimeSpan StufferHubShiftAverageLength { get; } = TimeSpan.FromHours(24);
+}
+
+public class AppointmentAgentConfig : AgentConfig
+{
+    public override int AdminStaffCount { get; } = 25;
+    public override int AdminStaffAverageSpeed { get; } = 0;
+    public override int AdminStaffSpeedDeviation { get; } = 0;
 }
