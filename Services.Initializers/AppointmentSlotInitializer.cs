@@ -18,16 +18,16 @@ public class AppointmentSlotInitializer(
 
     private async Task InitializeObjectsAsync(Hub hub, OperatingHour operatingHour, CancellationToken cancellationToken)
     {
-        var appointmentSlotLength = modelState.AppointmentConfig!.AppointmentLength * modelState.ModelConfig.ModelStep;
+        var appointmentSlotDifference = modelState.AppointmentConfig!.AppointmentSlotDifference * modelState.ModelConfig.ModelStep;
         var appointmentSlotInitialDelay = modelState.AppointmentConfig!.AppointmentSlotInitialDelay * modelState.ModelConfig.ModelStep;
-        var appointmentSlotCount = (int)(operatingHour.Duration / appointmentSlotLength);
+        var appointmentSlotCount = (int)(operatingHour.Duration / appointmentSlotDifference);
         if (appointmentSlotCount <= 0) return;
 
         for (var i = 0; i < appointmentSlotCount - 1; i++)
         {
             await appointmentSlotFactory.GetNewObjectAsync(
                 hub,
-                (appointmentSlotInitialDelay + i * appointmentSlotLength + operatingHour.StartTime),
+                (appointmentSlotInitialDelay + i * appointmentSlotDifference + operatingHour.StartTime),
                 cancellationToken);
         }
     }

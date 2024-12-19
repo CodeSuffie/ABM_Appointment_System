@@ -109,7 +109,7 @@ public sealed class PickerService
                 _modelState.AppointmentConfig!.AppointmentLength * _modelState.ModelConfig.ModelStep)
             .Where(aps => aps.Appointments.Count != 0)
             .OrderBy(aps => aps.StartTime)
-            .Take(2);
+            .Take((_modelState.AppointmentConfig!.AppointmentLength / _modelState.AppointmentConfig!.AppointmentSlotDifference) + 1);
 
         foreach (var appointmentSlot in appointmentSlots)
         {

@@ -10,6 +10,7 @@ public sealed class AppointmentFactory(
     ILogger<AppointmentFactory> logger,
     AppointmentRepository appointmentRepository,
     AppointmentSlotFactory appointmentSlotFactory,
+    AppointmentSlotRepository appointmentSlotRepository,
     BayRepository bayRepository,
     ModelState modelState) : IFactoryService<Appointment>
 {
@@ -55,34 +56,69 @@ public sealed class AppointmentFactory(
         var bays = bayRepository.Get(hub)
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
-
+        
         await foreach (var bay in bays)
         {
-            logger.LogDebug("Getting Appointment for this Bay \n({@Bay})\n in this AppointmentSlot \n({@AppointmentSlot}).",
-                bay,
-                appointmentSlot);
-            var appointment = await appointmentRepository.GetAsync(bay, appointmentSlot, cancellationToken);
-            if (appointment == null)
-            {
-                logger.LogInformation("Bay \n({@Bay})\n does not have an Appointment assigned in this " +
-                                      "AppointmentSlot \n({@AppointmentSlot}).",
-                    bay,
-                    appointmentSlot);
+            if (bay.BayStatus == BayStatus.Closed) continue;
 
-                if (bay.BayStatus != BayStatus.Closed) return bay;
+            var slotLength = modelState.AppointmentConfig!.AppointmentLength * 
+                             modelState.ModelConfig.ModelStep;
+            var blockingCount = (modelState.AppointmentConfig!.AppointmentLength /
+                                 modelState.AppointmentConfig!.AppointmentSlotDifference) - 1;
+            var slotDifference = modelState.AppointmentConfig!.AppointmentSlotDifference *
+                                 modelState.ModelConfig.ModelStep;
+            var startTime = appointmentSlot.StartTime - blockingCount * slotDifference;
+            var endTime = appointmentSlot.StartTime + blockingCount * slotDifference;
                 
-                logger.LogInformation("Bay \n({@Bay})\n is closed during this AppointmentSlot \n({@AppointmentSlot}).",
+            var appointmentSlots = appointmentSlotRepository.GetBetween(hub, startTime, endTime, slotLength)
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken);
+
+            var validBay = true;
+            await foreach (var slot in appointmentSlots)
+            {
+                logger.LogDebug("Getting Appointment for this Bay \n({@Bay})\n in this AppointmentSlot \n({@AppointmentSlot}).",
                     bay,
-                    appointmentSlot);
-
-                continue;
-
-            }
+                    slot);
             
-            logger.LogDebug("Bay \n({@Bay})\n had an appointment \n({@Appointment})\n in this AppointmentSlot \n({@AppointmentSlot}).",
+                var appointment = await appointmentRepository.GetAsync(bay, appointmentSlot, cancellationToken);
+                if (appointment == null) continue;
+                
+                logger.LogDebug("Bay \n({@Bay})\n had a blocking appointment \n({@Appointment})\n in this AppointmentSlot \n({@AppointmentSlot}).",
+                    bay,
+                    appointment,
+                    slot);
+                
+                validBay = false;
+                break;
+            }
+
+            if (!validBay) continue;
+            
+            logger.LogInformation("Bay \n({@Bay})\n does not have an Appointment assigned in this " +
+                                  "AppointmentSlot \n({@AppointmentSlot}).",
                 bay,
-                appointment,
                 appointmentSlot);
+
+            return bay;
+        }
+
+        return null;
+    }
+    
+    public async Task<AppointmentSlot?> GetNextVacantAsync(Hub hub, TimeSpan startTime, CancellationToken cancellationToken)
+    {
+        var appointmentSlots = appointmentSlotRepository.GetAfter(hub, startTime)
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
+
+        await foreach (var appointmentSlot in appointmentSlots)
+        {
+            var bay = await GetVacantAsync(hub, appointmentSlot, cancellationToken);
+            if (bay != null)
+            {
+                return appointmentSlot;
+            }
         }
 
         return null;
@@ -90,7 +126,7 @@ public sealed class AppointmentFactory(
     
     public async Task SetAsync(Trip trip, Hub hub, TimeSpan startTime, CancellationToken cancellationToken)
     {
-        var appointmentSlot = await appointmentSlotFactory.GetNextVacantAsync(hub, startTime, cancellationToken);
+        var appointmentSlot = await GetNextVacantAsync(hub, startTime, cancellationToken);
         if (appointmentSlot == null)
         {
             logger.LogError("Hub \n({@Hub})\n did not have any AppointmentSlot with available Appointments after this " +

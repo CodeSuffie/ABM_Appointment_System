@@ -28,6 +28,14 @@ public sealed class AppointmentSlotRepository(ModelDbContext context)
 
         return appointmentSlots;
     }
+
+    public IQueryable<AppointmentSlot> GetBetween(Hub hub, TimeSpan startTime, TimeSpan endTime, TimeSpan duration)
+    {
+        var appointmentSlots = Get(hub)
+            .Where(aps => aps.StartTime + duration >= startTime && aps.StartTime <= endTime);
+
+        return appointmentSlots;
+    }
     
     public async Task<AppointmentSlot?> GetAsync(Appointment appointment, CancellationToken cancellationToken)
     {

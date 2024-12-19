@@ -82,7 +82,7 @@ public sealed class StufferService(
                 modelState.AppointmentConfig!.AppointmentLength * modelState.ModelConfig.ModelStep)
             .Where(aps => aps.Appointments.Count != 0)
             .OrderBy(aps => aps.StartTime)
-            .Take(2);
+            .Take((modelState.AppointmentConfig!.AppointmentLength / modelState.AppointmentConfig!.AppointmentSlotDifference) + 1);
         
         Bay? bestBay = null;
         var stuffPelletCount = 0;
