@@ -81,7 +81,7 @@ public sealed class AppointmentFactory(
                     bay,
                     slot);
             
-                var appointment = await appointmentRepository.GetAsync(bay, appointmentSlot, cancellationToken);
+                var appointment = await appointmentRepository.GetAsync(bay, slot, cancellationToken);
                 if (appointment == null) continue;
                 
                 logger.LogDebug("Bay \n({@Bay})\n had a blocking appointment \n({@Appointment})\n in this AppointmentSlot \n({@AppointmentSlot}).",
