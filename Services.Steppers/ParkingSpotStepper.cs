@@ -39,8 +39,8 @@ public sealed class ParkingSpotStepper : IStepperService<ParkingSpot>
         _logger.LogDebug("Handling Data Collection for ParkingSpot in this Step \n({Step})",
             _modelState.ModelTime);
 
-        var unclaimed = await _parkingSpotRepository.CountUnclaimedAsync(cancellationToken);
-        _unclaimedParkingSpotsHistogram.Record(unclaimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        // var unclaimed = await _parkingSpotRepository.CountUnclaimedAsync(cancellationToken);
+        // _unclaimedParkingSpotsHistogram.Record(unclaimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
         _logger.LogDebug("Finished handling Data Collection for ParkingSpot in this Step \n({Step})",
             _modelState.ModelTime);

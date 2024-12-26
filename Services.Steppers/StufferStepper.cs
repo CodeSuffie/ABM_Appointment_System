@@ -46,11 +46,11 @@ public sealed class StufferStepper : IStepperService<Stuffer>
         _logger.LogDebug("Handling Data Collection for Stuffer in this Step \n({Step})",
             _modelState.ModelTime);
         
-        var working = await _stufferRepository.CountAsync(_modelState.ModelTime, cancellationToken);
-        _workingStufferHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-
-        var fetching = await _stufferRepository.CountAsync(cancellationToken);
-        _stuffingStufferHistogram.Record(fetching, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        // var working = await _stufferRepository.CountAsync(_modelState.ModelTime, cancellationToken);
+        // _workingStufferHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var fetching = await _stufferRepository.CountAsync(cancellationToken);
+        // _stuffingStufferHistogram.Record(fetching, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
         _logger.LogDebug("Finished handling Data Collection for Stuffer in this Step \n({Step})",
             _modelState.ModelTime);

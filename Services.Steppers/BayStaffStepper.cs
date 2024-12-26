@@ -51,14 +51,14 @@ public sealed class BayStaffStepper : IStepperService<BayStaff>
         _logger.LogDebug("Handling Data Collection for BayStaff in this Step \n({Step})",
             _modelState.ModelTime);
         
-        var working = await _bayStaffRepository.CountAsync(_modelState.ModelTime, cancellationToken);
-        _workingBayStaffHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var dropOff = await _bayStaffRepository.CountAsync(WorkType.DropOff, cancellationToken);
-        _dropOffBayStaffHistogram.Record(dropOff, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var pickUp = await _bayStaffRepository.CountAsync(WorkType.PickUp, cancellationToken);
-        _pickUpBayStaffHistogram.Record(pickUp, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        // var working = await _bayStaffRepository.CountAsync(_modelState.ModelTime, cancellationToken);
+        // _workingBayStaffHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var dropOff = await _bayStaffRepository.CountAsync(WorkType.DropOff, cancellationToken);
+        // _dropOffBayStaffHistogram.Record(dropOff, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var pickUp = await _bayStaffRepository.CountAsync(WorkType.PickUp, cancellationToken);
+        // _pickUpBayStaffHistogram.Record(pickUp, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
         _logger.LogDebug("Finished handling Data Collection for BayStaff in this Step \n({Step})",
             _modelState.ModelTime);

@@ -46,11 +46,11 @@ public sealed class AdminStaffStepper : IStepperService<AdminStaff>
         _logger.LogDebug("Handling Data Collection for AdminStaff in this Step \n({Step})",
             _modelState.ModelTime);
         
-        var working = await _adminStaffRepository.CountAsync(_modelState.ModelTime, cancellationToken);
-        _workingAdminStaffHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var occupied = await _adminStaffRepository.CountOccupiedAsync(cancellationToken);
-        _occupiedAdminStaffHistogram.Record(occupied, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        // var working = await _adminStaffRepository.CountAsync(_modelState.ModelTime, cancellationToken);
+        // _workingAdminStaffHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var occupied = await _adminStaffRepository.CountOccupiedAsync(cancellationToken);
+        // _occupiedAdminStaffHistogram.Record(occupied, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
         _logger.LogDebug("Finished handling Data Collection for AdminStaff in this Step \n({Step})",
             _modelState.ModelTime);

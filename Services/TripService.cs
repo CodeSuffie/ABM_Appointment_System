@@ -127,8 +127,9 @@ public sealed class TripService
                 trip = await _tripFactory.GetNewObjectAsync(truck, hub, cancellationToken);
                 if (trip == null)
                 {
-                    _logger.LogError("Trip could not be created for this Truck \n({@Truck})\n and this Hub \n({@Hub}).",
+                    _logger.LogInformation("Trip could not be created for this Truck \n({@Truck})\n with this DropOff Load \n({@Load})\n and this Hub \n({@Hub}).",
                         truck,
+                        dropOff,
                         hub);
 
                     continue;
@@ -198,8 +199,9 @@ public sealed class TripService
                     trip = await _tripFactory.GetNewObjectAsync(truck, hub, cancellationToken);
                     if (trip == null)
                     {
-                        _logger.LogError("Trip could not be created for this Truck \n({@Truck})\n and this Hub \n({@Hub}).",
+                        _logger.LogInformation("Trip could not be created for this Truck \n({@Truck})\n with this PickUp Load \n({@Load})\n and this Hub \n({@Hub}).",
                             truck,
+                            pickUp,
                             hub);
 
                         continue;
@@ -212,7 +214,7 @@ public sealed class TripService
                 }
                 else
                 {
-                    _logger.LogError("Trip could not be created for this Truck \n({@Truck})\n and this Hub \n({@Hub}).",
+                    _logger.LogInformation("Trip could not be created for this Truck \n({@Truck})\n and this Hub \n({@Hub}).",
                         truck,
                         hub);
 

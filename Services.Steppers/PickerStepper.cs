@@ -46,11 +46,11 @@ public sealed class PickerStepper : IStepperService<Picker>
         _logger.LogDebug("Handling Data Collection for Picker in this Step \n({Step})",
             _modelState.ModelTime);
         
-        var working = await _pickerRepository.CountAsync(_modelState.ModelTime, cancellationToken);
-        _workingPickerHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-
-        var fetching = await _pickerRepository.CountAsync(cancellationToken);
-        _fetchingPickerHistogram.Record(fetching, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        // var working = await _pickerRepository.CountAsync(_modelState.ModelTime, cancellationToken);
+        // _workingPickerHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var fetching = await _pickerRepository.CountAsync(cancellationToken);
+        // _fetchingPickerHistogram.Record(fetching, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
         _logger.LogDebug("Finished handling Data Collection for Picker in this Step \n({Step})",
             _modelState.ModelTime);

@@ -15,6 +15,7 @@ public sealed class TripStepper : IStepperService<Trip>
     private readonly WorkService _workService;
     private readonly TripService _tripService;
     private readonly ModelState _modelState;
+    
     private readonly Histogram<int> _unclaimedTripsHistogram;
     private readonly Histogram<int> _claimedTripsHistogram;
     private readonly Histogram<int> _waitTravelHubTripsHistogram;
@@ -60,38 +61,38 @@ public sealed class TripStepper : IStepperService<Trip>
         _logger.LogDebug("Handling Data Collection for Trip in this Step \n({Step})",
             _modelState.ModelTime);
 
-        var unclaimed = await _tripRepository.CountAsync(false, cancellationToken);
-        _unclaimedTripsHistogram.Record(unclaimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-
-        var claimed = await _tripRepository.CountAsync(true, cancellationToken);
-        _claimedTripsHistogram.Record(claimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var waitTravelHub = await _tripRepository.CountAsync(WorkType.WaitTravelHub, cancellationToken);
-        _waitTravelHubTripsHistogram.Record(waitTravelHub, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var travelHub = await _tripRepository.CountAsync(WorkType.TravelHub, cancellationToken);
-        _travelHubTripsHistogram.Record(travelHub, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var arrived = await _tripRepository.CountAsync(WorkType.WaitParking, cancellationToken);
-        _arrivedTripsHistogram.Record(arrived, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var parked = await _tripRepository.CountAsync(WorkType.WaitCheckIn, cancellationToken);
-        _parkedTripsHistogram.Record(parked, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var checkingIn = await _tripRepository.CountAsync(WorkType.CheckIn, cancellationToken);
-        _checkingInTripsHistogram.Record(checkingIn, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var checkInComplete = await _tripRepository.CountAsync(WorkType.WaitBay, cancellationToken);
-        _checkInCompleteTripsHistogram.Record(checkInComplete, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var atBay = await _tripRepository.CountAsync(WorkType.Bay, cancellationToken);
-        _atBayTripsHistogram.Record(atBay, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var travelHome = await _tripRepository.CountAsync(WorkType.TravelHome, cancellationToken);
-        _travelHomeTripsHistogram.Record(travelHome, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        var completed = await _tripRepository.CountCompletedAsync(cancellationToken);
-        _completedTripsHistogram.Record(completed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        // var unclaimed = await _tripRepository.CountAsync(false, cancellationToken);
+        // _unclaimedTripsHistogram.Record(unclaimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var claimed = await _tripRepository.CountAsync(true, cancellationToken);
+        // _claimedTripsHistogram.Record(claimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var waitTravelHub = await _tripRepository.CountAsync(WorkType.WaitTravelHub, cancellationToken);
+        // _waitTravelHubTripsHistogram.Record(waitTravelHub, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var travelHub = await _tripRepository.CountAsync(WorkType.TravelHub, cancellationToken);
+        // _travelHubTripsHistogram.Record(travelHub, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var arrived = await _tripRepository.CountAsync(WorkType.WaitParking, cancellationToken);
+        // _arrivedTripsHistogram.Record(arrived, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var parked = await _tripRepository.CountAsync(WorkType.WaitCheckIn, cancellationToken);
+        // _parkedTripsHistogram.Record(parked, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var checkingIn = await _tripRepository.CountAsync(WorkType.CheckIn, cancellationToken);
+        // _checkingInTripsHistogram.Record(checkingIn, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var checkInComplete = await _tripRepository.CountAsync(WorkType.WaitBay, cancellationToken);
+        // _checkInCompleteTripsHistogram.Record(checkInComplete, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var atBay = await _tripRepository.CountAsync(WorkType.Bay, cancellationToken);
+        // _atBayTripsHistogram.Record(atBay, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var travelHome = await _tripRepository.CountAsync(WorkType.TravelHome, cancellationToken);
+        // _travelHomeTripsHistogram.Record(travelHome, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        //
+        // var completed = await _tripRepository.CountCompletedAsync(cancellationToken);
+        // _completedTripsHistogram.Record(completed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
         _logger.LogDebug("Finished handling Data Collection for Trip in this Step \n({Step})",
             _modelState.ModelTime);

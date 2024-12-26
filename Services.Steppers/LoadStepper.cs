@@ -30,8 +30,8 @@ public sealed class LoadStepper : IStepperService
         _logger.LogDebug("Handling Data Collection for Load in this Step \n({Step})",
             _modelState.ModelTime);
         
-        var unclaimed = await _loadRepository.CountUnclaimedAsync(cancellationToken);
-        _unclaimedLoadsHistogram.Record(unclaimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        // var unclaimed = await _loadRepository.CountUnclaimedAsync(cancellationToken);
+        // _unclaimedLoadsHistogram.Record(unclaimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
         _logger.LogDebug("Finished handling Data Collection for Load in this Step \n({Step})",
             _modelState.ModelTime);
