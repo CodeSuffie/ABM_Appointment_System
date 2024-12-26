@@ -44,8 +44,7 @@ public sealed class LoadFactory : IFactoryService<Load>
         var truckCompany = await _truckCompanyRepository.GetAsync(truck, cancellationToken);
         if (truckCompany == null)
         {
-            _logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) to create the new Load for.",
-                truck);
+            _logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) to create the new Load for.", truck);
 
             return null;
         }
@@ -66,34 +65,23 @@ public sealed class LoadFactory : IFactoryService<Load>
             return null;
         }
         
-        _logger.LogDebug("Setting LoadType ({LoadType}) for this Load \n({@Load}).",
-            LoadType.DropOff,
-            load);
+        _logger.LogDebug("Setting LoadType ({LoadType}) for this Load \n({@Load}).", LoadType.DropOff, load);
         await _loadRepository.SetAsync(load, LoadType.DropOff, cancellationToken);
         
-        _logger.LogDebug("Setting TruckCompany ({@TruckCompany}) for this Load \n({@Load}).",
-            truckCompany,
-            load);
+        _logger.LogDebug("Setting TruckCompany ({@TruckCompany}) for this Load \n({@Load}).", truckCompany, load);
         await _loadRepository.SetAsync(load, truckCompany, cancellationToken);
         
-        _logger.LogDebug("Setting Hub ({@Hub}) for this Load \n({@Load}).",
-            hub,
-            load);
+        _logger.LogDebug("Setting Hub ({@Hub}) for this Load \n({@Load}).", hub, load);
         await _loadRepository.SetAsync(load, hub, cancellationToken);
         
-        _logger.LogDebug("Setting Pellets for this Load \n({@Load})\n for this Truck \n({@Truck})\n and this Hub \n({@Hub}).",
-            load,
-            truck,
-            hub);
+        _logger.LogDebug("Setting Pellets for this Load \n({@Load})\n for this Truck \n({@Truck})\n and this Hub \n({@Hub}).", load, truck, hub);
         await _pelletFactory.SetPelletsAsync(load, truck.Capacity, cancellationToken);
 
         if (load.Pellets.Count != 0) return load;
         
-        _logger.LogInformation("Load \n({@Load})\n could not be assigned any Pellets.",
-            load);
+        _logger.LogInformation("Load \n({@Load})\n could not be assigned any Pellets.", load);
         
-        _logger.LogDebug("Removing this Load \n({@Load}).",
-            load);
+        _logger.LogDebug("Removing this Load \n({@Load}).", load);
         await _loadRepository.RemoveAsync(load, cancellationToken);
         
         return null;
@@ -104,8 +92,7 @@ public sealed class LoadFactory : IFactoryService<Load>
         var truckCompany = await _truckCompanyRepository.GetAsync(truck, cancellationToken);
         if (truckCompany == null)
         {
-            _logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) to create the new Load for.",
-                truck);
+            _logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) to create the new Load for.", truck);
 
             return null;
         }
@@ -118,34 +105,23 @@ public sealed class LoadFactory : IFactoryService<Load>
             return null;
         }
         
-        _logger.LogDebug("Setting LoadType ({LoadType}) for this Load \n({@Load}).",
-            LoadType.PickUp,
-            load);
+        _logger.LogDebug("Setting LoadType ({LoadType}) for this Load \n({@Load}).", LoadType.PickUp, load);
         await _loadRepository.SetAsync(load, LoadType.PickUp, cancellationToken);
         
-        _logger.LogDebug("Setting TruckCompany ({@TruckCompany}) for this Load \n({@Load}).",
-            truckCompany,
-            load);
+        _logger.LogDebug("Setting TruckCompany ({@TruckCompany}) for this Load \n({@Load}).", truckCompany, load);
         await _loadRepository.SetAsync(load, truckCompany, cancellationToken);
         
-        _logger.LogDebug("Setting Hub ({@Hub}) for this Load \n({@Load}).",
-            hub,
-            load);
+        _logger.LogDebug("Setting Hub ({@Hub}) for this Load \n({@Load}).", hub, load);
         await _loadRepository.SetAsync(load, hub, cancellationToken);
         
-        _logger.LogDebug("Setting Pellets for this Load \n({@Load})\n for this Truck \n({@Truck})\n and this Hub \n({@Hub}).",
-            load,
-            truck,
-            hub);
+        _logger.LogDebug("Setting Pellets for this Load \n({@Load})\n for this Truck \n({@Truck})\n and this Hub \n({@Hub}).", load, truck, hub);
         await _pelletFactory.SetPelletsAsync(load, truck.Capacity, cancellationToken);
 
         if (load.Pellets.Count != 0) return load;
         
-        _logger.LogInformation("Load \n({@Load})\n could not be assigned any Pellets.",
-            load);
+        _logger.LogInformation("Load \n({@Load})\n could not be assigned any Pellets.", load);
         
-        _logger.LogDebug("Removing this Load \n({@Load}).",
-            load);
+        _logger.LogDebug("Removing this Load \n({@Load}).", load);
         await _loadRepository.RemoveAsync(load, cancellationToken);
         
         return null;

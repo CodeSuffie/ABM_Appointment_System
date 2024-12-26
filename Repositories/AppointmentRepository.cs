@@ -8,42 +8,32 @@ public sealed class AppointmentRepository(ModelDbContext context)
 {
     public IQueryable<Appointment> Get()
     {
-        var appointments = context.Appointments
+        return context.Appointments
             .Include(ap => ap.AppointmentSlot);
-
-        return appointments;
     }
 
     public IQueryable<Appointment> Get(AppointmentSlot appointmentSlot)
     {
-        var appointments = Get()
+        return Get()
             .Where(ap => ap.AppointmentSlotId == appointmentSlot.Id);
-
-        return appointments;
     }
 
     public IQueryable<Appointment> Get(Bay bay)
     {
-        var appointments = Get()
+        return Get()
             .Where(ap => ap.BayId == bay.Id);
-
-        return appointments;
     }
     
     public Task<Appointment?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var appointmentSlot = Get()
+        return Get()
             .FirstOrDefaultAsync(ap => ap.TripId == trip.Id, cancellationToken);
-
-        return appointmentSlot;
     }
 
     public Task<Appointment?> GetAsync(Bay bay, AppointmentSlot appointmentSlot, CancellationToken cancellationToken)
     {
-        var appointment = Get(appointmentSlot)
+        return Get(appointmentSlot)
             .FirstOrDefaultAsync(ap => ap.BayId == bay.Id, cancellationToken);
-
-        return appointment;
     }
 
     public async Task AddAsync(Appointment appointment, CancellationToken cancellationToken)

@@ -27,8 +27,7 @@ public sealed class AppointmentSlotFactory(
         var appointmentSlot = await GetNewObjectAsync(cancellationToken);
         if (appointmentSlot == null)
         {
-            logger.LogError("AppointmentSlot could not be created for this Hub \n({@Hub}).",
-                hub);
+            logger.LogError("AppointmentSlot could not be created for this Hub \n({@Hub}).", hub);
 
             return null;
         }
@@ -43,9 +42,7 @@ public sealed class AppointmentSlotFactory(
         var appointmentSlot = await GetNewObjectAsync(hub, cancellationToken);
         if (appointmentSlot == null)
         {
-            logger.LogError("AppointmentSlot could not be created for this Hub \n({@Hub})\n with this StartTime ({Step}).",
-                hub,
-                startTime);
+            logger.LogError("AppointmentSlot could not be created for this Hub \n({@Hub})\n with this StartTime ({Step}).", hub, startTime);
 
             return null;
         }

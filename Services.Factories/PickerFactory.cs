@@ -29,8 +29,7 @@ public sealed class PickerFactory(
             return null;
         }
         
-        logger.LogDebug("Hub \n({@Hub})\n was selected for the new Picker.",
-            hub);
+        logger.LogDebug("Hub \n({@Hub})\n was selected for the new Picker.", hub);
         
         var picker = new Picker
         {
@@ -43,8 +42,7 @@ public sealed class PickerFactory(
         
         await pickerRepository.AddAsync(picker, cancellationToken);
         
-        logger.LogDebug("Setting HubShifts for this Picker \n({@Picker})",
-            picker);
+        logger.LogDebug("Setting HubShifts for this Picker \n({@Picker})", picker);
         await pickerShiftFactory.GetNewObjectsAsync(picker, cancellationToken);
 
         return picker;

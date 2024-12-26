@@ -141,24 +141,24 @@ public static class ServiceCollectionExtensions
         var serviceVersion = "1.0.0";
         var serviceEnvironment = "";
         
-        services.AddOpenTelemetry()
-            .ConfigureResource(resource => resource.AddService(
-                serviceName: serviceName, 
-                serviceVersion: serviceVersion))
-            .WithTracing(providerBuilder => providerBuilder
-                .AddSource(serviceName)
-                .AddOtlpExporter(exporter =>
-                {
-                    exporter.Endpoint = new Uri("http://grafana-collector:4317/");
-                    exporter.Protocol = OtlpExportProtocol.Grpc;
-                }))     // What is this for?
-            .WithMetrics(providerBuilder => providerBuilder
-                .AddMeter(serviceName)
-                .AddOtlpExporter(exporter =>
-                {
-                    exporter.Endpoint = new Uri("http://grafana-collector:4317/");
-                    exporter.Protocol = OtlpExportProtocol.Grpc;
-                }));        // PrometheusExporter() ?
+        // services.AddOpenTelemetry()
+        //     .ConfigureResource(resource => resource.AddService(
+        //         serviceName: serviceName, 
+        //         serviceVersion: serviceVersion))
+        //     .WithTracing(providerBuilder => providerBuilder
+        //         .AddSource(serviceName)
+        //         .AddOtlpExporter(exporter =>
+        //         {
+        //             exporter.Endpoint = new Uri("http://grafana-collector:4317/");
+        //             exporter.Protocol = OtlpExportProtocol.Grpc;
+        //         }))     // What is this for?
+        //     .WithMetrics(providerBuilder => providerBuilder
+        //         .AddMeter(serviceName)
+        //         .AddOtlpExporter(exporter =>
+        //         {
+        //             exporter.Endpoint = new Uri("http://grafana-collector:4317/");
+        //             exporter.Protocol = OtlpExportProtocol.Grpc;
+        //         }));        // PrometheusExporter() ?
         
         var meter = new Meter(serviceName, serviceVersion);
         // var meter = meterFactory.Create(serviceName, serviceVersion); ?

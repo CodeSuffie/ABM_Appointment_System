@@ -19,12 +19,7 @@ public sealed class PickerShiftFactory(
 
         if (maxShiftStart < TimeSpan.Zero)
         {
-            logger.LogError("Picker \n({@Picker})\n its ShiftLength \n({TimeSpan})\n " +
-                            "is longer than this OperatingHour \n({@OperatingHour})\n its Length \n({TimeSpan}).",
-                picker,
-                picker.AverageShiftLength,
-                operatingHour,
-                operatingHour.Duration);
+            logger.LogError("Picker \n({@Picker})\n its ShiftLength \n({TimeSpan})\n is longer than this OperatingHour \n({@OperatingHour})\n its Length \n({TimeSpan}).", picker, picker.AverageShiftLength, operatingHour, operatingHour.Duration);
 
             return null;
         }
@@ -42,8 +37,7 @@ public sealed class PickerShiftFactory(
         
         if (hub != null) return picker.WorkChance / hub.WorkChance;
         
-        logger.LogError("Picker \n({@Picker})\n did not have a Hub assigned to get the OperatingHourChance for.",
-            picker);
+        logger.LogError("Picker \n({@Picker})\n did not have a Hub assigned to get the OperatingHourChance for.", picker);
 
         return null;
     }
@@ -62,10 +56,7 @@ public sealed class PickerShiftFactory(
         var startTime = GetStartTime(picker, operatingHour);
         if (startTime == null)
         {
-            logger.LogError("No start time could be assigned to the new HubShift for this " +
-                            "Picker \n({@Picker})\n during this OperatingHour \n({@OperatingHour}).",
-                picker,
-                operatingHour);
+            logger.LogError("No start time could be assigned to the new HubShift for this Picker \n({@Picker})\n during this OperatingHour \n({@OperatingHour}).", picker, operatingHour);
 
             return null;
         }
@@ -78,19 +69,13 @@ public sealed class PickerShiftFactory(
             return null;
         }
         
-        logger.LogDebug("Setting this StartTime ({Step}) for this HubShift \n({@HubShift}).",
-            startTime,
-            hubShift);
+        logger.LogDebug("Setting this StartTime ({Step}) for this HubShift \n({@HubShift}).", startTime, hubShift);
         await hubShiftRepository.SetStartAsync(hubShift, (TimeSpan) startTime, cancellationToken);
         
-        logger.LogDebug("Setting this Duration ({Step}) for this HubShift \n({@HubShift}).",
-            picker.AverageShiftLength,
-            hubShift);
+        logger.LogDebug("Setting this Duration ({Step}) for this HubShift \n({@HubShift}).", picker.AverageShiftLength, hubShift);
         await hubShiftRepository.SetDurationAsync(hubShift, picker.AverageShiftLength, cancellationToken);
         
-        logger.LogDebug("Setting this Picker \n({@Picker})\n for this HubShift \n({@HubShift}).",
-            picker,
-            hubShift);
+        logger.LogDebug("Setting this Picker \n({@Picker})\n for this HubShift \n({@HubShift}).", picker, hubShift);
         await hubShiftRepository.SetAsync(hubShift, picker, cancellationToken);
         
         return hubShift;
@@ -101,8 +86,7 @@ public sealed class PickerShiftFactory(
         var hub = await hubRepository.GetAsync(picker, cancellationToken);
         if (hub == null)
         {
-            logger.LogError("Picker \n({@Picker})\n did not have a Hub assigned to create HubShifts for.",
-                picker);
+            logger.LogError("Picker \n({@Picker})\n did not have a Hub assigned to create HubShifts for.", picker);
 
             return;
         }
@@ -116,20 +100,14 @@ public sealed class PickerShiftFactory(
             var workChance = await GetWorkChanceAsync(picker, cancellationToken);
             if (workChance == null)
             {
-                logger.LogError("WorkChance could not be calculated for this Picker " +
-                                "\n({@Picker})\n during this OperatingHour \n({@OperatingHour}).",
-                    picker,
-                    operatingHour);
+                logger.LogError("WorkChance could not be calculated for this Picker \n({@Picker})\n during this OperatingHour \n({@OperatingHour}).", picker, operatingHour);
 
                 continue;
             }
             
             if (modelState.RandomDouble() > workChance)
             {
-                logger.LogInformation("Picker \n({@Picker})\n will not have an HubShift during " +
-                                      "this OperatingHour \n({@OperatingHour}).",
-                    picker,
-                    operatingHour);
+                logger.LogInformation("Picker \n({@Picker})\n will not have an HubShift during this OperatingHour \n({@OperatingHour}).", picker, operatingHour);
                 
                 continue;
             }
@@ -137,19 +115,12 @@ public sealed class PickerShiftFactory(
             var hubShift = await GetNewObjectAsync(picker, operatingHour, cancellationToken);
             if (hubShift == null)
             {
-                logger.LogError("No new HubShift could be created for this Picker " +
-                                "\n({@Picker})\n during this OperatingHour \n({@OperatingHour}).",
-                    picker,
-                    operatingHour);
+                logger.LogError("No new HubShift could be created for this Picker \n({@Picker})\n during this OperatingHour \n({@OperatingHour}).", picker, operatingHour);
 
                 continue;
             }
             
-            logger.LogInformation("New HubShift created for this Picker \n({@Picker})\n during this " +
-                                  "OperatingHour \n({@OperatingHour})\n: HubShift={@HubShift}",
-                picker,
-                operatingHour,
-                hubShift);
+            logger.LogInformation("New HubShift created for this Picker \n({@Picker})\n during this OperatingHour \n({@OperatingHour})\n: HubShift={@HubShift}", picker, operatingHour, hubShift);
         }
     }
 }

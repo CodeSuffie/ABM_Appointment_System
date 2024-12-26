@@ -12411,9 +12411,7 @@ FeatureQuery.prototype.getLookupMethod = function(lookupTable, subtable) {
             ); };
         default:
             throw new Error(
-                "lookupType: " + (lookupTable.lookupType) + " - " +
-                "substFormat: " + (subtable.substFormat) + " " +
-                "is not yet supported"
+                "lookupType: " + (lookupTable.lookupType) + " - substFormat: " + (subtable.substFormat) + " is not yet supported"
             );
     }
 };

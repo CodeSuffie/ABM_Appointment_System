@@ -20,9 +20,7 @@ public sealed class LocationFactory(
 
         if (hubCount > modelState.AgentConfig.HubLocations.GetLength(0))
         {
-            logger.LogError("Hub \n({@Hub})\n could not have its location initialized because " +
-                            "its location is not defined in the agent configuration.",
-                hub);
+            logger.LogError("Hub \n({@Hub})\n could not have its location initialized because its location is not defined in the agent configuration.", hub);
             
             return;
         }
@@ -30,8 +28,7 @@ public sealed class LocationFactory(
         hub.XLocation = modelState.AgentConfig.HubLocations[hubCount - 1, 0];
         hub.YLocation = modelState.AgentConfig.HubLocations[hubCount - 1, 1];
         
-        logger.LogInformation("Location successfully initialized for this Hub \n({@Hub})",
-            hub);
+        logger.LogInformation("Location successfully initialized for this Hub \n({@Hub})", hub);
     }
 
     public void InitializeObject(Warehouse warehouse, CancellationToken cancellationToken)
@@ -39,8 +36,7 @@ public sealed class LocationFactory(
         warehouse.XLocation = modelState.AgentConfig.WarehouseLocation[0];
         warehouse.YLocation = modelState.AgentConfig.WarehouseLocation[1];
         
-        logger.LogInformation("Location successfully initialized for this Warehouse \n({@Warehouse})",
-            warehouse);
+        logger.LogInformation("Location successfully initialized for this Warehouse \n({@Warehouse})", warehouse);
     }
     
     public async Task InitializeObjectAsync(TruckCompany truckCompany, CancellationToken cancellationToken)
@@ -49,9 +45,7 @@ public sealed class LocationFactory(
         
         if (truckCompanyCount > modelState.AgentConfig.TruckCompanyLocations.GetLength(0))
         {
-            logger.LogError("TruckCompany \n({@TruckCompany})\n could not have its location initialized because " +
-                            "its location is not defined in the agent configuration.",
-                truckCompany);
+            logger.LogError("TruckCompany \n({@TruckCompany})\n could not have its location initialized because its location is not defined in the agent configuration.", truckCompany);
             
             return;
         }
@@ -59,8 +53,7 @@ public sealed class LocationFactory(
         truckCompany.XLocation = modelState.AgentConfig.TruckCompanyLocations[truckCompanyCount - 1, 0];
         truckCompany.YLocation = modelState.AgentConfig.TruckCompanyLocations[truckCompanyCount - 1, 1];
         
-        logger.LogInformation("Location successfully initialized for this TruckCompany \n({@TruckCompany})",
-            truckCompany);
+        logger.LogInformation("Location successfully initialized for this TruckCompany \n({@TruckCompany})", truckCompany);
     }
     
     public async Task InitializeObjectAsync(Bay bay, CancellationToken cancellationToken)
@@ -68,8 +61,7 @@ public sealed class LocationFactory(
         var hub = await hubRepository.GetAsync(bay, cancellationToken);
         if (hub == null)
         {
-            logger.LogError("Bay \n({@Bay})\n did not have a Hub assigned to initialize its location with.",
-                bay);
+            logger.LogError("Bay \n({@Bay})\n did not have a Hub assigned to initialize its location with.", bay);
 
             return;
         }
@@ -78,9 +70,7 @@ public sealed class LocationFactory(
         
         if (bayCount > modelState.AgentConfig.BayLocations.GetLength(0))
         {
-            logger.LogError("Bay \n({@Bay})\n could not have its location initialized because " +
-                            "its location is not defined in the agent configuration.",
-                bay);
+            logger.LogError("Bay \n({@Bay})\n could not have its location initialized because its location is not defined in the agent configuration.", bay);
             
             return;
         }
@@ -94,8 +84,7 @@ public sealed class LocationFactory(
         var hub = await hubRepository.GetAsync(parkingSpot, cancellationToken);
         if (hub == null)
         {
-            logger.LogError("ParkingSpot \n({@ParkingSpot})\n did not have a Hub assigned to initialize its location with.",
-                parkingSpot);
+            logger.LogError("ParkingSpot \n({@ParkingSpot})\n did not have a Hub assigned to initialize its location with.", parkingSpot);
 
             return;
         }
@@ -104,9 +93,7 @@ public sealed class LocationFactory(
         
         if (parkingSpotCount > modelState.AgentConfig.ParkingSpotLocations.GetLength(0))
         {
-            logger.LogError("ParkingSpot \n({@ParkingSpot})\n could not have its location initialized because " +
-                            "its location is not defined in the agent configuration.",
-                parkingSpot);
+            logger.LogError("ParkingSpot \n({@ParkingSpot})\n could not have its location initialized because its location is not defined in the agent configuration.", parkingSpot);
             
             return;
         }

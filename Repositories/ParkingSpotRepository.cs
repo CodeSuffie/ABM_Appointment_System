@@ -8,22 +8,27 @@ public sealed class ParkingSpotRepository(ModelDbContext context)
 {
     public IQueryable<ParkingSpot> Get()
     {
-        var parkingSpots = context.ParkingSpots;
-
-        return parkingSpots;
+        return context.ParkingSpots;
     }
     
-    public async Task<ParkingSpot?> GetAsync(Trip trip, CancellationToken cancellationToken)
+    public Task<ParkingSpot?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var parkingSpot = await context.ParkingSpots
+        return Get()
             .FirstOrDefaultAsync(ps => ps.TripId == trip.Id, cancellationToken);
-
-        return parkingSpot;
     }
 
     public async Task AddAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
         await context.ParkingSpots.AddAsync(parkingSpot, cancellationToken);
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task SetAsync(ParkingSpot parkingSpot, Hub hub, CancellationToken cancellationToken)
+    {
+        parkingSpot.Hub = hub;
+        hub.ParkingSpots.Remove(parkingSpot);
+        hub.ParkingSpots.Add(parkingSpot);
         
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -41,14 +46,5 @@ public sealed class ParkingSpotRepository(ModelDbContext context)
         return Get()
             .Where(ps => ps.Trip == null)
             .CountAsync(cancellationToken);
-    }
-    
-    public async Task SetAsync(ParkingSpot parkingSpot, Hub hub, CancellationToken cancellationToken)
-    {
-        parkingSpot.Hub = hub;
-        hub.ParkingSpots.Remove(parkingSpot);
-        hub.ParkingSpots.Add(parkingSpot);
-        
-        await context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -17,54 +17,38 @@ public sealed class BayRepository(ModelDbContext context)
     
     public IQueryable<Bay> Get(Hub hub)
     {
-        var bays = Get()
+        return Get()
             .Where(b => b.HubId == hub.Id);
-        
-        return bays;
     }
     
-    public async Task<Bay?> GetAsync(BayShift bayShift, CancellationToken cancellationToken)
+    public Task<Bay?> GetAsync(BayShift bayShift, CancellationToken cancellationToken)
     {
-        var bay = await Get()
+        return Get()
             .FirstOrDefaultAsync(b => b.Id == bayShift.BayId, cancellationToken);
-        
-        return bay;
     }
     
-    public async Task<Bay?> GetAsync(Trip trip, CancellationToken cancellationToken)
+    public Task<Bay?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var bay = await Get()
+        return Get()
             .FirstOrDefaultAsync(b => b.TripId == trip.Id, cancellationToken);
-        
-        return bay;
     }
     
-    public async Task<Bay?> GetAsync(Work work, CancellationToken cancellationToken)
+    public Task<Bay?> GetAsync(Work work, CancellationToken cancellationToken)
     {
-        if (work.BayId == null) return null;
-        
-        var bay = await Get()
+        return Get()
             .FirstOrDefaultAsync(b => b.Id == work.BayId, cancellationToken);
-
-        return bay;
     }
     
-    public async Task<Bay?> GetAsync(Pellet pellet, CancellationToken cancellationToken)
+    public Task<Bay?> GetAsync(Pellet pellet, CancellationToken cancellationToken)
     {
-        if (pellet.BayId == null) return null;
-        
-        var bay = await Get()
+        return Get()
             .FirstOrDefaultAsync(b => b.Id == pellet.BayId, cancellationToken);
-
-        return bay;
     }
 
-    public async Task<Bay?> GetAsync(Appointment appointment, CancellationToken cancellationToken)
+    public Task<Bay?> GetAsync(Appointment appointment, CancellationToken cancellationToken)
     {
-        var bay = await Get()
+        return Get()
             .FirstOrDefaultAsync(b => b.Id == appointment.BayId, cancellationToken);
-
-        return bay;
     }
 
     public async Task AddAsync(Bay bay, CancellationToken cancellationToken)

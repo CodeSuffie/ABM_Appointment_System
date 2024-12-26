@@ -35,14 +35,12 @@ public sealed class TruckStepper : IStepperService<Truck>
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Handling Data Collection for Truck in this Step \n({Step})",
-            _modelState.ModelTime);
+        _logger.LogDebug("Handling Data Collection for Truck in this Step ({Step})", _modelState.ModelTime);
         
         // var unclaimed = await _truckRepository.CountUnclaimedAsync(cancellationToken);
         // _unclaimedTrucksHistogram.Record(unclaimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
-        _logger.LogDebug("Finished handling Data Collection for Truck in this Step \n({Step})",
-            _modelState.ModelTime);
+        _logger.LogDebug("Finished handling Data Collection for Truck in this Step ({Step})", _modelState.ModelTime);
     }
     
     public async Task StepAsync(Truck truck, CancellationToken cancellationToken)
@@ -50,24 +48,16 @@ public sealed class TruckStepper : IStepperService<Truck>
         var trip = await _tripRepository.GetAsync(truck, cancellationToken);
         if (trip != null)
         {
-            _logger.LogDebug("Truck \n({@Truck})\n has an active Trip assigned in this Step \n({Step})",
-                truck,
-                _modelState.ModelTime);
+            _logger.LogDebug("Truck \n({@Truck})\n has an active Trip assigned in this Step ({Step})", truck, _modelState.ModelTime);
             
-            _logger.LogDebug("Truck \n({@Truck})\n will remain idle in this Step \n({Step})",
-                truck,
-                _modelState.ModelTime);
+            _logger.LogDebug("Truck \n({@Truck})\n will remain idle in this Step ({Step})", truck, _modelState.ModelTime);
             
             return;
         }
         
-        _logger.LogInformation("Truck \n({@Truck})\n has no active Trip assigned in this Step \n({Step})",
-            truck,
-            _modelState.ModelTime);
+        _logger.LogInformation("Truck \n({@Truck})\n has no active Trip assigned in this Step ({Step})", truck, _modelState.ModelTime);
 
-        _logger.LogDebug("Alerting Free for this Truck \n({@Truck})\n in this Step \n({Step})",
-            truck,
-            _modelState.ModelTime);
+        _logger.LogDebug("Alerting Free for this Truck \n({@Truck})\n in this Step ({Step})", truck, _modelState.ModelTime);
         await _truckService.AlertFreeAsync(truck, cancellationToken);
     }
 
@@ -79,15 +69,11 @@ public sealed class TruckStepper : IStepperService<Truck>
         
         await foreach (var truck in trucks)
         {
-            _logger.LogDebug("Handling Step \n({Step})\n for Truck \n({@Truck})",
-                _modelState.ModelTime,
-                truck);
+            _logger.LogDebug("Handling Step ({Step})\n for Truck \n({@Truck})", _modelState.ModelTime, truck);
             
             await StepAsync(truck, cancellationToken);
             
-            _logger.LogDebug("Completed handling Step \n({Step})\n for Truck \n({@Truck})",
-                _modelState.ModelTime,
-                truck);
+            _logger.LogDebug("Completed handling Step ({Step})\n for Truck \n({@Truck})", _modelState.ModelTime, truck);
         }
     }
 }

@@ -27,14 +27,12 @@ public sealed class HubStepper : IStepperService
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Handling Data Collection for Hub in this Step \n({Step})",
-            _modelState.ModelTime);
+        _logger.LogDebug("Handling Data Collection for Hub in this Step ({Step})", _modelState.ModelTime);
         
         // var operating = await _hubRepository.CountOperatingAsync(_modelState.ModelTime, cancellationToken);
         // _operatingHubsHistogram.Record(operating, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
-        _logger.LogDebug("Finished handling Data Collection for Hub in this Step \n({Step})",
-            _modelState.ModelTime);
+        _logger.LogDebug("Finished handling Data Collection for Hub in this Step ({Step})", _modelState.ModelTime);
     }
     
     public Task StepAsync(CancellationToken cancellationToken)

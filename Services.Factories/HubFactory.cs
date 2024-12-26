@@ -25,12 +25,10 @@ public sealed class HubFactory(
 
         await hubRepository.AddAsync(hub, cancellationToken);
         
-        logger.LogDebug("Setting location for this Hub \n({@Hub})",
-            hub);
+        logger.LogDebug("Setting location for this Hub \n({@Hub})", hub);
         await locationFactory.InitializeObjectAsync(hub, cancellationToken);
         
-        logger.LogDebug("Setting OperatingHours for this Hub \n({@Hub})",
-            hub);
+        logger.LogDebug("Setting OperatingHours for this Hub \n({@Hub})", hub);
         await operatingHourFactory.GetNewObjectsAsync(hub, cancellationToken);
 
         return hub;

@@ -18,23 +18,18 @@ public sealed class AdminStaffService(
         var trip = await tripRepository.GetAsync(adminStaff, cancellationToken);
         if (trip == null)
         {
-            logger.LogError("AdminStaff \n({@AdminStaff})\n did not have a Trip assigned to alert completed Work for.",
-                adminStaff);
+            logger.LogError("AdminStaff \n({@AdminStaff})\n did not have a Trip assigned to alert completed Work for.", adminStaff);
 
             return;
         }
         
-        logger.LogDebug("Alerting Check-In Completed for this AdminStaff \n({@AdminStaff})\n to assigned Trip \n({@Trip})",
-            adminStaff,
-            trip);
+        logger.LogDebug("Alerting Check-In Completed for this AdminStaff \n({@AdminStaff})\n to assigned Trip \n({@Trip})", adminStaff, trip);
         await tripService.AlertCheckInCompleteAsync(trip, cancellationToken);
         
         var work = await workRepository.GetAsync(adminStaff, cancellationToken);
         if (work == null) return;
         
-        logger.LogDebug("Removing completed Work \n({@Work})\n for this AdminStaff \n({@AdminStaff})",
-            work,
-            adminStaff);
+        logger.LogDebug("Removing completed Work \n({@Work})\n for this AdminStaff \n({@AdminStaff})", work, adminStaff);
         await workRepository.RemoveAsync(work, cancellationToken);
     }
     
@@ -43,8 +38,7 @@ public sealed class AdminStaffService(
         var hub = await hubRepository.GetAsync(adminStaff, cancellationToken);
         if (hub == null)
         {
-            logger.LogError("AdminStaff \n({@AdminStaff})\n did not have a Hub assigned to alert free for.",
-                adminStaff);
+            logger.LogError("AdminStaff \n({@AdminStaff})\n did not have a Hub assigned to alert free for.", adminStaff);
 
             return;
         }
@@ -52,19 +46,14 @@ public sealed class AdminStaffService(
         var trip = await tripService.GetNextAsync(hub, WorkType.WaitCheckIn, cancellationToken);
         if (trip == null)
         {
-            logger.LogInformation("Hub \n({@Hub})\n did not have a Trip for this AdminStaff \n({@AdminStaff})\n to assign Check-In Work for.",
-                hub,
-                adminStaff);
+            logger.LogInformation("Hub \n({@Hub})\n did not have a Trip for this AdminStaff \n({@AdminStaff})\n to assign Check-In Work for.", hub, adminStaff);
             
-            logger.LogDebug("AdminStaff \n({@AdminStaff})\n will remain idle...",
-                adminStaff);
+            logger.LogDebug("AdminStaff \n({@AdminStaff})\n will remain idle...", adminStaff);
             
             return;
         }
 
-        logger.LogDebug("Alerting Free for this AdminStaff \n({@AdminStaff})\n to selected Trip \n({@Trip})",
-            adminStaff,
-            trip);
+        logger.LogDebug("Alerting Free for this AdminStaff \n({@AdminStaff})\n to selected Trip \n({@Trip})", adminStaff, trip);
         await tripService.AlertFreeAsync(trip, adminStaff, cancellationToken);
     }
 }

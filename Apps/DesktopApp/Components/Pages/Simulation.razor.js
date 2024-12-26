@@ -90,9 +90,7 @@ export async function initialize(dotNetObjectRef) {
         },
         interaction: null,
         models: {
-            truck_01: null,
-            warehouse_01: null,
-            warehouse_02: null,
+            truck_01: null, warehouse_01: null, warehouse_02: null,
             wheel_stopper: null,
             rolling_shutter: null,
             chain_link_fence : null,

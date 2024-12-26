@@ -45,8 +45,7 @@ public sealed class BayStepper : IStepperService<Bay>
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Handling Data Collection for Bay in this Step \n({Step})",
-            _modelState.ModelTime);
+        _logger.LogDebug("Handling Data Collection for Bay in this Step ({Step})", _modelState.ModelTime);
         
         // var closed = await _bayRepository.CountAsync(BayStatus.Closed, cancellationToken);
         // _closedBaysHistogram.Record(closed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
@@ -66,8 +65,7 @@ public sealed class BayStepper : IStepperService<Bay>
         // var pickedUp = await _bayRepository.CountAsync(BayFlags.PickedUp, cancellationToken);
         // _pickedUpBaysHistogram.Record(pickedUp, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
-        _logger.LogDebug("Finished handling Data Collection for Bay in this Step \n({Step})",
-            _modelState.ModelTime);
+        _logger.LogDebug("Finished handling Data Collection for Bay in this Step ({Step})", _modelState.ModelTime);
     }
     
     public async Task StepAsync(Bay bay, CancellationToken cancellationToken)
@@ -99,15 +97,11 @@ public sealed class BayStepper : IStepperService<Bay>
         
         await foreach (var bay in bays)
         {
-            _logger.LogDebug("Handling Step \n({Step})\n for this Bay \n({@Bay})",
-                _modelState.ModelTime,
-                bay);
+            _logger.LogDebug("Handling Step ({Step})\n for this Bay \n({@Bay})", _modelState.ModelTime, bay);
             
             await StepAsync(bay, cancellationToken);
             
-            _logger.LogDebug("Completed handling Step \n({Step})\n for this Bay \n({@Bay})",
-                _modelState.ModelTime,
-                bay);
+            _logger.LogDebug("Completed handling Step ({Step})\n for this Bay \n({@Bay})", _modelState.ModelTime, bay);
         }
     }
 }

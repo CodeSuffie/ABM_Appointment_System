@@ -8,17 +8,14 @@ public sealed class TruckRepository(ModelDbContext context)
 {
     public IQueryable<Truck> Get()
     {
-        var trucks = context.Trucks.Include(t => t.Inventory);
-
-        return trucks;
+        return context.Trucks
+            .Include(t => t.Inventory);
     }
     
-    public async Task<Truck?> GetAsync(Trip trip, CancellationToken cancellationToken)
+    public Task<Truck?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var truck = await Get()
+        return Get()
             .FirstOrDefaultAsync(t => t.TripId == trip.Id, cancellationToken);
-
-        return truck;
     }
     
     public async Task AddAsync(Truck truck, CancellationToken cancellationToken)

@@ -52,8 +52,7 @@ public sealed class BayStaffService
         
         if (trip == null)
         {
-            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned to alert Work complete for.",
-                    bay);
+            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned to alert Work complete for.", bay);
 
             return;
         }
@@ -62,8 +61,7 @@ public sealed class BayStaffService
 
         if (pellet == null)
         {
-            _logger.LogError("Work \n({@Work})\n did not have a Pellet assigned to complete Work for.",
-                work);
+            _logger.LogError("Work \n({@Work})\n did not have a Pellet assigned to complete Work for.", work);
 
             return;
         }
@@ -98,16 +96,9 @@ public sealed class BayStaffService
     {
         if (bay.BayStatus == BayStatus.Closed)
         {
-            _logger.LogInformation("BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with assigned " +
-                                   "BayStatus {@BayStatus} and can therefore be opened in this Step \n({Step})",
-                bayStaff,
-                bay,
-                BayStatus.Closed,
-                _modelState.ModelTime);
+            _logger.LogInformation("BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with assigned BayStatus {@BayStatus} and can therefore be opened in this Step ({Step})", bayStaff, bay, BayStatus.Closed, _modelState.ModelTime);
             
-            _logger.LogDebug("Setting BayStatus {@BayStatus} for this Bay \n({@Bay})",
-                BayStatus.Opened,
-                bay);
+            _logger.LogDebug("Setting BayStatus {@BayStatus} for this Bay \n({@Bay})", BayStatus.Opened, bay);
             await _bayRepository.SetAsync(bay, BayStatus.Opened, cancellationToken);
         }
 
@@ -115,32 +106,22 @@ public sealed class BayStaffService
         
         if (trip == null)
         {
-            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned to start Work for.",
-                    bay);
+            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned to start Work for.", bay);
 
             return;
         }
         
-        _logger.LogDebug("Try to start Drop-Off Work for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
-            bayStaff,
-            bay);
+        _logger.LogDebug("Try to start Drop-Off Work for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})", bayStaff, bay);
         var startedDropOff = await TryStartDropOffAsync(trip, bayStaff, bay, cancellationToken);
 
         if (!startedDropOff)
         {
-            _logger.LogDebug("Try to start Pick-Up Work for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
-                bayStaff,
-                bay);
+            _logger.LogDebug("Try to start Pick-Up Work for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})", bayStaff, bay);
             var startedPickUp = await TryStartPickUpAsync(trip, bayStaff, bay, cancellationToken);
             
             if (!startedPickUp)
             {
-                _logger.LogInformation("BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with assigned BayFlag {@BayFlag}" +
-                                       "and can therefore remain idle in this Step \n({Step})",
-                    bayStaff,
-                    bay,
-                    BayFlags.PickedUp,
-                    _modelState.ModelTime);
+                _logger.LogInformation("BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with assigned BayFlag {@BayFlag}and can therefore remain idle in this Step ({Step})", bayStaff, bay, BayFlags.PickedUp, _modelState.ModelTime);
             }
         }
     }
@@ -149,24 +130,14 @@ public sealed class BayStaffService
     {
         if (bay.BayFlags.HasFlag(BayFlags.DroppedOff))
         {
-            _logger.LogInformation(
-                "BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with Drop-Off work completed " +
-                "and can therefore not start Drop-Off Work this Step \n({Step})",
-                bayStaff,
-                bay,
-                _modelState.ModelTime);
+            _logger.LogInformation("BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with Drop-Off work completed and can therefore not start Drop-Off Work this Step ({Step})", bayStaff, bay, _modelState.ModelTime);
 
             return false;
         }
 
         if (!await _bayService.HasRoomForPelletAsync(bay, cancellationToken))
         {
-            _logger.LogInformation(
-                "BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with no room for another Pellet " +
-                "and can therefore not start Drop-Off Work this Step \n({Step})",
-                bayStaff,
-                bay,
-                _modelState.ModelTime);
+            _logger.LogInformation("BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with no room for another Pellet and can therefore not start Drop-Off Work this Step ({Step})", bayStaff, bay, _modelState.ModelTime);
             
             _dropOffMissCounter.Add(1, 
             [
@@ -182,19 +153,14 @@ public sealed class BayStaffService
         var pellet = await _pelletService.GetNextDropOffAsync(bay, cancellationToken);
         if (pellet == null)
         {
-            _logger.LogInformation("Trip \n({@Trip})\n did not have any more Pellets assigned to Drop-Off.",
-                trip);
+            _logger.LogInformation("Trip \n({@Trip})\n did not have any more Pellets assigned to Drop-Off.", trip);
             
-            _logger.LogInformation("Drop-Off Work could not be started for this Trip \n({@Trip}).",
-                trip);
+            _logger.LogInformation("Drop-Off Work could not be started for this Trip \n({@Trip}).", trip);
                 
             return false;
         }
 
-        _logger.LogDebug("Starting Drop-Off Work for this BayStaff \n({@BayStaff})\n for this Trip \n({@Trip})\n for this Pellet \n({@Pellet})",
-            bayStaff,
-            trip,
-            pellet);
+        _logger.LogDebug("Starting Drop-Off Work for this BayStaff \n({@BayStaff})\n for this Trip \n({@Trip})\n for this Pellet \n({@Pellet})", bayStaff, trip, pellet);
         await StartDropOffAsync(bayStaff, pellet, bay, cancellationToken);
 
         return true;
@@ -204,12 +170,7 @@ public sealed class BayStaffService
     {
         if (bay.BayFlags.HasFlag(BayFlags.PickedUp))
         {
-            _logger.LogInformation(
-                "BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with Pick-Up work completed " +
-                "and can therefore not start Pick-Up Work this Step \n({Step})",
-                bayStaff,
-                bay,
-                _modelState.ModelTime);
+            _logger.LogInformation("BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with Pick-Up work completed and can therefore not start Pick-Up Work this Step ({Step})", bayStaff, bay, _modelState.ModelTime);
 
             return false;
         }
@@ -217,19 +178,14 @@ public sealed class BayStaffService
         var pellet = await _pelletService.GetNextPickUpAsync(bay, cancellationToken);
         if (pellet == null)
         {
-            _logger.LogInformation("Trip \n({@Trip})\n did not have any more Pellets assigned to Pick-Up.",
-                trip);
+            _logger.LogInformation("Trip \n({@Trip})\n did not have any more Pellets assigned to Pick-Up.", trip);
             
-            _logger.LogInformation("Pick-Up Work could not be started for this Trip \n({@Trip}).",
-                trip);
+            _logger.LogInformation("Pick-Up Work could not be started for this Trip \n({@Trip}).", trip);
                 
             return false;
         }
             
-        _logger.LogDebug("Starting Pick-Up Work for this BayStaff \n({@BayStaff})\n for this Trip \n({@Trip})\n for this Pellet \n({@Pellet})",
-            bayStaff,
-            trip,
-            pellet);
+        _logger.LogDebug("Starting Pick-Up Work for this BayStaff \n({@BayStaff})\n for this Trip \n({@Trip})\n for this Pellet \n({@Pellet})", bayStaff, trip, pellet);
         await StartPickUpAsync(bayStaff, pellet, bay, cancellationToken);
 
         return true;
@@ -237,10 +193,7 @@ public sealed class BayStaffService
 
     public async Task StartDropOffAsync(BayStaff bayStaff, Pellet pellet, Bay bay, CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
-            WorkType.DropOff,
-            bayStaff,
-            bay);
+        _logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})", WorkType.DropOff, bayStaff, bay);
         await _workFactory.GetNewObjectAsync(bay, bayStaff, pellet, WorkType.DropOff, cancellationToken);
         
         _dropOffBayStaffCounter.Add(1, 
@@ -254,10 +207,7 @@ public sealed class BayStaffService
 
     public async Task StartPickUpAsync(BayStaff bayStaff, Pellet pellet, Bay bay, CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})",
-            WorkType.PickUp,
-            bayStaff,
-            bay);
+        _logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})", WorkType.PickUp, bayStaff, bay);
         await _workFactory.GetNewObjectAsync(bay, bayStaff, pellet, WorkType.PickUp, cancellationToken);
         
         _pickUpBayStaffCounter.Add(1, 

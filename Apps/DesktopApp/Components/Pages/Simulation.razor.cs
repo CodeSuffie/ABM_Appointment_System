@@ -185,11 +185,7 @@ public sealed partial class Simulation
         }
         
         await _javaScriptModule.InvokeVoidAsync("addBay", 
-            bay.Id,
-            bay.XLocation,
-            bay.YLocation,
-            bay.XSize,
-            bay.YSize);
+            bay.Id, bay.XLocation, bay.YLocation, bay.XSize, bay.YSize);
     }
     
     private async ValueTask AddBaysAsync(Bay[] bays)
@@ -241,9 +237,7 @@ public sealed partial class Simulation
         }
         
         await _javaScriptModule.InvokeVoidAsync("addParkingSpot", 
-            parkingSpot.Id,
-            parkingSpot.XLocation,
-            parkingSpot.YLocation,
+            parkingSpot.Id, parkingSpot.XLocation, parkingSpot.YLocation,
             1,
             1);
     }
@@ -264,9 +258,7 @@ public sealed partial class Simulation
         }
 
         await _javaScriptModule.InvokeVoidAsync("addTruck", 
-            truck.Id,
-            truck.Trip.XLocation,
-            truck.Trip.YLocation);
+            truck.Id, truck.Trip.XLocation, truck.Trip.YLocation);
     }
     
     private async ValueTask AddTrucksAsync(Truck[] trucks)

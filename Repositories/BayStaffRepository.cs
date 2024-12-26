@@ -8,25 +8,19 @@ public sealed class BayStaffRepository(ModelDbContext context)
 {
     public IQueryable<BayStaff> Get()
     {
-        var bayStaffs = context.BayStaffs;
-
-        return bayStaffs;
+        return context.BayStaffs;
     }
     
     public IQueryable<BayStaff> Get(Hub hub)
     {
-        var bayStaffs = Get()
+        return Get()
             .Where(bs => bs.HubId == hub.Id);
-
-        return bayStaffs;
     }
 
-    public async Task<BayStaff?> GetAsync(Work work, CancellationToken cancellationToken)
+    public Task<BayStaff?> GetAsync(Work work, CancellationToken cancellationToken)
     {
-        var bayStaff = await Get()
+        return Get()
             .FirstOrDefaultAsync(bs => bs.Id == work.BayStaffId, cancellationToken);
-
-        return bayStaff;
     }
     
     public async Task AddAsync(BayStaff bayStaff, CancellationToken cancellationToken)

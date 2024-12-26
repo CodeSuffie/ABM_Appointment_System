@@ -23,7 +23,7 @@ public class ModelConfig : ModelConfigBase
     public override Random Random { get; } = new Random(2);
     public override int MinutesPerHour { get; } = 60;
     
-    public override TimeSpan ModelTotalTime { get; } = TimeSpan.FromDays(1);
+    public override TimeSpan ModelTotalTime { get; } = TimeSpan.FromHours(6);
     public override TimeSpan ModelStep { get; } = TimeSpan.FromMinutes(1);
     
     public override int InitialTruckCompanyPellets { get; } = 100;

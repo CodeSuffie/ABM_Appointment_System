@@ -18,8 +18,7 @@ public sealed class TruckCompanyFactory(
 
         await truckCompanyRepository.AddAsync(truckCompany, cancellationToken);
         
-        logger.LogDebug("Setting location for this TruckCompany \n({@TruckCompany})",
-            truckCompany);
+        logger.LogDebug("Setting location for this TruckCompany \n({@TruckCompany})", truckCompany);
         await locationFactory.InitializeObjectAsync(truckCompany, cancellationToken);
 
         return truckCompany;

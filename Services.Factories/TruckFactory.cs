@@ -28,8 +28,7 @@ public sealed class TruckFactory(
             return null;
         }
         
-        logger.LogDebug("TruckCompany \n({@TruckCompany})\n was selected for the new Truck.",
-            truckCompany);
+        logger.LogDebug("TruckCompany \n({@TruckCompany})\n was selected for the new Truck.", truckCompany);
         
         var truck = new Truck
         {

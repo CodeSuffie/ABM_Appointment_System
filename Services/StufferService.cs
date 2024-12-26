@@ -52,8 +52,7 @@ public sealed class StufferService
         var work = await _workRepository.GetAsync(stuffer, cancellationToken);
         if (work == null)
         {
-            _logger.LogError("Stuffer \n({@Stuffer})\n did not have Work assigned to alert completed for.",
-                stuffer);
+            _logger.LogError("Stuffer \n({@Stuffer})\n did not have Work assigned to alert completed for.", stuffer);
 
             return;
         }
@@ -61,9 +60,7 @@ public sealed class StufferService
         var pellet = await _pelletRepository.GetAsync(work, cancellationToken);
         if (pellet == null)
         {
-            _logger.LogError("Stuffer \n({@Stuffer})\n its assigned Work \n({@Work})\n did not have a Pellet assigned to Stuff.",
-                stuffer,
-                work);
+            _logger.LogError("Stuffer \n({@Stuffer})\n its assigned Work \n({@Work})\n did not have a Pellet assigned to Stuff.", stuffer, work);
 
             return;
         }
@@ -71,10 +68,7 @@ public sealed class StufferService
         var bay = await _bayRepository.GetAsync(work, cancellationToken);
         if (bay == null)
         {
-            _logger.LogError("Stuffer \n({@Stuffer})\n its assigned Work \n({@Work})\n did not have a bay assigned to Stuff the Pellet \n({@Pellet})\n for.",
-                stuffer,
-                work,
-                pellet);
+            _logger.LogError("Stuffer \n({@Stuffer})\n its assigned Work \n({@Work})\n did not have a bay assigned to Stuff the Pellet \n({@Pellet})\n for.", stuffer, work, pellet);
 
             return;
         }
@@ -102,8 +96,7 @@ public sealed class StufferService
         var hub = await _hubRepository.GetAsync(stuffer, cancellationToken);
         if (hub == null)
         {
-            _logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to alert free for.",
-                stuffer);
+            _logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to alert free for.", stuffer);
 
             return;
         }
@@ -112,8 +105,7 @@ public sealed class StufferService
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
 
-        var appointmentSlots = _appointmentSlotRepository.GetAfter(hub,
-                _modelState.ModelTime -
+        var appointmentSlots = _appointmentSlotRepository.GetAfter(hub, _modelState.ModelTime -
                 _modelState.AppointmentConfig!.AppointmentLength * _modelState.ModelConfig.ModelStep)
             .Where(aps => aps.Appointments.Count != 0)
             .OrderBy(aps => aps.StartTime)
@@ -153,8 +145,7 @@ public sealed class StufferService
         var hub = await _hubRepository.GetAsync(stuffer, cancellationToken);
         if (hub == null)
         {
-            _logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to alert free for.",
-                stuffer);
+            _logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to alert free for.", stuffer);
 
             return;
         }
@@ -182,13 +173,9 @@ public sealed class StufferService
 
         if (bestBay == null)
         {
-            _logger.LogInformation("Stuffer \n({@Stuffer})\n its assigned Hub \n({@Hub})\n did not have a " +
-                                   "Bay with more Pellets assigned to Stuff.",
-                stuffer,
-                hub);
+            _logger.LogInformation("Stuffer \n({@Stuffer})\n its assigned Hub \n({@Hub})\n did not have a Bay with more Pellets assigned to Stuff.", stuffer, hub);
             
-            _logger.LogDebug("Stuffer \n({@Stuffer})\n will remain idle...",
-                stuffer);
+            _logger.LogDebug("Stuffer \n({@Stuffer})\n will remain idle...", stuffer);
 
             return;
         }
@@ -201,19 +188,14 @@ public sealed class StufferService
         var pellet = await _pelletService.GetNextStuffAsync(bay, cancellationToken);
         if (pellet == null)
         {
-            _logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Stuff.",
-                bay);
+            _logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Stuff.", bay);
             
-            _logger.LogInformation("Stuff Work could not be started for this Bay \n({@Bay}).",
-                bay);
+            _logger.LogInformation("Stuff Work could not be started for this Bay \n({@Bay}).", bay);
             
             return;
         }
         
-        _logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pellet \n({@Pellet})",
-            stuffer,
-            bay,
-            pellet);
+        _logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pellet \n({@Pellet})", stuffer, bay, pellet);
         await _workFactory.GetNewObjectAsync(bay, stuffer, pellet, cancellationToken);
         
         _occupiedStufferCounter.Add(1, 
@@ -230,19 +212,14 @@ public sealed class StufferService
         var pellet = await _pelletService.GetNextStuffAsync(bay, appointmentSlots, cancellationToken);
         if (pellet == null)
         {
-            _logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Stuff.",
-                bay);
+            _logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Stuff.", bay);
             
-            _logger.LogInformation("Stuff Work could not be started for this Bay \n({@Bay}).",
-                bay);
+            _logger.LogInformation("Stuff Work could not be started for this Bay \n({@Bay}).", bay);
             
             return;
         }
         
-        _logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pellet \n({@Pellet})",
-            stuffer,
-            bay,
-            pellet);
+        _logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pellet \n({@Pellet})", stuffer, bay, pellet);
         await _workFactory.GetNewObjectAsync(bay, stuffer, pellet, cancellationToken);
         
         _occupiedStufferCounter.Add(1, 

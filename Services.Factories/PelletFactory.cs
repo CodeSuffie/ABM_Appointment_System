@@ -82,9 +82,7 @@ public sealed class PelletFactory : IFactoryService<Pellet>
                 continue;
             }
             
-            _logger.LogDebug("Setting TruckCompany \n({@TruckCompany})\n for this Pellet \n({@Pellet})",
-                truckCompany,
-                pellet);
+            _logger.LogDebug("Setting TruckCompany \n({@TruckCompany})\n for this Pellet \n({@Pellet})", truckCompany, pellet);
             await _pelletRepository.SetAsync(pellet, truckCompany, cancellationToken);
             
             _logger.LogInformation("New Pellet created: Pellet={@Pellet}", pellet);
@@ -114,15 +112,12 @@ public sealed class PelletFactory : IFactoryService<Pellet>
             var warehouse = await _warehouseRepository.GetAsync(hub, cancellationToken);
             if (warehouse == null)
             {
-                _logger.LogError("Hub ({@Hub}) did not have a Warehouse assigned for this new Pellet.",
-                    hub);
+                _logger.LogError("Hub ({@Hub}) did not have a Warehouse assigned for this new Pellet.", hub);
 
                 continue;
             }
 
-            _logger.LogDebug("Setting Warehouse \n({@Warehouse})\n for this Pellet \n({@Pellet})",
-                warehouse,
-                pellet);
+            _logger.LogDebug("Setting Warehouse \n({@Warehouse})\n for this Pellet \n({@Pellet})", warehouse, pellet);
             await _pelletRepository.SetAsync(pellet, warehouse, cancellationToken);
 
             _logger.LogInformation("New Pellet created: Pellet={@Pellet}", pellet);
@@ -155,8 +150,7 @@ public sealed class PelletFactory : IFactoryService<Pellet>
         }
         else
         {
-            _logger.LogError("Hub \n({@Hub})\n did not have a Warehouse assigned.",
-                hub);
+            _logger.LogError("Hub \n({@Hub})\n did not have a Warehouse assigned.", hub);
         }
         
         return allPellets;
@@ -168,18 +162,14 @@ public sealed class PelletFactory : IFactoryService<Pellet>
             
         if (allPellets.Count <= 0)
         {
-            _logger.LogInformation("TruckCompany ({@TruckCompany}) did not have any unclaimed pellets assigned.",
-                truckCompany);
+            _logger.LogInformation("TruckCompany ({@TruckCompany}) did not have any unclaimed pellets assigned.", truckCompany);
 
             return;
         }
             
         if (allPellets.Count <= count)
         {
-            _logger.LogInformation("TruckCompany ({@TruckCompany}) to fetch Pellets from had less than or an equal number ({@Count}) of unclaimed pellets assigned as the given count ({@Count}).",
-                truckCompany,
-                allPellets.Count,
-                count);
+            _logger.LogInformation("TruckCompany ({@TruckCompany}) to fetch Pellets from had less than or an equal number ({@Count}) of unclaimed pellets assigned as the given count ({@Count}).", truckCompany, allPellets.Count, count);
 
             count = allPellets.Count;
         }
@@ -204,18 +194,14 @@ public sealed class PelletFactory : IFactoryService<Pellet>
             
         if (allPellets.Count <= 0)
         {
-            _logger.LogInformation("Hub ({@Hub}) did not have any unclaimed pellets assigned.",
-                hub);
+            _logger.LogInformation("Hub ({@Hub}) did not have any unclaimed pellets assigned.", hub);
 
             return;
         }
             
         if (allPellets.Count <= count)
         {
-            _logger.LogInformation("Hub ({@Hub}) to fetch Pellets from had less than or an equal number ({@Count}) of unclaimed pellets assigned as the given count ({@Count}).",
-                hub,
-                allPellets.Count,
-                count);
+            _logger.LogInformation("Hub ({@Hub}) to fetch Pellets from had less than or an equal number ({@Count}) of unclaimed pellets assigned as the given count ({@Count}).", hub, allPellets.Count, count);
 
             count = allPellets.Count;
         }
@@ -239,8 +225,7 @@ public sealed class PelletFactory : IFactoryService<Pellet>
             var truckCompany = await _truckCompanyRepository.GetAsync(load, cancellationToken);
             if (truckCompany == null)
             {
-                _logger.LogError("Load ({@Load}) did not have a Truck Company assigned.",
-                    load);
+                _logger.LogError("Load ({@Load}) did not have a Truck Company assigned.", load);
 
                 return;
             }
@@ -252,8 +237,7 @@ public sealed class PelletFactory : IFactoryService<Pellet>
             var hub = await _hubRepository.GetAsync(load, cancellationToken);
             if (hub == null)
             {
-                _logger.LogError("Load ({@Load}) did not have a Hub assigned.",
-                    load);
+                _logger.LogError("Load ({@Load}) did not have a Hub assigned.", load);
 
                 return;
             }

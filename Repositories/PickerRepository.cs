@@ -8,17 +8,13 @@ public sealed class PickerRepository(ModelDbContext context)
 {
     public IQueryable<Picker> Get()
     {
-        var pickers = context.Pickers;
-
-        return pickers;
+        return context.Pickers;
     }
 
-    public async Task<Picker?> GetAsync(Work work, CancellationToken cancellationToken)
+    public Task<Picker?> GetAsync(Work work, CancellationToken cancellationToken)
     {
-        var picker = await Get()
+        return Get()
             .FirstOrDefaultAsync(pi => pi.Id == work.PickerId, cancellationToken);
-
-        return picker;
     }
 
     public async Task AddAsync(Picker picker, CancellationToken cancellationToken)

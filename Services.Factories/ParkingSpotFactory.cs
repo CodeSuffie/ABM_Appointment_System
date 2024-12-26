@@ -30,13 +30,10 @@ public sealed class ParkingSpotFactory(
             return null;
         }
         
-        logger.LogDebug("Setting ParkingSpot \n({@ParkingSpot})\n to its Hub \n({@Hub})",
-            parkingSpot,
-            hub);
+        logger.LogDebug("Setting ParkingSpot \n({@ParkingSpot})\n to its Hub \n({@Hub})", parkingSpot, hub);
         await parkingSpotRepository.SetAsync(parkingSpot, hub, cancellationToken);
         
-        logger.LogDebug("Setting location for this ParkingSpot \n({@ParkingSpot})",
-            parkingSpot);
+        logger.LogDebug("Setting location for this ParkingSpot \n({@ParkingSpot})", parkingSpot);
         await locationFactory.InitializeObjectAsync(parkingSpot, cancellationToken);
 
         return parkingSpot;

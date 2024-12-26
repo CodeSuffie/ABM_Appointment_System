@@ -53,23 +53,18 @@ public sealed class BayService
         var trip = await _tripRepository.GetAsync(bay, cancellationToken);
         if (trip == null) 
         {
-            _logger.LogError("Bay \n({@Bay})\n did not have a Trip assigned to alert completed Work for",
-                bay);
+            _logger.LogError("Bay \n({@Bay})\n did not have a Trip assigned to alert completed Work for", bay);
 
             return;
         }
         
-        _logger.LogDebug("Alerting Bay Work Completed for this Bay \n({@Bay})\n to assigned Trip \n({@Trip})",
-            bay,
-            trip);
+        _logger.LogDebug("Alerting Bay Work Completed for this Bay \n({@Bay})\n to assigned Trip \n({@Trip})", bay, trip);
         await _tripService.AlertBayWorkCompleteAsync(trip, cancellationToken);
             
         var work = await _workRepository.GetAsync(bay, cancellationToken);
         if (work == null) return;
         
-        _logger.LogDebug("Removing completed Work \n({@Work})\n for this Bay \n({@Bay})",
-            work,
-            bay);
+        _logger.LogDebug("Removing completed Work \n({@Work})\n for this Bay \n({@Bay})", work, bay);
         await _workRepository.RemoveAsync(work, cancellationToken);
     }
 
@@ -78,8 +73,7 @@ public sealed class BayService
         var hub = await _hubRepository.GetAsync(bay, cancellationToken);
         if (hub == null)
         {
-            _logger.LogError("Bay \n({@Bay})\n did not have a Hub assigned to alert free for.",
-                bay);
+            _logger.LogError("Bay \n({@Bay})\n did not have a Hub assigned to alert free for.", bay);
 
             return;
         }
@@ -89,19 +83,14 @@ public sealed class BayService
             await _tripService.GetNextAsync(hub, bay, cancellationToken);
         if (trip == null)
         {
-            _logger.LogInformation("Hub \n({@Hub})\n did not have a Trip for this Bay \n({@Bay})\n to assign Bay Work for.",
-                hub,
-                bay);
+            _logger.LogInformation("Hub \n({@Hub})\n did not have a Trip for this Bay \n({@Bay})\n to assign Bay Work for.", hub, bay);
             
-            _logger.LogDebug("Bay \n({@Bay})\n will remain idle...",
-                bay);
+            _logger.LogDebug("Bay \n({@Bay})\n will remain idle...", bay);
             
             return;
         }
 
-        _logger.LogDebug("Alerting Free for this Bay \n({@Bay})\n to selected Trip \n({@Trip})",
-            bay,
-            trip);
+        _logger.LogDebug("Alerting Free for this Bay \n({@Bay})\n to selected Trip \n({@Trip})", bay, trip);
         await _tripService.AlertFreeAsync(trip, bay, cancellationToken);
     }
     
@@ -110,11 +99,9 @@ public sealed class BayService
         var trip = await _tripRepository.GetAsync(bay, cancellationToken);
         if (trip == null)
         {
-            _logger.LogInformation("Bay ({@Bay}) did not have a Trip assigned.",
-                bay);
+            _logger.LogInformation("Bay ({@Bay}) did not have a Trip assigned.", bay);
             
-            _logger.LogDebug("Removing all BayFlags from thisBay ({@Bay}).",
-                bay);
+            _logger.LogDebug("Removing all BayFlags from thisBay ({@Bay}).", bay);
             await _bayRepository.RemoveAsync(bay, BayFlags.DroppedOff | BayFlags.Fetched | BayFlags.PickedUp, cancellationToken);
             return;
         }

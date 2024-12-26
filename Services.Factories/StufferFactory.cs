@@ -29,8 +29,7 @@ public sealed class StufferFactory(
             return null;
         }
         
-        logger.LogDebug("Hub \n({@Hub})\n was selected for the new Stuffer.",
-            hub);
+        logger.LogDebug("Hub \n({@Hub})\n was selected for the new Stuffer.", hub);
         
         var stuffer = new Stuffer
         {
@@ -43,8 +42,7 @@ public sealed class StufferFactory(
         
         await stufferRepository.AddAsync(stuffer, cancellationToken);
         
-        logger.LogDebug("Setting HubShifts for this Stuffer \n({@Stuffer})",
-            stuffer);
+        logger.LogDebug("Setting HubShifts for this Stuffer \n({@Stuffer})", stuffer);
         await stufferShiftFactory.GetNewObjectsAsync(stuffer, cancellationToken);
 
         return stuffer;

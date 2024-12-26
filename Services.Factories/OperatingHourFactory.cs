@@ -18,9 +18,7 @@ public sealed class OperatingHourFactory(
 
         if (maxShiftStart < TimeSpan.Zero)
         {
-            logger.LogError("Hub \n({@Hub})\n its OperatingHourLength \n({TimeSpan})\n is longer than a full day.",
-                hub,
-                hub.AverageShiftLength);
+            logger.LogError("Hub \n({@Hub})\n its OperatingHourLength \n({TimeSpan})\n is longer than a full day.", hub, hub.AverageShiftLength);
 
             return null;
             // Hub Operating Hours can be longer than 1 day?
@@ -53,8 +51,7 @@ public sealed class OperatingHourFactory(
         var startTime = GetStartTime(hub, day);
         if (startTime == null)
         {
-            logger.LogError("No start time could be assigned to the new OperatingHour for this Hub \n({@Hub}).",
-                hub);
+            logger.LogError("No start time could be assigned to the new OperatingHour for this Hub \n({@Hub}).", hub);
 
             return null;
         }
@@ -67,19 +64,13 @@ public sealed class OperatingHourFactory(
             return null;
         }
         
-        logger.LogDebug("Setting this StartTime ({Step}) for this OperatingHour \n({@OperatingHour}).",
-            startTime,
-            operatingHour);
+        logger.LogDebug("Setting this StartTime ({Step}) for this OperatingHour \n({@OperatingHour}).", startTime, operatingHour);
         await operatingHourRepository.SetStartAsync(operatingHour, (TimeSpan) startTime, cancellationToken);
         
-        logger.LogDebug("Setting this Duration ({Step}) for this OperatingHour \n({@OperatingHour}).",
-            hub.AverageShiftLength,
-            operatingHour);
+        logger.LogDebug("Setting this Duration ({Step}) for this OperatingHour \n({@OperatingHour}).", hub.AverageShiftLength, operatingHour);
         await operatingHourRepository.SetDurationAsync(operatingHour, hub.AverageShiftLength, cancellationToken);
         
-        logger.LogDebug("Setting this Hub \n({@Hub})\n for this OperatingHour \n({@OperatingHour}).",
-            hub,
-            operatingHour);
+        logger.LogDebug("Setting this Hub \n({@Hub})\n for this OperatingHour \n({@OperatingHour}).", hub, operatingHour);
         await operatingHourRepository.SetAsync(operatingHour, hub, cancellationToken);
         
         return operatingHour;
@@ -87,15 +78,13 @@ public sealed class OperatingHourFactory(
 
     public async Task GetNewObjectsAsync(Hub hub, CancellationToken cancellationToken)
     {
-        for (var i = 0; i < modelState.ModelConfig.ModelTotalTime.Days; i++)
+        for (var i = 0; i <= modelState.ModelConfig.ModelTotalTime.Days; i++)
         {
             var day = TimeSpan.FromDays(i);
             
             if (modelState.RandomDouble() > hub.WorkChance)
             {
-                logger.LogInformation("Hub \n({@Hub})\n will not have an OperatingHour during this day \n({TimeSpan})",
-                    hub,
-                    day);
+                logger.LogInformation("Hub \n({@Hub})\n will not have an OperatingHour during this day \n({TimeSpan})", hub, day);
                 
                 continue;
             }
@@ -103,18 +92,13 @@ public sealed class OperatingHourFactory(
             var operatingHour = await GetNewObjectAsync(hub, day, cancellationToken);
             if (operatingHour == null)
             {
-                logger.LogError("No new OperatingHour could be created for this Hub \n({@Hub})\n during this day \n({TimeSpan})\n",
-                    hub,
-                    day);
+                logger.LogError("No new OperatingHour could be created for this Hub \n({@Hub})\n during this day \n({TimeSpan})\n", hub, day);
 
                 continue;
             }
 
             await hubRepository.AddAsync(hub, operatingHour, cancellationToken);
-            logger.LogInformation("New OperatingHour created for this Hub \n({@Hub})\n during this day \n({TimeSpan})\n: OperatingHour={@OperatingHour}",
-                hub,
-                day,
-                operatingHour);
+            logger.LogInformation("New OperatingHour created for this Hub \n({@Hub})\n during this day \n({TimeSpan})\n: OperatingHour={@OperatingHour}", hub, day, operatingHour);
         }
     }
 }

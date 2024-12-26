@@ -8,17 +8,13 @@ public sealed class StufferRepository(ModelDbContext context)
 {
     public IQueryable<Stuffer> Get()
     {
-        var stuffer = context.Stuffers;
-
-        return stuffer;
+        return context.Stuffers;
     }
 
-    public async Task<Stuffer?> GetAsync(Work work, CancellationToken cancellationToken)
+    public Task<Stuffer?> GetAsync(Work work, CancellationToken cancellationToken)
     {
-        var stuffer = await Get()
+        return Get()
             .FirstOrDefaultAsync(pi => pi.Id == work.StufferId, cancellationToken);
-
-        return stuffer;
     }
 
     public async Task AddAsync(Stuffer stuffer, CancellationToken cancellationToken)

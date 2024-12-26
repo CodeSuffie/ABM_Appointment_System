@@ -1,5 +1,6 @@
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
@@ -64,13 +65,10 @@ public sealed class PelletService
                != null;
     }
     
-    private async Task<bool> HasPelletAsync(Truck truck, Pellet pellet, CancellationToken cancellationToken)
+    private async Task<bool> HasPelletAsync(IQueryable<Pellet>? pellets, Pellet pellet, CancellationToken cancellationToken)
     {
-        return (await _pelletRepository
-                   .Get(truck)
-                   .FirstOrDefaultAsync(p => p.Id == pellet.Id,
-                       cancellationToken))
-               != null;
+        return pellets != null && await pellets.AnyAsync(p => p.Id == pellet.Id,
+            cancellationToken);
     }
     
     private async Task<bool> HasWorkAsync(Pellet pellet, CancellationToken cancellationToken)
@@ -109,8 +107,7 @@ public sealed class PelletService
         var trip = await _tripRepository.GetAsync(bay, cancellationToken);
         if (trip == null)
         {
-            _logger.LogError("Bay \n({@Bay})\n did not have a Trip assigned.",
-                bay);
+            _logger.LogError("Bay \n({@Bay})\n did not have a Trip assigned.", bay);
             
             return;
         }
@@ -118,20 +115,14 @@ public sealed class PelletService
         var truck = await _truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
         {
-            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned.",
-                trip);
+            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned to alert Dropped Off for.", trip);
             
             return;
         }
 
         if (_pelletRepository.Get(truck).FirstOrDefault(p => p.Id == pellet.Id) == null)
         {
-            _logger.LogError("Cannot unload Pellet \n({@Pellet})\n for this Trip \n({@Trip})\n from this Truck " +
-                             "\n({@Truck})\n at this Bay \n({@Bay})\n since its Inventory does not have the Pellet assigned.",
-                pellet,
-                trip,
-                truck,
-                bay);
+            _logger.LogError("Cannot unload Pellet \n({@Pellet})\n for this Trip \n({@Trip})\n from this Truck \n({@Truck})\n at this Bay \n({@Bay})\n since its Inventory does not have the Pellet assigned.", pellet, trip, bay);
 
             return;
         }
@@ -144,19 +135,14 @@ public sealed class PelletService
         var pelletBay = await _bayRepository.GetAsync(pellet, cancellationToken);
         if (pelletBay == null)
         {
-            _logger.LogError("Pellet ({@Pellet}) did not have a Bay assigned.",
-                bay);
+            _logger.LogError("Pellet ({@Pellet}) did not have a Bay assigned.", bay);
             
             return;
         }
 
         if (pelletBay.Id != bay.Id)
         {
-            _logger.LogError("Cannot Stuff Pellet ({@Pellet}) from this Bay \n({@Bay})\n because the Pellet had a " +
-                             "different Bay \n({@Bay})\n assigned.",
-                pellet,
-                bay,
-                pelletBay);
+            _logger.LogError("Cannot Stuff Pellet ({@Pellet}) from this Bay \n({@Bay})\n because the Pellet had a different Bay \n({@Bay})\n assigned.", pellet, bay, pelletBay);
             
             return;
         }
@@ -164,8 +150,7 @@ public sealed class PelletService
         var hub = await _hubRepository.GetAsync(bay, cancellationToken);
         if (hub == null)
         {
-            _logger.LogError("Bay ({@Bay}) did not have a Hub assigned.",
-                bay);
+            _logger.LogError("Bay ({@Bay}) did not have a Hub assigned.", bay);
             
             return;
         }
@@ -173,8 +158,7 @@ public sealed class PelletService
         var warehouse = await _warehouseRepository.GetAsync(hub, cancellationToken);
         if (warehouse == null)
         {
-            _logger.LogError("Hub ({@Hub}) did not have a Warehouse assigned.",
-                hub);
+            _logger.LogError("Hub ({@Hub}) did not have a Warehouse assigned.", hub);
             
             return;
         }
@@ -187,8 +171,7 @@ public sealed class PelletService
         var warehouse = await _warehouseRepository.GetAsync(pellet, cancellationToken);
         if (warehouse == null)
         {
-            _logger.LogError("Pellet ({@Pellet}) did not have a Warehouse assigned to Fetch from.",
-                pellet);
+            _logger.LogError("Pellet ({@Pellet}) did not have a Warehouse assigned to Fetch from.", pellet);
             
             return;
         }
@@ -196,8 +179,7 @@ public sealed class PelletService
         var warehouseHub = await _hubRepository.GetAsync(warehouse, cancellationToken);
         if (warehouseHub == null)
         {
-            _logger.LogError("Warehouse ({@Warehouse}) did not have a Hub assigned.",
-                warehouse);
+            _logger.LogError("Warehouse ({@Warehouse}) did not have a Hub assigned.", warehouse);
             
             return;
         }
@@ -205,20 +187,14 @@ public sealed class PelletService
         var bayHub = await _hubRepository.GetAsync(bay, cancellationToken);
         if (bayHub == null)
         {
-            _logger.LogError("Bay ({@Bay}) did not have a Hub assigned.",
-                bay);
+            _logger.LogError("Bay ({@Bay}) did not have a Hub assigned.", bay);
             
             return;
         }
 
         if (warehouseHub.Id != bayHub.Id)
         {
-            _logger.LogError("Pellet ({@Pellet}) at this Warehouse ({@Warehouse}) at this Hub ({@Hub}) could not be fetched for this Bay ({@Bay}) because its Hub ({@Hub}) does not have the Pellet Warehouse assigned.",
-                pellet,
-                warehouse,
-                warehouseHub,
-                bay,
-                bayHub);
+            _logger.LogError("Pellet ({@Pellet}) at this Warehouse ({@Warehouse}) at this Hub ({@Hub}) could not be fetched for this Bay ({@Bay}) because its Hub ({@Hub}) does not have the Pellet Warehouse assigned.", pellet, warehouse, warehouseHub, bay, bayHub);
             
             return;
         }
@@ -231,8 +207,7 @@ public sealed class PelletService
         var bay = await _bayRepository.GetAsync(trip, cancellationToken);
         if (bay == null)
         {
-            _logger.LogError("Trip ({@Trip}) did not have a Bay assigned.",
-                trip);
+            _logger.LogError("Trip ({@Trip}) did not have a Bay assigned.", trip);
             
             return;
         }
@@ -240,29 +215,20 @@ public sealed class PelletService
         var bayPellets = _pelletRepository.Get(bay);
         if (!bayPellets.Any(p => p.Id == pellet.Id))
         {
-            _logger.LogError("Cannot load Pellet ({@Pellet}) for this Trip ({@Trip}) since its Bay ({@Bay}) does not have the pellet assigned.",
-                pellet,
-                trip,
-                bay);
+            _logger.LogError("Cannot load Pellet ({@Pellet}) for this Trip ({@Trip}) since its Bay ({@Bay}) does not have the pellet assigned.", pellet, trip, bay);
         }
         
         var truck = await _truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
         {
-            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned.",
-                trip);
+            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned to alert Picked Up for.", trip);
             
             return;
         }
         
         if (_pelletRepository.Get(truck).FirstOrDefault(p => p.Id == pellet.Id) != null)
         {
-            _logger.LogError("Cannot unload Pellet \n({@Pellet})\n for this Trip \n({@Trip})\n onto this Truck " +
-                             "\n({@Truck})\n at this Bay \n({@Bay})\n since its Inventory already has the Pellet assigned.",
-                pellet,
-                trip,
-                truck,
-                bay);
+            _logger.LogError("Cannot unload Pellet \n({@Pellet})\n for this Trip \n({@Trip})\n onto this Truck \n({@Truck})\n at this Bay \n({@Bay})\n since its Inventory already has the Pellet assigned.", pellet, trip, truck, bay);
 
             return;
         }
@@ -275,8 +241,7 @@ public sealed class PelletService
         var trip = await _tripRepository.GetAsync(bay, cancellationToken);
         if (trip == null)
         {
-            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned.",
-                bay);
+            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned.", bay);
             
             return [];
         }
@@ -284,8 +249,7 @@ public sealed class PelletService
         var dropOffLoad = await _loadRepository.GetAsync(trip, LoadType.DropOff, cancellationToken);
         if (dropOffLoad == null)
         {
-            _logger.LogInformation("Trip \n({@Trip})\n did not have a Load assigned to Drop-Off.",
-                trip);
+            _logger.LogInformation("Trip \n({@Trip})\n did not have a Load assigned to Drop-Off.", trip);
             
             return [];
         }
@@ -293,17 +257,17 @@ public sealed class PelletService
         var truck = await _truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
         {
-            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned.",
-                trip);
+            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned to get DropOff Pellets for.", trip);
             
             return [];
         }
         
         var dropOffPellets = new List<Pellet>();
+        var truckPellets = _pelletRepository.Get(truck);
 
         foreach (var dropOffPellet in dropOffLoad.Pellets)
         {
-            if (await HasPelletAsync(truck, dropOffPellet, cancellationToken))
+            if (await HasPelletAsync(truckPellets, dropOffPellet, cancellationToken))
             {
                 dropOffPellets.Add(dropOffPellet);
             }
@@ -319,8 +283,7 @@ public sealed class PelletService
         var trip = await _tripRepository.GetAsync(bay, cancellationToken);
         if (trip == null)
         {
-            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned.",
-                bay);
+            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned.", bay);
             
             return bayPellets.ToList();
         }
@@ -328,8 +291,7 @@ public sealed class PelletService
         var pickUpLoad = await _loadRepository.GetAsync(trip, LoadType.PickUp, cancellationToken);
         if (pickUpLoad == null)
         {
-            _logger.LogInformation("Trip ({@Trip}) did not have a Load assigned to Pick-Up.",
-                trip);
+            _logger.LogInformation("Trip ({@Trip}) did not have a Load assigned to Pick-Up.", trip);
             
             return bayPellets.ToList();
         }
@@ -364,9 +326,7 @@ public sealed class PelletService
             var appointment = await _appointmentRepository.GetAsync(bay, appointmentSlot, cancellationToken);
             if (appointment == null)
             {
-                _logger.LogInformation("Bay \n({@Bay})\n did not have an Appointment assigned during this AppointmentSlot \n({@AppointmentSlot}).",
-                    bay,
-                    appointmentSlot);
+                _logger.LogInformation("Bay \n({@Bay})\n did not have an Appointment assigned during this AppointmentSlot \n({@AppointmentSlot}).", bay, appointmentSlot);
 
                 continue;
             }
@@ -374,11 +334,7 @@ public sealed class PelletService
             var trip = await _tripRepository.GetAsync(appointment, cancellationToken);
             if (trip == null)
             {
-                _logger.LogError("Appointment \n{@Appointment}\n assigned to this Bay \n({@Bay})\n during this " +
-                                 "AppointmentSlot \n({@AppointmentSlot}) did not have a Trip assigned.",
-                    appointment,
-                    bay,
-                    appointmentSlot);
+                _logger.LogError("Appointment \n{@Appointment}\n assigned to this Bay \n({@Bay})\n during this AppointmentSlot \n({@AppointmentSlot}) did not have a Trip assigned.", appointment, bay, appointmentSlot);
 
                 continue;
             }
@@ -386,8 +342,7 @@ public sealed class PelletService
             var pickUpLoad = await _loadRepository.GetAsync(trip, LoadType.PickUp, cancellationToken);
             if (pickUpLoad == null)
             {
-                _logger.LogInformation("Trip \n({@Trip})\n did not have a Load assigned to Pick-Up.",
-                    trip);
+                _logger.LogInformation("Trip \n({@Trip})\n did not have a Load assigned to Pick-Up.", trip);
 
                 continue;
             }
@@ -400,8 +355,7 @@ public sealed class PelletService
         var tripCurrent = await _tripRepository.GetAsync(bay, cancellationToken);
         if (tripCurrent == null)
         {
-            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned.",
-                bay);
+            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned.", bay);
 
             return stuffPellets.ToList();
         }
@@ -409,8 +363,7 @@ public sealed class PelletService
         var pickUpLoadCurrent = await _loadRepository.GetAsync(tripCurrent, LoadType.PickUp, cancellationToken);
         if (pickUpLoadCurrent == null)
         {
-            _logger.LogInformation("Trip \n({@Trip})\n did not have a Load assigned to Pick-Up.",
-                tripCurrent);
+            _logger.LogInformation("Trip \n({@Trip})\n did not have a Load assigned to Pick-Up.", tripCurrent);
 
             return stuffPellets.ToList();
         }
@@ -427,8 +380,7 @@ public sealed class PelletService
         var trip = await _tripRepository.GetAsync(bay, cancellationToken);
         if (trip == null)
         {
-            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned.",
-                bay);
+            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned.", bay);
             
             return [];
         }
@@ -436,9 +388,7 @@ public sealed class PelletService
         var pickUpLoad = await _loadRepository.GetAsync(trip, LoadType.PickUp, cancellationToken);
         if (pickUpLoad == null)
         {
-            _logger.LogInformation("Trip \n({@Trip})\n at Bay \n({@Bay})\n did not have a Load assigned to Pick-Up.",
-                trip,
-                bay);
+            _logger.LogInformation("Trip \n({@Trip})\n at Bay \n({@Bay})\n did not have a Load assigned to Pick-Up.", trip, bay);
             
             return [];
         }
@@ -446,17 +396,17 @@ public sealed class PelletService
         var truck = await _truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
         {
-            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned.",
-                trip);
+            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned get Fetch Pellets for.", trip);
             
             return [];
         }
         
         var fetchPellets = new List<Pellet>();
+        var truckPellets = _pelletRepository.Get(truck);
 
         foreach (var pickUpPellet in pickUpLoad.Pellets)
         {
-            if (!await HasPelletAsync(truck, pickUpPellet, cancellationToken) &&
+            if (!await HasPelletAsync(truckPellets, pickUpPellet, cancellationToken) &&
                 !await HasPelletAsync(bay, pickUpPellet, cancellationToken))   // TODO: Check if Bay Hub matches Warehouse Hub
             {
                 fetchPellets.Add(pickUpPellet);
@@ -478,8 +428,7 @@ public sealed class PelletService
         var trip = await _tripRepository.GetAsync(appointment, cancellationToken);
         if (trip == null)
         {
-            _logger.LogInformation("Appointment \n({@Appointment})\n did not have a Trip assigned.",
-                appointment);
+            _logger.LogInformation("Appointment \n({@Appointment})\n did not have a Trip assigned.", appointment);
             
             return [];
         }
@@ -487,28 +436,23 @@ public sealed class PelletService
         var pickUpLoad = await _loadRepository.GetAsync(trip, LoadType.PickUp, cancellationToken);
         if (pickUpLoad == null)
         {
-            _logger.LogInformation("Trip \n({@Trip})\n assigned to this Appointment \n({@Appointment})\n at Bay \n({@Bay})\n did not have a Load assigned to Pick-Up.",
-                trip,
-                appointment,
-                bay);
+            _logger.LogInformation("Trip \n({@Trip})\n assigned to this Appointment \n({@Appointment})\n at Bay \n({@Bay})\n did not have a Load assigned to Pick-Up.", trip, appointment, bay);
             
             return [];
         }
         
         var truck = await _truckRepository.GetAsync(trip, cancellationToken);
-        if (truck == null)
+        IQueryable<Pellet>? truckPellets = null;
+        if (truck != null)
         {
-            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned.",
-                trip);
-            
-            return [];
+            truckPellets = _pelletRepository.Get(truck);
         }
         
         var fetchPellets = new List<Pellet>();
 
         foreach (var pickUpPellet in pickUpLoad.Pellets)
         {
-            if (!await HasPelletAsync(truck, pickUpPellet, cancellationToken) &&
+            if (!await HasPelletAsync(truckPellets, pickUpPellet, cancellationToken) &&
                 !await HasPelletAsync(bay, pickUpPellet, cancellationToken))   // TODO: Check if Bay Hub matches Warehouse Hub
             {
                 fetchPellets.Add(pickUpPellet);
@@ -523,8 +467,7 @@ public sealed class PelletService
         var trip = await _tripRepository.GetAsync(bay, cancellationToken);
         if (trip == null)
         {
-            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned.",
-                bay);
+            _logger.LogInformation("Bay \n({@Bay})\n did not have a Trip assigned.", bay);
             
             return [];
         }
@@ -532,8 +475,7 @@ public sealed class PelletService
         var pickUpLoad = await _loadRepository.GetAsync(trip, LoadType.PickUp, cancellationToken);
         if (pickUpLoad == null)
         {
-            _logger.LogInformation("Trip ({@Trip}) did not have a Load assigned to Pick-Up.",
-                trip);
+            _logger.LogInformation("Trip ({@Trip}) did not have a Load assigned to Pick-Up.", trip);
 
             return [];
         }
@@ -541,17 +483,17 @@ public sealed class PelletService
         var truck = await _truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
         {
-            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned.",
-                trip);
+            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned to get PickUp Pellets for.", trip);
             
             return [];
         }
         
         var pickUpPellets = new List<Pellet>();
+        var truckPellets = _pelletRepository.Get(truck);
 
         foreach (var pickUpPellet in pickUpLoad.Pellets)
         {
-            if (!await HasPelletAsync(truck, pickUpPellet, cancellationToken))
+            if (!await HasPelletAsync(truckPellets, pickUpPellet, cancellationToken))
             {
                 pickUpPellets.Add(pickUpPellet);
             }
@@ -754,8 +696,7 @@ public sealed class PelletService
         var truck = await _truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)
         {
-            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned.",
-                trip);
+            _logger.LogError("Trip \n({@Trip})\n did not have a Truck assigned to alert Complete for.", trip);
             
             return;
         }
@@ -768,8 +709,7 @@ public sealed class PelletService
         var truckCompany = await _truckCompanyRepository.GetAsync(truck, cancellationToken);
         if (truckCompany == null)
         {
-            _logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) to add the new Inventory for.",
-                truck);
+            _logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) to add the new Inventory for.", truck);
 
             return;
         }
@@ -790,8 +730,7 @@ public sealed class PelletService
         var truckCompany = await _truckCompanyRepository.GetAsync(truck, cancellationToken);
         if (truckCompany == null)
         {
-            _logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) unload the inventory for.",
-                truck);
+            _logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) unload the inventory for.", truck);
 
             return;
         }

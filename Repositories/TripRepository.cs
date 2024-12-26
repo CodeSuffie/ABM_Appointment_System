@@ -16,23 +16,20 @@ public sealed class TripRepository(
 {
     public IQueryable<Trip> Get()
     {
-        var trips = context.Trips
+        return context.Trips
             .Include(t => t.Appointment);
-
-        return trips;
     }
 
     public IQueryable<Trip> Get(bool active)
     {
-        var trips = context.Trips
+        return Get()
             .Where(t => (t.Truck != null) == active);
-
-        return trips;
     }
     
     public IQueryable<Trip> Get(Hub hub)
     {
-        return Get().Where(t => t.HubId == hub.Id);
+        return Get()
+            .Where(t => t.HubId == hub.Id);
     }
     
     public Task<Trip?> GetAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
@@ -43,47 +40,45 @@ public sealed class TripRepository(
     
     public Task<Trip?> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        return context.Trips
+        return Get()
             .FirstOrDefaultAsync(t => t.Id == adminStaff.TripId, cancellationToken);
     }
     
     public Task<Trip?> GetAsync(Bay bay, CancellationToken cancellationToken)
     {
-        return context.Trips
+        return Get()
             .FirstOrDefaultAsync(t=> t.Id == bay.TripId, cancellationToken);
     }
     
     public Task<Trip?> GetAsync(Work work, CancellationToken cancellationToken)
     {
-        return context.Trips
+        return Get()
             .FirstOrDefaultAsync(t => t.Id == work.TripId, cancellationToken);
     }
     
     public Task<Trip?> GetAsync(Truck truck, CancellationToken cancellationToken)
     {
-        return context.Trips
+        return Get()
             .FirstOrDefaultAsync(t=> t.Id == truck.TripId, cancellationToken);
     }
 
     public Task<Trip?> GetAsync(Load load, CancellationToken cancellationToken)
     {
-        return context.Trips
+        return Get()
             .FirstOrDefaultAsync(t=> t.Id == load.TripId, cancellationToken);
     }
 
     public Task<Trip?> GetAsync(Appointment appointment, CancellationToken cancellationToken)
     {
-        return context.Trips
+        return Get()
             .FirstOrDefaultAsync(t=> t.Id == appointment.TripId, cancellationToken);
     }
     
     public IQueryable<Trip> GetCurrent(Hub hub, WorkType workType, CancellationToken cancellationToken)
     {
-        var trips = Get(hub)
+        return Get(hub)
             .Where(t => t.Work != null &&
                         t.Work.WorkType == workType);
-        
-        return trips;
     }
     
     public async Task AddAsync(Trip trip, CancellationToken cancellationToken)
@@ -99,10 +94,7 @@ public sealed class TripRepository(
         var oldParkingSpot = await parkingSpotRepository.GetAsync(trip, cancellationToken);
         if (oldParkingSpot != null && oldParkingSpot.Id != parkingSpot.Id)
         {
-            logger.LogError("Trip ({@Trip}) already has an assigned ParkingSpot ({@ParkingSpot}), it cannot move to the new ParkingSpot ({@ParkingSpot}).",
-                trip,
-                oldParkingSpot,
-                parkingSpot);
+            logger.LogError("Trip ({@Trip}) already has an assigned ParkingSpot ({@ParkingSpot}), it cannot move to the new ParkingSpot ({@ParkingSpot}).", trip, oldParkingSpot, parkingSpot);
 
             return;
         }
@@ -118,10 +110,7 @@ public sealed class TripRepository(
         var oldAdminStaff = await adminStaffRepository.GetAsync(trip, cancellationToken);
         if (oldAdminStaff != null && oldAdminStaff.Id != adminStaff.Id)
         {
-            logger.LogError("Trip ({@Trip}) already has an assigned AdminStaff ({@AdminStaff}), it cannot move to the new AdminStaff ({@AdminStaff}).",
-                trip,
-                oldAdminStaff,
-                adminStaff);
+            logger.LogError("Trip ({@Trip}) already has an assigned AdminStaff ({@AdminStaff}), it cannot move to the new AdminStaff ({@AdminStaff}).", trip, oldAdminStaff, adminStaff);
 
             return;
         }
@@ -137,10 +126,7 @@ public sealed class TripRepository(
         var oldBay = await bayRepository.GetAsync(trip, cancellationToken);
         if (oldBay != null && oldBay.Id != bay.Id)
         {
-            logger.LogError("Trip ({@Trip}) already has an assigned Bay ({@Bay}), it cannot move to the new Bay ({@Bay}).",
-                trip,
-                oldBay,
-                bay);
+            logger.LogError("Trip ({@Trip}) already has an assigned Bay ({@Bay}), it cannot move to the new Bay ({@Bay}).", trip, oldBay, bay);
 
             return;
         }
@@ -156,10 +142,7 @@ public sealed class TripRepository(
         var oldTruck = await truckRepository.GetAsync(trip, cancellationToken);
         if (oldTruck != null && oldTruck.Id != truck.Id)
         {
-            logger.LogError("Trip ({@Trip}) already has an assigned Truck ({@Truck}), it cannot move to the new Truck ({@Truck}).",
-                trip,
-                oldTruck,
-                truck);
+            logger.LogError("Trip ({@Trip}) already has an assigned Truck ({@Truck}), it cannot move to the new Truck ({@Truck}).", trip, oldTruck, truck);
 
             return;
         }
@@ -206,9 +189,7 @@ public sealed class TripRepository(
         var hub = await hubRepository.GetAsync(dropOff, cancellationToken);
         if (hub == null)
         {
-            logger.LogError("Load ({@Load}) to set as Drop-Off for this Trip ({@Trip}) has no Hub assigned.",
-                dropOff,
-                trip);
+            logger.LogError("Load ({@Load}) to set as Drop-Off for this Trip ({@Trip}) has no Hub assigned.", dropOff, trip);
             
             return;
         }
@@ -221,13 +202,7 @@ public sealed class TripRepository(
         }
         else if (trip.HubId != hub.Id)
         {
-            logger.LogError(
-                "Load ({@Load}) to set as Drop-Off for this Trip ({@Trip}) has a different Hub ({@Hub}) " +
-                "assigned than the Hub Pick-Up Load has assigned ({@Hub}).",
-                dropOff,
-                trip,
-                hub,
-                trip.Hub);
+            logger.LogError("Load ({@Load}) to set as Drop-Off for this Trip ({@Trip}) has a different Hub ({@Hub}) assigned than the Hub Pick-Up Load has assigned ({@Hub}).", dropOff, trip, hub, trip.Hub);
 
             return;
         }
@@ -247,9 +222,7 @@ public sealed class TripRepository(
         var hub = await hubRepository.GetAsync(pickUp, cancellationToken);
         if (hub == null)
         {
-            logger.LogError("Load ({@Load}) to set as Pick-Up for this Trip ({@Trip}) has no Hub assigned.",
-                pickUp,
-                trip);
+            logger.LogError("Load ({@Load}) to set as Pick-Up for this Trip ({@Trip}) has no Hub assigned.", pickUp, trip);
             
             return;
         }
@@ -262,13 +235,7 @@ public sealed class TripRepository(
         }
         else if (trip.HubId != hub.Id)
         {
-            logger.LogError(
-                "Load ({@Load}) to set as Pick-Up for this Trip ({@Trip}) has a different Hub ({@Hub}) " +
-                "assigned than the Hub Drop-Off Load has assigned ({@Hub}).",
-                pickUp,
-                trip,
-                hub,
-                trip.Hub);
+            logger.LogError("Load ({@Load}) to set as Pick-Up for this Trip ({@Trip}) has a different Hub ({@Hub}) assigned than the Hub Drop-Off Load has assigned ({@Hub}).", pickUp, trip, hub, trip.Hub);
 
             return;
         }

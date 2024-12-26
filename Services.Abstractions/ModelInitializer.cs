@@ -21,8 +21,7 @@ public sealed class ModelInitializer(
 
     private async Task InitializeByPriorityAsync(Priority priority, CancellationToken cancellationToken)
     {
-        logger.LogInformation("Starting Initialization for Priority: {@Priority}...",
-            priority);
+        logger.LogInformation("Starting Initialization for Priority: {@Priority}...", priority);
         
         foreach (var initializationService in initializationServices
                      .Where(service => 
@@ -31,8 +30,7 @@ public sealed class ModelInitializer(
             await initializationService.InitializeObjectsAsync(cancellationToken);
         }
         
-        logger.LogInformation("Initialization Completed for Priority: {@Priority}...",
-            priority);
+        logger.LogInformation("Initialization Completed for Priority: {@Priority}...", priority);
     }
     
     public async Task InitializeModelAsync(CancellationToken cancellationToken)
@@ -42,12 +40,12 @@ public sealed class ModelInitializer(
         logger.LogInformation("Starting Initialization...");
 
         await InitializeByPriorityAsync(Priority.High, cancellationToken);
-        await InitializeByPriorityAsync(Priority.Normal, cancellationToken);
-        await InitializeByPriorityAsync(Priority.Low, cancellationToken);
         if (modelState.ModelConfig.AppointmentSystemMode)
         {
             await InitializeByPriorityAsync(Priority.Appointment, cancellationToken);
         }
+        await InitializeByPriorityAsync(Priority.Normal, cancellationToken);
+        await InitializeByPriorityAsync(Priority.Low, cancellationToken);
         
         logger.LogInformation("Initialization Completed.");
     }

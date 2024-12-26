@@ -16,79 +16,61 @@ public sealed class WorkRepository(
 {
     public IQueryable<Work> Get()
     {
-        var works = context.Works;
-        
-        return works;
+        return context.Works;
     }
     
     public IQueryable<Work> Get(Bay bay, WorkType workType)
     {
-        var works = context.Works
+        return Get()
             .Where(x => x.BayId == bay.Id && 
                         x.WorkType == workType);
-        
-        return works;
     }
     
-    public async Task<Work?> GetAsync(Trip trip, CancellationToken cancellationToken)
+    public Task<Work?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var work = await context.Works
+        return Get()
             .FirstOrDefaultAsync(x => x.TripId == trip.Id, cancellationToken);
-        
-        return work;
     }
     
-    public async Task<Work?> GetAsync(Bay bay, CancellationToken cancellationToken)
+    public Task<Work?> GetAsync(Bay bay, CancellationToken cancellationToken)
     {
-        var work = await Get(bay, WorkType.Bay)
+        return Get(bay, WorkType.Bay)
             .FirstOrDefaultAsync(cancellationToken);
-        
-        return work;
     }
     
-    public async Task<Work?> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
+    public Task<Work?> GetAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        var work = await context.Works
+        return Get()
             .FirstOrDefaultAsync(x => x.AdminStaff != null &&
                                       x.AdminStaffId == adminStaff.Id, cancellationToken);
-        
-        return work;
     }
     
-    public async Task<Work?> GetAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    public Task<Work?> GetAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        var work = await context.Works
+        return Get()
             .FirstOrDefaultAsync(x => x.BayStaff != null &&
                                       x.BayStaffId == bayStaff.Id, cancellationToken);
-        
-        return work;
     }
 
-    public async Task<Work?> GetAsync(Picker picker, CancellationToken cancellationToken)
+    public Task<Work?> GetAsync(Picker picker, CancellationToken cancellationToken)
     {
-        var work = await context.Works
+        return Get()
             .FirstOrDefaultAsync(x => x.Picker != null &&
                                       x.PickerId == picker.Id, cancellationToken);
-        
-        return work;
     }
     
-    public async Task<Work?> GetAsync(Stuffer stuffer, CancellationToken cancellationToken)
+    public Task<Work?> GetAsync(Stuffer stuffer, CancellationToken cancellationToken)
     {
-        var work = await context.Works
+        return Get()
             .FirstOrDefaultAsync(x => x.Stuffer != null &&
                                       x.StufferId == stuffer.Id, cancellationToken);
-        
-        return work;
     }
 
-    public async Task<Work?> GetAsync(Pellet pellet, CancellationToken cancellationToken)
+    public Task<Work?> GetAsync(Pellet pellet, CancellationToken cancellationToken)
     {
-        var work = await context.Works
+        return Get()
             .FirstOrDefaultAsync(x => x.Pellet != null &&
                                       x.PelletId == pellet.Id, cancellationToken);
-        
-        return work;
     }
 
     public async Task AddAsync(Work work, CancellationToken cancellationToken)

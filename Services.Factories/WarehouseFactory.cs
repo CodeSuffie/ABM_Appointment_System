@@ -35,13 +35,10 @@ public sealed class WarehouseFactory(
             return null;
         }
 
-        logger.LogDebug("Setting Warehouse \n({@Warehouse})\n to its Hub \n({@Hub})",
-            warehouse,
-            hub);
+        logger.LogDebug("Setting Warehouse \n({@Warehouse})\n to its Hub \n({@Hub})", warehouse, hub);
         await warehouseRepository.SetAsync(warehouse, hub, cancellationToken);
         
-        logger.LogDebug("Setting location for this Warehouse \n({@Warehouse})",
-            warehouse);
+        logger.LogDebug("Setting location for this Warehouse \n({@Warehouse})", warehouse);
         locationFactory.InitializeObject(warehouse, cancellationToken);
 
         return warehouse;

@@ -33,19 +33,13 @@ public sealed class AppointmentFactory(
             return null;
         }
         
-        logger.LogDebug("Setting Appointment \n({@Appointment})\n to this AppointmentSlot \n({@AppointmentSlot})",
-            appointment,
-            appointmentSlot);
+        logger.LogDebug("Setting Appointment \n({@Appointment})\n to this AppointmentSlot \n({@AppointmentSlot})", appointment, appointmentSlot);
         await appointmentRepository.SetAsync(appointment, appointmentSlot, cancellationToken);
 
-        logger.LogDebug("Setting Appointment \n({@Appointment})\n to this Bay \n({@Bay})",
-            appointment,
-            bay);
+        logger.LogDebug("Setting Appointment \n({@Appointment})\n to this Bay \n({@Bay})", appointment, bay);
         await appointmentRepository.SetAsync(appointment, bay, cancellationToken);
         
-        logger.LogDebug("Setting Appointment \n({@Appointment})\n to this Trip \n({@Trip})",
-            appointment,
-            trip);
+        logger.LogDebug("Setting Appointment \n({@Appointment})\n to this Trip \n({@Trip})", appointment, trip);
         await appointmentRepository.SetAsync(appointment, trip, cancellationToken);
 
         return appointment;
@@ -77,17 +71,12 @@ public sealed class AppointmentFactory(
             var validBay = true;
             await foreach (var slot in appointmentSlots)
             {
-                logger.LogDebug("Getting Appointment for this Bay \n({@Bay})\n in this AppointmentSlot \n({@AppointmentSlot}).",
-                    bay,
-                    slot);
+                logger.LogDebug("Getting Appointment for this Bay \n({@Bay})\n in this AppointmentSlot \n({@AppointmentSlot}).", bay, slot);
             
                 var appointment = await appointmentRepository.GetAsync(bay, slot, cancellationToken);
                 if (appointment == null) continue;
                 
-                logger.LogDebug("Bay \n({@Bay})\n had a blocking appointment \n({@Appointment})\n in this AppointmentSlot \n({@AppointmentSlot}).",
-                    bay,
-                    appointment,
-                    slot);
+                logger.LogDebug("Bay \n({@Bay})\n had a blocking appointment \n({@Appointment})\n in this AppointmentSlot \n({@AppointmentSlot}).", bay, appointment, slot);
                 
                 validBay = false;
                 break;
@@ -95,10 +84,7 @@ public sealed class AppointmentFactory(
 
             if (!validBay) continue;
             
-            logger.LogInformation("Bay \n({@Bay})\n does not have an Appointment assigned in this " +
-                                  "AppointmentSlot \n({@AppointmentSlot}).",
-                bay,
-                appointmentSlot);
+            logger.LogInformation("Bay \n({@Bay})\n does not have an Appointment assigned in this AppointmentSlot \n({@AppointmentSlot}).", bay, appointmentSlot);
 
             return bay;
         }
@@ -129,11 +115,7 @@ public sealed class AppointmentFactory(
         var appointmentSlot = await GetNextVacantAsync(hub, startTime, cancellationToken);
         if (appointmentSlot == null)
         {
-            logger.LogError("Hub \n({@Hub})\n did not have any AppointmentSlot with available Appointments after this " +
-                            "Step \n({Step})\n for this Trip \n({@Trip}).",
-                hub, 
-                startTime, 
-                trip);
+            logger.LogError("Hub \n({@Hub})\n did not have any AppointmentSlot with available Appointments after this Step ({Step})\n for this Trip \n({@Trip}).", hub, startTime,  trip);
 
             return;
         }
@@ -141,12 +123,7 @@ public sealed class AppointmentFactory(
         var bay = await GetVacantAsync(hub, appointmentSlot, cancellationToken);
         if (bay == null)
         {
-            logger.LogError("Hub \n({@Hub})\n with this AppointmentSlot \n({@AppointmentSlot})\n had no Bay " +
-                            "available for an Appointment after this Step \n({Step})\n for this Trip \n({@Trip}).",
-                hub, 
-                appointmentSlot,
-                startTime, 
-                trip);
+            logger.LogError("Hub \n({@Hub})\n with this AppointmentSlot \n({@AppointmentSlot})\n had no Bay available for an Appointment after this Step ({Step})\n for this Trip \n({@Trip}).", hub, appointmentSlot, startTime,  trip);
 
             return;
         }

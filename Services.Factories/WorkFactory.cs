@@ -57,14 +57,10 @@ public sealed class WorkFactory(
             return null;
         }
 
-        logger.LogDebug("Setting this Duration ({Step}) for this Work \n({@Work}).",
-            duration,
-            work);
+        logger.LogDebug("Setting this Duration ({Step}) for this Work \n({@Work}).", duration, work);
         await workRepository.SetDurationAsync(work, duration, cancellationToken);
         
-        logger.LogDebug("Setting this WorkType ({WorkType}) for this Work \n({@Work}).",
-            workType,
-            work);
+        logger.LogDebug("Setting this WorkType ({WorkType}) for this Work \n({@Work}).", workType, work);
         await workRepository.SetAsync(work, workType, cancellationToken);
 
         return work;
@@ -75,15 +71,12 @@ public sealed class WorkFactory(
         var work = await GetNewObjectAsync(duration, workType, cancellationToken);
         if (work == null)
         {
-            logger.LogError("Work could not be created for this Trip \n({@Trip}).",
-                trip);
+            logger.LogError("Work could not be created for this Trip \n({@Trip}).", trip);
 
             return null;
         }
 
-        logger.LogDebug("Setting this Trip \n({@Trip})\n for this Work \n({@Work}).",
-            trip,
-            work);
+        logger.LogDebug("Setting this Trip \n({@Trip})\n for this Work \n({@Work}).", trip, work);
         await workRepository.SetAsync(work, trip, cancellationToken);
 
         return work;
@@ -95,15 +88,12 @@ public sealed class WorkFactory(
         var work = await GetNewObjectAsync(duration, workType, cancellationToken);
         if (work == null)
         {
-            logger.LogError("Work could not be created for this Trip \n({@Trip}).",
-                trip);
+            logger.LogError("Work could not be created for this Trip \n({@Trip}).", trip);
 
             return null;
         }
 
-        logger.LogDebug("Setting this Trip \n({@Trip})\n for this Work \n({@Work}).",
-            trip,
-            work);
+        logger.LogDebug("Setting this Trip \n({@Trip})\n for this Work \n({@Work}).", trip, work);
         await workRepository.SetAsync(work, trip, cancellationToken);
 
         return work;
@@ -121,8 +111,7 @@ public sealed class WorkFactory(
         var appointment = await appointmentRepository.GetAsync(trip, cancellationToken);
         if (appointment == null)
         {
-            logger.LogError("Trip \n({@Trip})\n did not have an Appointment assigned.",
-                trip);
+            logger.LogError("Trip \n({@Trip})\n did not have an Appointment assigned.", trip);
 
             return null;
         }
@@ -130,9 +119,7 @@ public sealed class WorkFactory(
         var appointmentSlot = await appointmentSlotRepository.GetAsync(appointment, cancellationToken);
         if (appointmentSlot == null)
         {
-            logger.LogError("Appointment \n({@Appointment})\n for this Trip \n({@Trip})\n did not have an AppointmentSlot assigned.",
-                appointment,
-                trip);
+            logger.LogError("Appointment \n({@Appointment})\n for this Trip \n({@Trip})\n did not have an AppointmentSlot assigned.", appointment, trip);
 
             return null;
         }
@@ -142,15 +129,12 @@ public sealed class WorkFactory(
 
         if (work == null)
         {
-            logger.LogError("Work could not be created for this Trip \n({@Trip}) within Appointment System Mode.",
-                trip);
+            logger.LogError("Work could not be created for this Trip \n({@Trip}) within Appointment System Mode.", trip);
             
             return null;
         }
         
-        logger.LogDebug("Setting this Trip \n({@Trip})\n for this Work \n({@Work}).",
-            trip,
-            work);
+        logger.LogDebug("Setting this Trip \n({@Trip})\n for this Work \n({@Work}).", trip, work);
         await workRepository.SetAsync(work, trip, cancellationToken);
 
         return work;
@@ -164,15 +148,12 @@ public sealed class WorkFactory(
         var work = await GetNewObjectAsync(duration, WorkType.TravelHub, cancellationToken);
         if (work == null)
         {
-            logger.LogError("Work could not be created for this Trip \n({@Trip}).",
-                trip);
+            logger.LogError("Work could not be created for this Trip \n({@Trip}).", trip);
             
             return null;
         }
         
-        logger.LogDebug("Setting this Trip \n({@Trip})\n for this Work \n({@Work}).",
-            trip,
-            work);
+        logger.LogDebug("Setting this Trip \n({@Trip})\n for this Work \n({@Work}).", trip, work);
         await workRepository.SetAsync(work, trip, cancellationToken);
 
         return work;
@@ -184,21 +165,15 @@ public sealed class WorkFactory(
         var work = await GetNewObjectAsync(duration, WorkType.CheckIn, cancellationToken);
         if (work == null)
         {
-            logger.LogError("Work could not be created for this Trip \n({@Trip})\n and this AdminStaff \n({@AdminStaff}).",
-                trip,
-                adminStaff);
+            logger.LogError("Work could not be created for this Trip \n({@Trip})\n and this AdminStaff \n({@AdminStaff}).", trip, adminStaff);
 
             return null;
         }
 
-        logger.LogDebug("Setting this Trip \n({@Trip})\n for this Work \n({@Work}).",
-            trip,
-            work);
+        logger.LogDebug("Setting this Trip \n({@Trip})\n for this Work \n({@Work}).", trip, work);
         await workRepository.SetAsync(work, trip, cancellationToken);
 
-        logger.LogDebug("Setting this AdminStaff \n({@AdminStaff})\n for this Work \n({@Work}).",
-            adminStaff,
-            work);
+        logger.LogDebug("Setting this AdminStaff \n({@AdminStaff})\n for this Work \n({@Work}).", adminStaff, work);
         await workRepository.SetAsync(work, adminStaff, cancellationToken);
 
         return work;
@@ -210,21 +185,15 @@ public sealed class WorkFactory(
         var work = await GetNewObjectAsync(duration, WorkType.Bay, cancellationToken);
         if (work == null)
         {
-            logger.LogError("Work could not be created for this Trip \n({@Trip})\n and this Bay \n({@Bay}).",
-                trip,
-                bay);
+            logger.LogError("Work could not be created for this Trip \n({@Trip})\n and this Bay \n({@Bay}).", trip, bay);
 
             return null;
         }
 
-        logger.LogDebug("Setting this Trip \n({@Trip})\n for this Work \n({@Work}).",
-            trip,
-            work);
+        logger.LogDebug("Setting this Trip \n({@Trip})\n for this Work \n({@Work}).", trip, work);
         await workRepository.SetAsync(work, trip, cancellationToken);
 
-        logger.LogDebug("Setting this Bay \n({@Bay})\n for this Work \n({@Work}).",
-            bay,
-            work);
+        logger.LogDebug("Setting this Bay \n({@Bay})\n for this Work \n({@Work}).", bay, work);
         await workRepository.SetAsync(work, bay, cancellationToken);
 
         return work;
@@ -236,28 +205,18 @@ public sealed class WorkFactory(
         var work = await GetNewObjectAsync(duration, workType, cancellationToken);
         if (work == null)
         {
-            logger.LogError("Work could not be created for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})\n " +
-                            "for this Pellet \n({@Pellet}).",
-                bayStaff,
-                bay,
-                pellet);
+            logger.LogError("Work could not be created for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})\n for this Pellet \n({@Pellet}).", bayStaff, bay, pellet);
 
             return null;
         }
 
-        logger.LogDebug("Setting this Bay \n({@Bay})\n for this Work \n({@Work}).",
-            bay,
-            work);
+        logger.LogDebug("Setting this Bay \n({@Bay})\n for this Work \n({@Work}).", bay, work);
         await workRepository.SetAsync(work, bay, cancellationToken);
         
-        logger.LogDebug("Setting this BayStaff \n({@BayStaff})\n for this Work \n({@Work}).",
-            bayStaff,
-            work);
+        logger.LogDebug("Setting this BayStaff \n({@BayStaff})\n for this Work \n({@Work}).", bayStaff, work);
         await workRepository.SetAsync(work, bayStaff, cancellationToken);
         
-        logger.LogDebug("Setting this Pellet \n({@Pellet})\n for this Work \n({@Work}).",
-            pellet,
-            work);
+        logger.LogDebug("Setting this Pellet \n({@Pellet})\n for this Work \n({@Work}).", pellet, work);
         await workRepository.SetAsync(work, pellet, cancellationToken);
 
         return work;
@@ -269,28 +228,18 @@ public sealed class WorkFactory(
         var work = await GetNewObjectAsync(duration, WorkType.Fetch, cancellationToken);
         if (work == null)
         {
-            logger.LogError("Work could not be created for this Picker \n({@Picker})\n at this Bay \n({@Bay})\n " +
-                            "for this Pellet \n({@Pellet}).",
-                picker,
-                bay,
-                pellet);
+            logger.LogError("Work could not be created for this Picker \n({@Picker})\n at this Bay \n({@Bay})\n for this Pellet \n({@Pellet}).", picker, bay, pellet);
 
             return null;
         }
 
-        logger.LogDebug("Setting this Bay \n({@Bay})\n for this Work \n({@Work}).",
-            bay,
-            work);
+        logger.LogDebug("Setting this Bay \n({@Bay})\n for this Work \n({@Work}).", bay, work);
         await workRepository.SetAsync(work, bay, cancellationToken);
         
-        logger.LogDebug("Setting this Picker \n({@Picker})\n for this Work \n({@Work}).",
-            picker,
-            work);
+        logger.LogDebug("Setting this Picker \n({@Picker})\n for this Work \n({@Work}).", picker, work);
         await workRepository.SetAsync(work, picker, cancellationToken);
         
-        logger.LogDebug("Setting this Pellet \n({@Pellet})\n for this Work \n({@Work}).",
-            pellet,
-            work);
+        logger.LogDebug("Setting this Pellet \n({@Pellet})\n for this Work \n({@Work}).", pellet, work);
         await workRepository.SetAsync(work, pellet, cancellationToken);
 
         return work;
@@ -302,28 +251,18 @@ public sealed class WorkFactory(
         var work = await GetNewObjectAsync(duration, WorkType.Stuff, cancellationToken);
         if (work == null)
         {
-            logger.LogError("Work could not be created for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay})\n " +
-                            "for this Pellet \n({@Pellet}).",
-                stuffer,
-                bay,
-                pellet);
+            logger.LogError("Work could not be created for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay})\n for this Pellet \n({@Pellet}).", stuffer, bay, pellet);
 
             return null;
         }
         
-        logger.LogDebug("Setting this Bay \n({@Bay})\n for this Work \n({@Work}).",
-            bay,
-            work);
+        logger.LogDebug("Setting this Bay \n({@Bay})\n for this Work \n({@Work}).", bay, work);
         await workRepository.SetAsync(work, bay, cancellationToken);
         
-        logger.LogDebug("Setting this Stuffer \n({@Stuffer})\n for this Work \n({@Work}).",
-            stuffer,
-            work);
+        logger.LogDebug("Setting this Stuffer \n({@Stuffer})\n for this Work \n({@Work}).", stuffer, work);
         await workRepository.SetAsync(work, stuffer, cancellationToken);
         
-        logger.LogDebug("Setting this Pellet \n({@Pellet})\n for this Work \n({@Work}).",
-            pellet,
-            work);
+        logger.LogDebug("Setting this Pellet \n({@Pellet})\n for this Work \n({@Work}).", pellet, work);
         await workRepository.SetAsync(work, pellet, cancellationToken);
 
         return work;

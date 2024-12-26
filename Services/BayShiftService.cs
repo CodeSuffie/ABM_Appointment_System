@@ -28,8 +28,7 @@ public sealed class BayShiftService(
         {
             if (!IsCurrent(shift)) continue;
             
-            logger.LogInformation("BayShift \n({@BayShift})\n is currently active.",
-                shift);
+            logger.LogInformation("BayShift \n({@BayShift})\n is currently active.", shift);
                 
             return shift;
         }

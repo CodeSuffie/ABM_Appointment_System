@@ -29,8 +29,7 @@ public sealed class AdminStaffFactory(
             return null;
         }
         
-        logger.LogDebug("Hub \n({@Hub})\n was selected for the new AdminStaff.",
-            hub);
+        logger.LogDebug("Hub \n({@Hub})\n was selected for the new AdminStaff.", hub);
         
         var adminStaff = new AdminStaff
         {
@@ -42,8 +41,7 @@ public sealed class AdminStaffFactory(
 
         await adminStaffRepository.AddAsync(adminStaff, cancellationToken);
         
-        logger.LogDebug("Setting HubShifts for this AdminStaff \n({@AdminStaff})",
-            adminStaff);
+        logger.LogDebug("Setting HubShifts for this AdminStaff \n({@AdminStaff})", adminStaff);
         await adminShiftFactory.GetNewObjectsAsync(adminStaff, cancellationToken);
 
         return adminStaff;

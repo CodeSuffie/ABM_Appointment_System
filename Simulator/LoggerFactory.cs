@@ -21,6 +21,7 @@ internal static class LoggerFactory
                         Work = ads.Work,
                         TripId = ads.TripId,
                         WorkChance = ads.WorkChance,
+                        Speed = ads.Speed,
                         AverageShiftLength = ads.AverageShiftLength,
                         ShiftIds = ads.Shifts.Select(sh => sh.Id),
                     })
@@ -44,12 +45,14 @@ internal static class LoggerFactory
                     b => new
                     {
                         Id = b.Id,
+                        Capacity = b.Capacity,
                         BayStatus = b.BayStatus,
                         BayFlags = b.BayFlags,
                         HubId = b.HubId,
                         TripId = b.TripId,
                         InventoryIds = b.Inventory.Select(l => l.Id),
                         WorkIds = b.Works.Select(w => w.Id),
+                        AppointmentIds = b.Appointments.Select(ap => ap.Id),
                     })
                 .Destructure.ByTransforming<BayShift>(
                     bsh => new 
@@ -67,6 +70,7 @@ internal static class LoggerFactory
                         HubId = bs.HubId,
                         Work = bs.Work,
                         WorkChance = bs.WorkChance,
+                        Speed = bs.Speed,
                         AverageShiftLength = bs.AverageShiftLength,
                         ShiftIds = bs.Shifts.Select(sh => sh.Id)
                     })
@@ -74,19 +78,18 @@ internal static class LoggerFactory
                     h => new
                     {
                         Id = h.Id,
-                        OperatingChance = h.WorkChance,
-                        AverageOperatingHourLength = h.AverageShiftLength,
+                        WorkChance = h.WorkChance,
+                        AverageShiftLength = h.AverageShiftLength,
                         AdminStaffIds = h.AdminStaffs.Select(ads => ads.Id),
                         BayStaffIds = h.BayStaffs.Select(bs => bs.Id),
-                        WarehouseId = h.WarehouseId,
+                        PickerIds = h.Pickers.Select(p => p.Id),
+                        StufferIds = h.Stuffers.Select(s => s.Id),
+                        Warehouse = h.Warehouse,
                         ParkingSpotIds = h.ParkingSpots.Select(ps => ps.Id),
                         BayIds = h.Bays.Select(b => b.Id),
                         TripIds = h.Trips.Select(tp => tp.Id),
-                        OperatingHourIds = h.Shifts.Select(oh => oh.Id),
-                        // XSize = h.XSize,
-                        // YSize = h.YSize,
-                        // XLocation = h.XLocation,
-                        // YLocation = h.YLocation
+                        AppointmentSlotIds = h.AppointmentSlots.Select(aps => aps.Id),
+                        ShiftIds = h.Shifts.Select(h => h.Id)
                     })
                 .Destructure.ByTransforming<HubShift>(
                     adsh => new 
@@ -95,7 +98,7 @@ internal static class LoggerFactory
                         StartTime = adsh.StartTime,
                         Duration = adsh.Duration,
                         AdminStaffId = adsh.AdminStaffId,
-                        PickerId = adsh.AdminStaffId,
+                        PickerId = adsh.PickerId,
                         StufferId = adsh.StufferId,
                     })
                 .Destructure.ByTransforming<Load>(
@@ -126,10 +129,12 @@ internal static class LoggerFactory
                     p => new
                     {
                         Id = p.Id,
+                        Difficulty = p.Difficulty,
                         TruckCompanyId = p.TruckCompanyId,
-                        LoadId = p.LoadId,
+                        TruckId = p.TruckId,
                         BayId = p.BayId,
                         WarehouseId = p.WarehouseId,
+                        LoadId = p.LoadId,
                         WorkId = p.WorkId
                     })
                 .Destructure.ByTransforming<Picker>(
@@ -139,6 +144,8 @@ internal static class LoggerFactory
                         HubId = pi.HubId,
                         Work = pi.Work,
                         WorkChance = pi.WorkChance,
+                        Speed = pi.Speed,
+                        Experience = pi.Experience,
                         AverageShiftLength = pi.AverageShiftLength,
                         ShiftIds = pi.Shifts.Select(sh => sh.Id)
                     })
@@ -149,6 +156,8 @@ internal static class LoggerFactory
                         HubId = s.HubId,
                         Work = s.Work,
                         WorkChance = s.WorkChance,
+                        Speed = s.Speed,
+                        Experience = s.Experience,
                         AverageShiftLength = s.AverageShiftLength,
                         ShiftIds = s.Shifts.Select(sh => sh.Id)
                     })
@@ -176,12 +185,14 @@ internal static class LoggerFactory
                         Capacity = tk.Capacity,
                         Speed = tk.Speed,
                         TruckCompanyId = tk.TruckCompanyId,
-                        TripId = tk.TripId
+                        TripId = tk.TripId,
+                        InventoryIds = tk.Inventory.Select(p => p.Id)
                     })
                 .Destructure.ByTransforming<TruckCompany>(
                     tc => new
                     {
                         Id = tc.Id,
+                        Capacity = tc.Capacity,
                         TruckIds = tc.Trucks.Select(tk => tk.Id),
                         InventoryIds = tc.Inventory.Select(p => p.Id),
                     })
@@ -189,6 +200,7 @@ internal static class LoggerFactory
                     w => new
                     {
                         Id = w.Id,
+                        Capacity = w.Capacity,
                         HubId = w.HubId,
                         InventoryIds = w.Inventory.Select(p => p.Id),
                     })
@@ -202,10 +214,12 @@ internal static class LoggerFactory
                         TripId = w.TripId,
                         AdminStaffId = w.AdminStaffId,
                         BayStaffId = w.BayStaffId,
+                        PickerId = w.PickerId,
+                        StufferId = w.StufferId,
                         BayId = w.BayId,
                         PelletId = w.PelletId
                     })
-                .MinimumLevel.Error()
+                .MinimumLevel.Warning()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .WriteTo.Console(theme: AnsiConsoleTheme.Code)
                 .CreateLogger();

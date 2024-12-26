@@ -49,9 +49,7 @@ public sealed class TripFactory(
             return null;
         }
         
-        logger.LogDebug("Setting Truck \n({@Truck})\n to this Trip \n({@Trip}).",
-            truck,
-            trip);
+        logger.LogDebug("Setting Truck \n({@Truck})\n to this Trip \n({@Trip}).", truck, trip);
         await tripRepository.SetAsync(trip, truck, cancellationToken);
 
         return trip;
@@ -62,8 +60,7 @@ public sealed class TripFactory(
         var truckCompany = await truckCompanyRepository.GetAsync(truck, cancellationToken);
         if (truckCompany == null)
         {
-            logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) to create the new Trip for.",
-                truck);
+            logger.LogError("No TruckCompany was assigned to the Truck ({@Truck}) to create the new Trip for.", truck);
 
             return null;
         }
@@ -71,47 +68,31 @@ public sealed class TripFactory(
         var trip = await GetNewObjectAsync(truck, cancellationToken);
         if (trip == null)
         {
-            logger.LogError("Trip could not be created for this Truck \n({@Truck}).",
-                truck);
+            logger.LogError("Trip could not be created for this Truck \n({@Truck}).", truck);
 
             return null;
         }
         
-        logger.LogDebug("Setting Hub \n({@Hub})\n to this Trip \n({@Trip}).",
-            hub,
-            trip);
+        logger.LogDebug("Setting Hub \n({@Hub})\n to this Trip \n({@Trip}).", hub, trip);
         await tripRepository.SetAsync(trip, hub, cancellationToken);
                 
-        logger.LogDebug("Setting TruckCompany \n({@TruckCompany})\n location to this Trip \n({@Trip})",
-            truckCompany,
-            trip);
+        logger.LogDebug("Setting TruckCompany \n({@TruckCompany})\n location to this Trip \n({@Trip})", truckCompany, trip);
         await locationFactory.SetAsync(trip, truckCompany, cancellationToken);
 
         if (!modelState.ModelConfig.AppointmentSystemMode) return trip;
         
-        logger.LogDebug("Getting Travel Time for this Truck \n({@Truck})\n from this TruckCompany " +
-                         "\n({@TruckCompany})\n location to this Hub \n({@Hub})\n location.",
-            truck,
-            truckCompany,
-            hub);
+        logger.LogDebug("Getting Travel Time for this Truck \n({@Truck})\n from this TruckCompany \n({@TruckCompany})\n location to this Hub \n({@Hub})\n location.", truck, truckCompany, hub);
         var travelTime = GetTravelTime(truck, truckCompany, hub);
             
-        logger.LogDebug("Setting Travel Time ({Step}) for to this Trip \n({@Trip}).",
-            travelTime,
-            trip);
+        logger.LogDebug("Setting Travel Time ({Step}) for to this Trip \n({@Trip}).", travelTime, trip);
         await tripRepository.SetAsync(trip, travelTime, cancellationToken);
 
         var earliestArrivalTime = modelState.ModelTime + travelTime;
             
-        logger.LogDebug("Setting Appointment at this Hub \n({@Hub})\n for Trip \n({@Trip})\n with the calculated " +
-                         "earliest arrival time ({Step}).",
-            hub,
-            trip,
-            earliestArrivalTime);
+        logger.LogDebug("Setting Appointment at this Hub \n({@Hub})\n for Trip \n({@Trip})\n with the calculated earliest arrival time ({Step}).", hub, trip, earliestArrivalTime);
         await appointmentFactory.SetAsync(trip, hub, earliestArrivalTime, cancellationToken);
 
-        logger.LogDebug("Getting created Appointment for this Trip \n({@Trip}).",
-            trip);
+        logger.LogDebug("Getting created Appointment for this Trip \n({@Trip}).", trip);
         var appointment = await appointmentRepository.GetAsync(trip, cancellationToken);
         if (appointment != null) return trip;
             

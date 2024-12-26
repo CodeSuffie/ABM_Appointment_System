@@ -14,8 +14,7 @@ public sealed class WorkService(
     {
         if (work.Duration == null)
         {
-            logger.LogError("Work \n({@Work})\n does not have a Duration",
-                work);
+            logger.LogError("Work \n({@Work})\n does not have a Duration", work);
 
             return false;
         }

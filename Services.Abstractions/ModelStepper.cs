@@ -25,31 +25,27 @@ public sealed class ModelStepper
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Handling Data Collection for this Step \n({Step})",
-            _modelState.ModelTime);
+        _logger.LogDebug("Handling Data Collection for this Step ({Step})", _modelState.ModelTime);
         
         foreach (var stepperService in _stepperServices)
         {
             await stepperService.DataCollectAsync(cancellationToken);
         }
         
-        _logger.LogDebug("Completed Data Collection for this Step \n({Step})",
-            _modelState.ModelTime);
+        _logger.LogDebug("Completed Data Collection for this Step ({Step})", _modelState.ModelTime);
         
         _stepCounter.Add(1, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
     }
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Handling this Step \n({Step})",
-            _modelState.ModelTime);
+        _logger.LogWarning("Handling this Step ({Step})", _modelState.ModelTime);
         
         foreach (var stepperService in _stepperServices)
         {
             await stepperService.StepAsync(cancellationToken);
         }
         
-        _logger.LogDebug("Completed handling this Step \n({Step})",
-            _modelState.ModelTime);
+        _logger.LogWarning("Completed handling this Step ({Step})", _modelState.ModelTime);
     }
 }

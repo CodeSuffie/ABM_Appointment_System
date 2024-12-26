@@ -36,14 +36,12 @@ public sealed class ParkingSpotStepper : IStepperService<ParkingSpot>
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Handling Data Collection for ParkingSpot in this Step \n({Step})",
-            _modelState.ModelTime);
+        _logger.LogDebug("Handling Data Collection for ParkingSpot in this Step ({Step})", _modelState.ModelTime);
 
         // var unclaimed = await _parkingSpotRepository.CountUnclaimedAsync(cancellationToken);
         // _unclaimedParkingSpotsHistogram.Record(unclaimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
         
-        _logger.LogDebug("Finished handling Data Collection for ParkingSpot in this Step \n({Step})",
-            _modelState.ModelTime);
+        _logger.LogDebug("Finished handling Data Collection for ParkingSpot in this Step ({Step})", _modelState.ModelTime);
     }
     
     public async Task StepAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
@@ -52,24 +50,16 @@ public sealed class ParkingSpotStepper : IStepperService<ParkingSpot>
 
         if (trip != null)
         {
-            _logger.LogDebug("ParkingSpot \n({@ParkingSpot})\n has an active Trip assigned in this Step \n({Step})",
-                parkingSpot,
-                _modelState.ModelTime);
+            _logger.LogDebug("ParkingSpot \n({@ParkingSpot})\n has an active Trip assigned in this Step ({Step})", parkingSpot, _modelState.ModelTime);
 
-            _logger.LogDebug("ParkingSpot \n({@ParkingSpot})\n will remain idle in this Step \n({Step})",
-                parkingSpot,
-                _modelState.ModelTime);
+            _logger.LogDebug("ParkingSpot \n({@ParkingSpot})\n will remain idle in this Step ({Step})", parkingSpot, _modelState.ModelTime);
 
             return;
         }
 
-        _logger.LogInformation("ParkingSpot \n({@ParkingSpot})\n has no active Trip assigned in this Step \n({Step})",
-            parkingSpot,
-            _modelState.ModelTime);
+        _logger.LogInformation("ParkingSpot \n({@ParkingSpot})\n has no active Trip assigned in this Step ({Step})", parkingSpot, _modelState.ModelTime);
         
-        _logger.LogDebug("Alerting Free for this ParkingSpot \n({@ParkingSpot})\n in this Step \n({Step})",
-            parkingSpot,
-            _modelState.ModelTime);
+        _logger.LogDebug("Alerting Free for this ParkingSpot \n({@ParkingSpot})\n in this Step ({Step})", parkingSpot, _modelState.ModelTime);
         await _parkingSpotService.AlertFreeAsync(parkingSpot, cancellationToken);
     }
 
@@ -81,15 +71,11 @@ public sealed class ParkingSpotStepper : IStepperService<ParkingSpot>
         
         await foreach (var parkingSpot in parkingSpots)
         {
-            _logger.LogDebug("Handling Step \n({Step})\n for this ParkingSpot \n({@ParkingSpot})",
-                _modelState.ModelTime,
-                parkingSpot);
+            _logger.LogDebug("Handling Step ({Step})\n for this ParkingSpot \n({@ParkingSpot})", _modelState.ModelTime, parkingSpot);
             
             await StepAsync(parkingSpot, cancellationToken);
             
-            _logger.LogDebug("Completed handling Step \n({Step})\n for this ParkingSpot \n({@ParkingSpot})",
-                _modelState.ModelTime,
-                parkingSpot);
+            _logger.LogDebug("Completed handling Step ({Step})\n for this ParkingSpot \n({@ParkingSpot})", _modelState.ModelTime, parkingSpot);
         }
     }
 }

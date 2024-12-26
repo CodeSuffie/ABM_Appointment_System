@@ -28,15 +28,12 @@ public sealed class HubShiftService(
         {
             if (!IsCurrent(shift)) continue;
             
-            logger.LogInformation("HubShift \n({@HubShift})\n is currently active for this AdminStaff \n({@AdminStaff})\n.",
-                shift,
-                adminStaff);
+            logger.LogInformation("HubShift \n({@HubShift})\n is currently active for this AdminStaff \n({@AdminStaff})\n.", shift, adminStaff);
                 
             return shift;
         }
 
-        logger.LogInformation("No HubShift is currently active for this AdminStaff \n({@AdminStaff})\n.",
-            adminStaff);
+        logger.LogInformation("No HubShift is currently active for this AdminStaff \n({@AdminStaff})\n.", adminStaff);
         return null;
     }
 
@@ -50,15 +47,12 @@ public sealed class HubShiftService(
         {
             if (!IsCurrent(shift)) continue;
             
-            logger.LogInformation("HubShift \n({@HubShift})\n is currently active for this Picker \n({@Picker})\n.",
-                shift,
-                picker);
+            logger.LogInformation("HubShift \n({@HubShift})\n is currently active for this Picker \n({@Picker})\n.", shift, picker);
                 
             return shift;
         }
 
-        logger.LogInformation("No HubShift is currently active for this Picker \n({@Picker})\n.",
-            picker);
+        logger.LogInformation("No HubShift is currently active for this Picker \n({@Picker})\n.", picker);
         return null;
     }
     
@@ -72,15 +66,12 @@ public sealed class HubShiftService(
         {
             if (!IsCurrent(shift)) continue;
             
-            logger.LogInformation("HubShift \n({@HubShift})\n is currently active for this Stuffer \n({@Stuffer})\n.",
-                shift,
-                stuffer);
+            logger.LogInformation("HubShift \n({@HubShift})\n is currently active for this Stuffer \n({@Stuffer})\n.", shift, stuffer);
                 
             return shift;
         }
 
-        logger.LogInformation("No HubShift is currently active for this Stuffer \n({@Stuffer})\n.",
-            stuffer);
+        logger.LogInformation("No HubShift is currently active for this Stuffer \n({@Stuffer})\n.", stuffer);
         return null;
     }
 }

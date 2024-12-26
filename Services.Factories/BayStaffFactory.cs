@@ -28,8 +28,7 @@ public sealed class BayStaffFactory(
 
             return null;
         }
-        logger.LogDebug("Hub \n({@Hub})\n was selected for the new BayStaff.",
-            hub);
+        logger.LogDebug("Hub \n({@Hub})\n was selected for the new BayStaff.", hub);
         
         var bayStaff = new BayStaff
         {
@@ -43,8 +42,7 @@ public sealed class BayStaffFactory(
 
         if (modelState.ModelConfig.AppointmentSystemMode) return bayStaff;
         
-        logger.LogDebug("Setting BayShifts for this BayStaff \n({@BayStaff})",
-            bayStaff);
+        logger.LogDebug("Setting BayShifts for this BayStaff \n({@BayStaff})", bayStaff);
         await bayShiftFactory.GetNewObjectsAsync(bayStaff, cancellationToken);
 
         return bayStaff;

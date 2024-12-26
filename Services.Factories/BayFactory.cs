@@ -37,13 +37,10 @@ public sealed class BayFactory(
             return null;
         }
 
-        logger.LogDebug("Setting Bay \n({@Bay})\n to its Hub \n({@Hub})",
-            bay,
-            hub);
+        logger.LogDebug("Setting Bay \n({@Bay})\n to its Hub \n({@Hub})", bay, hub);
         await bayRepository.SetAsync(bay, hub, cancellationToken);
         
-        logger.LogDebug("Setting location for this Bay \n({@Bay})",
-            bay);
+        logger.LogDebug("Setting location for this Bay \n({@Bay})", bay);
         await locationFactory.InitializeObjectAsync(bay, cancellationToken);
 
         return bay;
@@ -57,8 +54,7 @@ public sealed class BayFactory(
 
         if (bays.Count <= 0)
         {
-            logger.LogError("Hub \n({@Hub})\n did not have a Bay assigned.",
-                hub);
+            logger.LogError("Hub \n({@Hub})\n did not have a Bay assigned.", hub);
 
             return null;
         }

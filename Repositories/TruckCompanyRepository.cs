@@ -8,38 +8,25 @@ public sealed class TruckCompanyRepository(ModelDbContext context)
 {
     public IQueryable<TruckCompany> Get()
     {
-        var truckCompanies = context.TruckCompanies;
-
-        return truckCompanies;
+        return context.TruckCompanies;
     }
     
-    public async Task<TruckCompany?> GetAsync(Truck truck, CancellationToken cancellationToken)
+    public Task<TruckCompany?> GetAsync(Truck truck, CancellationToken cancellationToken)
     {
-        var truckCompany = await Get()
+        return Get()
             .FirstOrDefaultAsync(tc => tc.Id == truck.TruckCompanyId, cancellationToken);
-
-        return truckCompany;
     }
     
-    public async Task<TruckCompany?> GetAsync(Load load, CancellationToken cancellationToken)
+    public Task<TruckCompany?> GetAsync(Load load, CancellationToken cancellationToken)
     {
-        if (load.TruckCompanyId == null)
-        {
-            return null;
-        }
-        
-        var truckCompany = await Get()
+        return Get()
             .FirstOrDefaultAsync(tc => tc.Id == load.TruckCompanyId, cancellationToken);
-
-        return truckCompany;
     }
 
-    public async Task<int> CountAsync(CancellationToken cancellationToken)
+    public Task<int> CountAsync(CancellationToken cancellationToken)
     {
-        var count = await Get()
+        return Get()
             .CountAsync(cancellationToken);
-
-        return count;
     }
     
     public async Task AddAsync(TruckCompany truckCompany, CancellationToken cancellationToken)

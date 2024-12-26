@@ -8,25 +8,19 @@ public sealed class AdminStaffRepository(ModelDbContext context)
 {
     public IQueryable<AdminStaff> Get()
     {
-        var adminStaffs = context.AdminStaffs;
-
-        return adminStaffs;
+        return context.AdminStaffs;
     }
     
-    public async Task<AdminStaff?> GetAsync(Trip trip, CancellationToken cancellationToken)
+    public Task<AdminStaff?> GetAsync(Trip trip, CancellationToken cancellationToken)
     {
-        var adminStaff = await context.AdminStaffs
+        return Get()
             .FirstOrDefaultAsync(a => a.TripId == trip.Id, cancellationToken);
-
-        return adminStaff;
     }
 
-    public async Task<AdminStaff?> GetAsync(Work work, CancellationToken cancellationToken)
+    public Task<AdminStaff?> GetAsync(Work work, CancellationToken cancellationToken)
     {
-        var adminStaff = await context.AdminStaffs
+        return Get()
             .FirstOrDefaultAsync(a => a.Id == work.AdminStaffId, cancellationToken);
-
-        return adminStaff;
     }
     
     public async Task AddAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
