@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,21 @@ public sealed class TripService
     private readonly AppointmentSlotRepository _appointmentSlotRepository;
     private readonly AppointmentRepository _appointmentRepository;
     private readonly ModelState _modelState;
+    
+    private readonly UpDownCounter<int> _occupiedTruckCounter;
+    private readonly UpDownCounter<int> _occupiedAdminStaffCounter;
+    private readonly UpDownCounter<int> _occupiedParkingSpotCounter;
+    private readonly UpDownCounter<int> _occupiedBayCounter;
+    
+    private readonly UpDownCounter<int> _waitTravelHubTripsCounter;
+    private readonly UpDownCounter<int> _travelHubTripsCounter;
+    private readonly UpDownCounter<int> _waitParkingTripsCounter;
+    private readonly UpDownCounter<int> _parkedTripsCounter;
+    private readonly UpDownCounter<int> _checkingInTripsCounter;
+    private readonly UpDownCounter<int> _waitBayTripsCounter;
+    private readonly UpDownCounter<int> _atBayTripsCounter;
+    private readonly UpDownCounter<int> _travelHomeTripsCounter;
+    private readonly Counter<int> _completedTripsCounter;
 
     public TripService(ILogger<TripService> logger,
         LoadFactory loadFactory,
@@ -43,7 +59,8 @@ public sealed class TripService
         PelletService pelletService,
         AppointmentSlotRepository appointmentSlotRepository,
         AppointmentRepository appointmentRepository,
-        ModelState modelState)
+        ModelState modelState,
+        Meter meter)
     {
         _logger = logger;
         _loadFactory = loadFactory;
@@ -62,6 +79,21 @@ public sealed class TripService
         _appointmentSlotRepository = appointmentSlotRepository;
         _appointmentRepository = appointmentRepository;
         _modelState = modelState;
+        
+        _occupiedTruckCounter = meter.CreateUpDownCounter<int>("occupied-trucks", "Truck", "#Truck Occupied.");
+        _occupiedAdminStaffCounter = meter.CreateUpDownCounter<int>("occupied-admin-staff", "AdminStaff", "#AdminStaff Occupied.");
+        _occupiedParkingSpotCounter = meter.CreateUpDownCounter<int>("occupied-parking-spots", "ParkingSpot", "#ParkingSpot Occupied.");
+        _occupiedBayCounter = meter.CreateUpDownCounter<int>("occupied-bays", "Bay", "#Bay Occupied.");
+        
+        _waitTravelHubTripsCounter = meter.CreateUpDownCounter<int>("wait-travel-hub-trip", "Trip", "#Trips Waiting to Travel to the Hub.");
+        _travelHubTripsCounter = meter.CreateUpDownCounter<int>("travel-hub-trip", "Trip", "#Trips Travelling to the Hub.");
+        _waitParkingTripsCounter = meter.CreateUpDownCounter<int>("arrived-hub-trip", "Trip", "#Trips Arrived at the Hub but not yet parking.");
+        _parkedTripsCounter = meter.CreateUpDownCounter<int>("parking-trip", "Trip", "#Trips Parking but not yet Checked-In.");
+        _checkingInTripsCounter = meter.CreateUpDownCounter<int>("checking-in-trip", "Trip", "#Trips Currently Checking In.");
+        _waitBayTripsCounter = meter.CreateUpDownCounter<int>("checked-in-trip", "Trip", "#Trips Checked In but not yet at a Bay.");
+        _atBayTripsCounter = meter.CreateUpDownCounter<int>("bay-trip", "Trip", "#Trips Currently at a Bay.");
+        _travelHomeTripsCounter = meter.CreateUpDownCounter<int>("travel-home-trip", "Trip", "#Trips with completed Bay Work and Travelling home.");
+        _completedTripsCounter = meter.CreateCounter<int>("completed-trip", "Trip", "#Trips Completed.");
     }
 
     public async Task<Trip?> GetNextAsync(Truck truck, CancellationToken cancellationToken)
@@ -398,6 +430,18 @@ public sealed class TripService
         _logger.LogInformation("Truck \n({@Truck})\n successfully linked to this Trip \n({@Trip})",
             truck,
             trip);
+        
+        _occupiedTruckCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Truck", truck.Id),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
+        _waitTravelHubTripsCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
     }
     
     public async Task AlertFreeAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
@@ -438,6 +482,24 @@ public sealed class TripService
         _logger.LogInformation("ParkingSpot \n({@ParkingSpot})\n successfully linked to this Trip \n({@Trip})",
             parkingSpot,
             trip);
+        
+        _occupiedParkingSpotCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("ParkingSpot", parkingSpot.Id),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
+        _waitParkingTripsCounter.Add(-1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
+        _parkedTripsCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id),
+                new KeyValuePair<string, object?>("ParkingSpot", parkingSpot.Id)
+            ]);
     }
 
     public async Task AlertFreeAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
@@ -473,6 +535,19 @@ public sealed class TripService
         _logger.LogInformation("AdminStaff \n({@AdminStaff})\n successfully linked to this Trip \n({@Trip})",
             adminStaff,
             trip);
+        
+        _occupiedAdminStaffCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("AdminStaff", adminStaff.Id),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
+        _checkingInTripsCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id),
+                new KeyValuePair<string, object?>("AdminStaff", adminStaff.Id)
+            ]);
     }
 
     public async Task AlertFreeAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
@@ -489,7 +564,6 @@ public sealed class TripService
             
             return;
         }
-        
         
         _logger.LogDebug("Removing active Work \n({@Work})\n assigned to this Trip \n({@Trip})",
             work,
@@ -511,6 +585,13 @@ public sealed class TripService
             _logger.LogInformation("ParkingSpot \n({@ParkingSpot})\n successfully removed from this Trip \n({@Trip})",
                 parkingSpot,
                 trip);
+            
+            _occupiedParkingSpotCounter.Add(-1, 
+            [
+                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                    new KeyValuePair<string, object?>("ParkingSpot", parkingSpot.Id),
+                    new KeyValuePair<string, object?>("Trip", trip.Id)
+                ]);
         }
         
         _logger.LogDebug("Setting this Bay \n({@Bay})\n to this Trip \n({@Trip})",
@@ -531,6 +612,24 @@ public sealed class TripService
         _logger.LogInformation("Bay \n({@Bay})\n successfully linked to this Trip \n({@Trip})",
             bay,
             trip);
+        
+        _occupiedBayCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Bay", bay.Id),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
+        _waitBayTripsCounter.Add(-1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
+        _atBayTripsCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id),
+                new KeyValuePair<string, object?>("Bay", bay.Id)
+            ]);
     }
 
     public async Task AlertWaitTravelHubCompleteAsync(Trip trip, CancellationToken cancellationToken)
@@ -559,6 +658,17 @@ public sealed class TripService
         
         _logger.LogInformation("Trip \n({@Trip})\n successfully waited to travel to the Hub.",
             trip);
+        
+        _waitTravelHubTripsCounter.Add(-1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
+        _travelHubTripsCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
     }
     
     public async Task AlertTravelHubCompleteAsync(Trip trip, CancellationToken cancellationToken)
@@ -587,6 +697,17 @@ public sealed class TripService
         
         _logger.LogInformation("Trip \n({@Trip})\n successfully arrived at the Hub.",
             trip);
+        
+        _travelHubTripsCounter.Add(-1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
+        _waitParkingTripsCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
     }
     
     public async Task AlertCheckInCompleteAsync(Trip trip, CancellationToken cancellationToken)
@@ -623,6 +744,20 @@ public sealed class TripService
             _logger.LogInformation("AdminStaff \n({@AdminStaff})\n successfully removed from this Trip \n({@Trip})",
                 adminStaff,
                 trip);
+            
+            _occupiedAdminStaffCounter.Add(-1, 
+            [
+                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                    new KeyValuePair<string, object?>("AdminStaff", adminStaff.Id),
+                    new KeyValuePair<string, object?>("Trip", trip.Id)
+                ]);
+        
+            _checkingInTripsCounter.Add(-1, 
+            [
+                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                    new KeyValuePair<string, object?>("Trip", trip.Id),
+                    new KeyValuePair<string, object?>("AdminStaff", adminStaff.Id)
+                ]);
         }
         
         _logger.LogDebug("Adding Work of type {WorkType} to this Trip \n({@Trip})",
@@ -632,6 +767,11 @@ public sealed class TripService
         
         _logger.LogInformation("Trip \n({@Trip})\n successfully completed Check-In.",
             trip);
+        _waitBayTripsCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
     }
     
     public async Task AlertBayWorkCompleteAsync(Trip trip, CancellationToken cancellationToken)
@@ -668,6 +808,20 @@ public sealed class TripService
             _logger.LogInformation("Bay \n({@Bay})\n successfully removed from this Trip \n({@Trip})",
                 bay,
                 trip);
+            
+            _occupiedBayCounter.Add(-1, 
+            [
+                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                    new KeyValuePair<string, object?>("Bay", bay.Id),
+                    new KeyValuePair<string, object?>("Trip", trip.Id)
+                ]);
+        
+            _atBayTripsCounter.Add(-1, 
+            [
+                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                    new KeyValuePair<string, object?>("Trip", trip.Id),
+                    new KeyValuePair<string, object?>("Bay", bay.Id)
+                ]);
         }
         
         _logger.LogDebug("Adding Work of type {WorkType} to this Trip \n({@Trip})",
@@ -677,6 +831,11 @@ public sealed class TripService
         
         _logger.LogInformation("Trip ({@Trip})\n successfully completed Bay Work.",
             trip);
+        _travelHomeTripsCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
     }
     
     public async Task AlertTravelHomeCompleteAsync(Trip trip, CancellationToken cancellationToken)
@@ -721,7 +880,25 @@ public sealed class TripService
             _logger.LogInformation("Truck ({@Truck})\n successfully removed from this Trip ({@Trip})",
                 truck,
                 trip);
+            
+            _occupiedTruckCounter.Add(-1, 
+            [
+                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                    new KeyValuePair<string, object?>("Truck", truck.Id),
+                    new KeyValuePair<string, object?>("Trip", trip.Id)
+                ]);
         }
+        
+        _travelHomeTripsCounter.Add(-1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
+        _completedTripsCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Trip", trip.Id)
+            ]);
         
         _logger.LogInformation("Trip ({@Trip})\n successfully COMPLETED!!!",
             trip);

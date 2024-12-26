@@ -22,6 +22,7 @@ public sealed class PickerService
     private readonly WorkFactory _workFactory;
     private readonly ModelState _modelState;
     private readonly Counter<int> _fetchMissCounter;
+    private readonly UpDownCounter<int> _occupiedPickerCounter;
 
     public PickerService(ILogger<PickerService> logger,
         HubRepository hubRepository,
@@ -49,6 +50,7 @@ public sealed class PickerService
         _modelState = modelState;
         
         _fetchMissCounter = meter.CreateCounter<int>("fetch-miss", "FetchMiss", "#PickUp Load not fetched yet.");
+        _occupiedPickerCounter = meter.CreateUpDownCounter<int>("fetching-picker", "Picker", "#Picker Working on a Fetch.");
     }
     
     public async Task AlertWorkCompleteAsync(Picker picker, CancellationToken cancellationToken)
@@ -84,6 +86,14 @@ public sealed class PickerService
         }
         
         await _pelletService.AlertFetchedAsync(pellet, bay, cancellationToken);
+        
+        _occupiedPickerCounter.Add(-1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Picker", picker.Id),
+                new KeyValuePair<string, object?>("Bay", bay.Id),
+                new KeyValuePair<string, object?>("Pellet", pellet.Id),
+            ]);
     }
 
     public async Task AlertFreeAppointmentAsync(Picker picker, CancellationToken cancellationToken)
@@ -244,7 +254,21 @@ public sealed class PickerService
             pellet);
         await _workFactory.GetNewObjectAsync(bay, picker, pellet, cancellationToken);
         
-        _fetchMissCounter.Add(1, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+        _occupiedPickerCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Picker", picker.Id),
+                new KeyValuePair<string, object?>("Bay", bay.Id),
+                new KeyValuePair<string, object?>("Pellet", pellet.Id)
+            ]);
+        
+        _fetchMissCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Picker", picker.Id),
+                new KeyValuePair<string, object?>("Bay", bay.Id),
+                new KeyValuePair<string, object?>("Pellet", pellet.Id)
+            ]);
     }
     
     private async Task StartFetchAsync(Picker picker, Bay bay, Appointment appointment, CancellationToken cancellationToken)
@@ -266,6 +290,14 @@ public sealed class PickerService
             bay,
             pellet);
         await _workFactory.GetNewObjectAsync(bay, picker, pellet, cancellationToken);
+        
+        _occupiedPickerCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Picker", picker.Id),
+                new KeyValuePair<string, object?>("Bay", bay.Id),
+                new KeyValuePair<string, object?>("Pellet", pellet.Id)
+            ]);
 
         var appointmentSlot = await _appointmentSlotRepository.GetAsync(appointment, cancellationToken);
         if (appointmentSlot == null)
@@ -278,7 +310,14 @@ public sealed class PickerService
 
         if (appointmentSlot.StartTime <= _modelState.ModelTime)
         {
-            _fetchMissCounter.Add(1, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+            _fetchMissCounter.Add(1, 
+            [
+                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                    new KeyValuePair<string, object?>("Picker", picker.Id),
+                    new KeyValuePair<string, object?>("Bay", bay.Id),
+                    new KeyValuePair<string, object?>("Pellet", pellet.Id),
+                    new KeyValuePair<string, object?>("Appointment", appointment.Id),
+                ]);
         }
     }
 }

@@ -18,6 +18,8 @@ public sealed class BayStaffService
     private readonly TripRepository _tripRepository;
     private readonly BayService _bayService;
     private readonly Counter<int> _dropOffMissCounter;
+    private readonly UpDownCounter<int> _dropOffBayStaffCounter;
+    private readonly UpDownCounter<int> _pickUpBayStaffCounter;
 
     public BayStaffService(
         ILogger<BayStaffService> logger,
@@ -40,9 +42,11 @@ public sealed class BayStaffService
         _bayService = bayService;
 
         _dropOffMissCounter = meter.CreateCounter<int>("drop-off-miss", "DropOffMiss", "#Drop Off Pellets Unable to place at Bay.");
+        _dropOffBayStaffCounter = meter.CreateUpDownCounter<int>("drop-off-bay-staff", "BayStaff", "#BayStaff Working on a Drop-Off.");
+        _pickUpBayStaffCounter = meter.CreateUpDownCounter<int>("pick-up-bay-staff", "BayStaff", "#BayStaff Working on a Pick-Up.");
     }
     
-    public async Task AlertWorkCompleteAsync(Work work, Bay bay, CancellationToken cancellationToken)
+    public async Task AlertWorkCompleteAsync(Work work, Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
     {
         var trip = await _tripRepository.GetAsync(bay, cancellationToken);
         
@@ -68,10 +72,24 @@ public sealed class BayStaffService
         {
             case WorkType.DropOff:
                 await _pelletService.AlertDroppedOffAsync(pellet, bay, cancellationToken);
+                _dropOffBayStaffCounter.Add(-1, 
+                [
+                        new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                        new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
+                        new KeyValuePair<string, object?>("Bay", bay.Id),
+                        new KeyValuePair<string, object?>("Pellet", pellet.Id)
+                    ]);
                 break;
             
             case WorkType.PickUp:
                 await _pelletService.AlertPickedUpAsync(pellet, trip, cancellationToken);
+                _pickUpBayStaffCounter.Add(-1, 
+                [
+                        new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                        new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
+                        new KeyValuePair<string, object?>("Bay", bay.Id),
+                        new KeyValuePair<string, object?>("Pellet", pellet.Id)
+                    ]);
                 break;
         }
     }
@@ -150,7 +168,13 @@ public sealed class BayStaffService
                 bay,
                 _modelState.ModelTime);
             
-            _dropOffMissCounter.Add(1,  new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
+            _dropOffMissCounter.Add(1, 
+            [
+                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                    new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
+                    new KeyValuePair<string, object?>("Bay", bay.Id),
+                    new KeyValuePair<string, object?>("Trip", trip.Id)
+                ]);
 
             return false;
         }
@@ -218,6 +242,14 @@ public sealed class BayStaffService
             bayStaff,
             bay);
         await _workFactory.GetNewObjectAsync(bay, bayStaff, pellet, WorkType.DropOff, cancellationToken);
+        
+        _dropOffBayStaffCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
+                new KeyValuePair<string, object?>("Bay", bay.Id),
+                new KeyValuePair<string, object?>("Pellet", pellet.Id)
+            ]);
     }
 
     public async Task StartPickUpAsync(BayStaff bayStaff, Pellet pellet, Bay bay, CancellationToken cancellationToken)
@@ -227,5 +259,13 @@ public sealed class BayStaffService
             bayStaff,
             bay);
         await _workFactory.GetNewObjectAsync(bay, bayStaff, pellet, WorkType.PickUp, cancellationToken);
+        
+        _pickUpBayStaffCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
+                new KeyValuePair<string, object?>("Bay", bay.Id),
+                new KeyValuePair<string, object?>("Pellet", pellet.Id)
+            ]);
     }
 }

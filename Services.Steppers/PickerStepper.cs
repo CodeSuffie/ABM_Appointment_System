@@ -38,7 +38,7 @@ public sealed class PickerStepper : IStepperService<Picker>
         _modelState = modelState;
         
         _workingPickerHistogram = meter.CreateHistogram<int>("working-picker", "Picker", "#Picker Working.");
-        _fetchingPickerHistogram = meter.CreateHistogram<int>("fetch-picker", "Picker", "#Picker Working on a Fetch.");
+        _fetchingPickerHistogram = meter.CreateHistogram<int>("fetching-picker", "Picker", "#Picker Working on a Fetch.");
     }
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)

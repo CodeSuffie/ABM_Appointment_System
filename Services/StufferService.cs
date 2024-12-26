@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
@@ -8,43 +9,69 @@ using Services.Factories;
 
 namespace Services;
 
-public sealed class StufferService(
-    ILogger<StufferService> logger,
-    WorkRepository workRepository,
-    WorkFactory workFactory,
-    PelletRepository pelletRepository,
-    BayRepository bayRepository,
-    HubRepository hubRepository,
-    PelletService pelletService,
-    AppointmentSlotRepository appointmentSlotRepository,
-    AppointmentRepository appointmentRepository,
-    ModelState modelState)
+public sealed class StufferService
 {
+    private readonly ILogger<StufferService> _logger;
+    private readonly WorkRepository _workRepository;
+    private readonly WorkFactory _workFactory;
+    private readonly PelletRepository _pelletRepository;
+    private readonly BayRepository _bayRepository;
+    private readonly HubRepository _hubRepository;
+    private readonly PelletService _pelletService;
+    private readonly AppointmentSlotRepository _appointmentSlotRepository;
+    private readonly ModelState _modelState;
+        
+    private readonly UpDownCounter<int> _occupiedStufferCounter;
+
+    public StufferService(ILogger<StufferService> logger,
+        WorkRepository workRepository,
+        WorkFactory workFactory,
+        PelletRepository pelletRepository,
+        BayRepository bayRepository,
+        HubRepository hubRepository,
+        PelletService pelletService,
+        AppointmentSlotRepository appointmentSlotRepository,
+        ModelState modelState,
+        Meter meter)
+    {
+        _logger = logger;
+        _workRepository = workRepository;
+        _workFactory = workFactory;
+        _pelletRepository = pelletRepository;
+        _bayRepository = bayRepository;
+        _hubRepository = hubRepository;
+        _pelletService = pelletService;
+        _appointmentSlotRepository = appointmentSlotRepository;
+        _modelState = modelState;
+        
+        _occupiedStufferCounter = meter.CreateUpDownCounter<int>("fetch-stuffer", "Stuffer", "#Stuffer Working on a Stuff.");
+    }
+
     public async Task AlertWorkCompleteAsync(Stuffer stuffer, CancellationToken cancellationToken)
     {
-        var work = await workRepository.GetAsync(stuffer, cancellationToken);
+        var work = await _workRepository.GetAsync(stuffer, cancellationToken);
         if (work == null)
         {
-            logger.LogError("Stuffer \n({@Stuffer})\n did not have Work assigned to alert completed for.",
+            _logger.LogError("Stuffer \n({@Stuffer})\n did not have Work assigned to alert completed for.",
                 stuffer);
 
             return;
         }
 
-        var pellet = await pelletRepository.GetAsync(work, cancellationToken);
+        var pellet = await _pelletRepository.GetAsync(work, cancellationToken);
         if (pellet == null)
         {
-            logger.LogError("Stuffer \n({@Stuffer})\n its assigned Work \n({@Work})\n did not have a Pellet assigned to Stuff.",
+            _logger.LogError("Stuffer \n({@Stuffer})\n its assigned Work \n({@Work})\n did not have a Pellet assigned to Stuff.",
                 stuffer,
                 work);
 
             return;
         }
         
-        var bay = await bayRepository.GetAsync(work, cancellationToken);
+        var bay = await _bayRepository.GetAsync(work, cancellationToken);
         if (bay == null)
         {
-            logger.LogError("Stuffer \n({@Stuffer})\n its assigned Work \n({@Work})\n did not have a bay assigned to Stuff the Pellet \n({@Pellet})\n for.",
+            _logger.LogError("Stuffer \n({@Stuffer})\n its assigned Work \n({@Work})\n did not have a bay assigned to Stuff the Pellet \n({@Pellet})\n for.",
                 stuffer,
                 work,
                 pellet);
@@ -52,43 +79,51 @@ public sealed class StufferService(
             return;
         }
         
-        await pelletService.AlertStuffedAsync(pellet, bay, cancellationToken);
+        await _pelletService.AlertStuffedAsync(pellet, bay, cancellationToken);
+        
+        _occupiedStufferCounter.Add(-1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Stuffer", stuffer.Id),
+                new KeyValuePair<string, object?>("Bay", bay.Id),
+                new KeyValuePair<string, object?>("Pellet", pellet.Id),
+            ]);
     }
     
     public async Task AlertFreeAppointmentAsync(Stuffer stuffer, CancellationToken cancellationToken)
     {
-        if (!modelState.ModelConfig.AppointmentSystemMode)
+        if (!_modelState.ModelConfig.AppointmentSystemMode)
         {
-            logger.LogError("This function cannot be called without Appointment System Mode.");
+            _logger.LogError("This function cannot be called without Appointment System Mode.");
 
             return;
         }
         
-        var hub = await hubRepository.GetAsync(stuffer, cancellationToken);
+        var hub = await _hubRepository.GetAsync(stuffer, cancellationToken);
         if (hub == null)
         {
-            logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to alert free for.",
+            _logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to alert free for.",
                 stuffer);
 
             return;
         }
 
-        var bays = bayRepository.Get(hub)
+        var bays = _bayRepository.Get(hub)
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
 
-        var appointmentSlots = appointmentSlotRepository.GetAfter(hub,
-                modelState.ModelTime -
-                modelState.AppointmentConfig!.AppointmentLength * modelState.ModelConfig.ModelStep)
+        var appointmentSlots = _appointmentSlotRepository.GetAfter(hub,
+                _modelState.ModelTime -
+                _modelState.AppointmentConfig!.AppointmentLength * _modelState.ModelConfig.ModelStep)
             .Where(aps => aps.Appointments.Count != 0)
             .OrderBy(aps => aps.StartTime)
-            .Take((modelState.AppointmentConfig!.AppointmentLength / modelState.AppointmentConfig!.AppointmentSlotDifference) + 1);
+            .Take((_modelState.AppointmentConfig!.AppointmentLength / _modelState.AppointmentConfig!.AppointmentSlotDifference) + 1);
         
         Bay? bestBay = null;
         var stuffPelletCount = 0;
         await foreach (var bay in bays)
         {
-            var bayStuffPelletCount = (await pelletService
+            var bayStuffPelletCount = (await _pelletService
                     .GetAvailableStuffPelletsAsync(bay, appointmentSlots, cancellationToken))
                 .Count;
             
@@ -108,23 +143,23 @@ public sealed class StufferService(
     }
     public async Task AlertFreeAsync(Stuffer stuffer, CancellationToken cancellationToken)
     {
-        if (modelState.ModelConfig.AppointmentSystemMode)
+        if (_modelState.ModelConfig.AppointmentSystemMode)
         {
             await AlertFreeAppointmentAsync(stuffer, cancellationToken);
             
             return;
         }
         
-        var hub = await hubRepository.GetAsync(stuffer, cancellationToken);
+        var hub = await _hubRepository.GetAsync(stuffer, cancellationToken);
         if (hub == null)
         {
-            logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to alert free for.",
+            _logger.LogError("Stuffer \n({@Stuffer})\n did not have a Hub assigned to alert free for.",
                 stuffer);
 
             return;
         }
 
-        var bays = bayRepository.Get(hub)
+        var bays = _bayRepository.Get(hub)
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
 
@@ -132,7 +167,7 @@ public sealed class StufferService(
         var stuffPelletCount = 0;
         await foreach (var bay in bays)
         {
-            var bayStuffPelletCount = (await pelletService
+            var bayStuffPelletCount = (await _pelletService
                     .GetAvailableStuffPelletsAsync(bay, cancellationToken))
                 .Count;
 
@@ -147,12 +182,12 @@ public sealed class StufferService(
 
         if (bestBay == null)
         {
-            logger.LogInformation("Stuffer \n({@Stuffer})\n its assigned Hub \n({@Hub})\n did not have a " +
+            _logger.LogInformation("Stuffer \n({@Stuffer})\n its assigned Hub \n({@Hub})\n did not have a " +
                                    "Bay with more Pellets assigned to Stuff.",
                 stuffer,
                 hub);
             
-            logger.LogDebug("Stuffer \n({@Stuffer})\n will remain idle...",
+            _logger.LogDebug("Stuffer \n({@Stuffer})\n will remain idle...",
                 stuffer);
 
             return;
@@ -163,44 +198,61 @@ public sealed class StufferService(
     
     private async Task StartStuffAsync(Stuffer stuffer, Bay bay, CancellationToken cancellationToken)
     {
-        var pellet = await pelletService.GetNextStuffAsync(bay, cancellationToken);
+        var pellet = await _pelletService.GetNextStuffAsync(bay, cancellationToken);
         if (pellet == null)
         {
-            logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Stuff.",
+            _logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Stuff.",
                 bay);
             
-            logger.LogInformation("Stuff Work could not be started for this Bay \n({@Bay}).",
+            _logger.LogInformation("Stuff Work could not be started for this Bay \n({@Bay}).",
                 bay);
             
             return;
         }
         
-        logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pellet \n({@Pellet})",
+        _logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pellet \n({@Pellet})",
             stuffer,
             bay,
             pellet);
-        await workFactory.GetNewObjectAsync(bay, stuffer, pellet, cancellationToken);
+        await _workFactory.GetNewObjectAsync(bay, stuffer, pellet, cancellationToken);
+        
+        _occupiedStufferCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Stuffer", stuffer.Id),
+                new KeyValuePair<string, object?>("Bay", bay.Id),
+                new KeyValuePair<string, object?>("Pellet", pellet.Id)
+            ]);
     }
     
     private async Task StartStuffAsync(Stuffer stuffer, Bay bay, IQueryable<AppointmentSlot> appointmentSlots, CancellationToken cancellationToken)
     {
-        var pellet = await pelletService.GetNextStuffAsync(bay, appointmentSlots, cancellationToken);
+        var pellet = await _pelletService.GetNextStuffAsync(bay, appointmentSlots, cancellationToken);
         if (pellet == null)
         {
-            logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Stuff.",
+            _logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Stuff.",
                 bay);
             
-            logger.LogInformation("Stuff Work could not be started for this Bay \n({@Bay}).",
+            _logger.LogInformation("Stuff Work could not be started for this Bay \n({@Bay}).",
                 bay);
             
             return;
         }
         
-        logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pellet \n({@Pellet})",
+        _logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pellet \n({@Pellet})",
             stuffer,
             bay,
             pellet);
-        await workFactory.GetNewObjectAsync(bay, stuffer, pellet, cancellationToken);
+        await _workFactory.GetNewObjectAsync(bay, stuffer, pellet, cancellationToken);
+        
+        _occupiedStufferCounter.Add(1, 
+        [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Stuffer", stuffer.Id),
+                new KeyValuePair<string, object?>("Bay", bay.Id),
+                new KeyValuePair<string, object?>("Pellet", pellet.Id),
+                // new KeyValuePair<string, object?>("Appointments", appointmentSlots.Select(aps => aps.Id).ToList())
+            ]);
     }
 
 }
