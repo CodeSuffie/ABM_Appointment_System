@@ -2,13 +2,13 @@ using Database.Abstractions;
 
 namespace Database.Models;
 
-public class Truck : IStorage<Pellet>
+public class Truck : IStorage<Pallet>
 {
     public long Id { get; set; }
     
-    // IStorage<Pellet>
+    // IStorage<Pallet>
     public long Capacity { get; set; }
-    public List<Pellet> Inventory { get; set; } = [];
+    public List<Pallet> Inventory { get; set; } = [];
     
     // Truck
     public long Speed { get; set; }

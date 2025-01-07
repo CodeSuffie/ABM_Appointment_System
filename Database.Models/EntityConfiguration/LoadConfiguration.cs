@@ -17,7 +17,7 @@ public class LoadConfiguration : IEntityTypeConfiguration<Load>
             .WithMany(x => x.Loads)
             .HasForeignKey(x => x.TripId);
 
-        builder.HasMany(x => x.Pellets)
+        builder.HasMany(x => x.Pallets)
             .WithOne(x => x.Load)
             .HasForeignKey(x => x.LoadId);
     }

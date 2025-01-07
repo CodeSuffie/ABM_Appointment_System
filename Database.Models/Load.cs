@@ -15,5 +15,5 @@ public class Load
     public Trip? Trip { get; set; }
     public long? TripId { get; set; }
 
-    public List<Pellet> Pellets { get; set; } = [];
+    public List<Pallet> Pallets { get; set; } = [];
 }

@@ -2,7 +2,7 @@ using Database.Abstractions;
 
 namespace Database.Models;
 
-public class Warehouse : IArea, IStorage<Pellet>
+public class Warehouse : IArea, IStorage<Pallet>
 {
     public long Id { get; set; }
     
@@ -14,9 +14,9 @@ public class Warehouse : IArea, IStorage<Pellet>
     public long XSize { get; set; }
     public long YSize { get; set; }
     
-    // IStorage<Pellet>
+    // IStorage<Pallet>
     public long Capacity { get; set; }
-    public List<Pellet> Inventory { get; set; } = [];
+    public List<Pallet> Inventory { get; set; } = [];
     
     // Warehouse
     public Hub? Hub { get; set; }

@@ -10,7 +10,7 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
     public DbSet<Truck> Trucks { get; set; }
     
     
-    public DbSet<Pellet> Pellets { get; set; }
+    public DbSet<Pallet> Pallets { get; set; }
     public DbSet<Load> Loads { get; set; }
     public DbSet<Trip> Trips { get; set; }
     
@@ -46,7 +46,7 @@ public sealed class ModelDbContext(DbContextOptions<ModelDbContext> options) : D
         modelBuilder.ApplyConfiguration(new TruckCompanyConfiguration());
         modelBuilder.ApplyConfiguration(new TruckConfiguration());
         
-        modelBuilder.ApplyConfiguration(new PelletConfiguration());
+        modelBuilder.ApplyConfiguration(new PalletConfiguration());
         modelBuilder.ApplyConfiguration(new LoadConfiguration());
         modelBuilder.ApplyConfiguration(new TripConfiguration());
         

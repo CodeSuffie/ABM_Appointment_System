@@ -12,7 +12,7 @@ public sealed class WorkRepository(
     PickerRepository pickerRepository,
     StufferRepository stufferRepository,
     BayRepository bayRepository,
-    PelletRepository pelletRepository)
+    PalletRepository palletRepository)
 {
     public IQueryable<Work> Get()
     {
@@ -66,11 +66,11 @@ public sealed class WorkRepository(
                                       x.StufferId == stuffer.Id, cancellationToken);
     }
 
-    public Task<Work?> GetAsync(Pellet pellet, CancellationToken cancellationToken)
+    public Task<Work?> GetAsync(Pallet pallet, CancellationToken cancellationToken)
     {
         return Get()
-            .FirstOrDefaultAsync(x => x.Pellet != null &&
-                                      x.PelletId == pellet.Id, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Pallet != null &&
+                                      x.PalletId == pallet.Id, cancellationToken);
     }
 
     public async Task AddAsync(Work work, CancellationToken cancellationToken)
@@ -136,10 +136,10 @@ public sealed class WorkRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task SetAsync(Work work, Pellet pellet, CancellationToken cancellationToken)
+    public async Task SetAsync(Work work, Pallet pallet, CancellationToken cancellationToken)
     {
-        work.Pellet = pellet;
-        pellet.Work = work;
+        work.Pallet = pallet;
+        pallet.Work = work;
 
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -184,10 +184,10 @@ public sealed class WorkRepository(
             stuffer.Work = null;
         }
         
-        var pellet = await pelletRepository.GetAsync(work, cancellationToken);
-        if (pellet != null)
+        var pallet = await palletRepository.GetAsync(work, cancellationToken);
+        if (pallet != null)
         {
-            pellet.Work = null;
+            pallet.Work = null;
         }
         
         var bay = await bayRepository.GetAsync(work, cancellationToken);

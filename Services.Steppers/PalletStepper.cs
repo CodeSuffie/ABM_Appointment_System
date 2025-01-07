@@ -4,19 +4,19 @@ using Services.Factories;
 
 namespace Services.Steppers;
 
-public sealed class PelletStepper : IStepperService
+public sealed class PalletStepper : IStepperService
 {
-    private readonly ILogger<PelletStepper> _logger;
-    private readonly PelletFactory _pelletFactory;
+    private readonly ILogger<PalletStepper> _logger;
+    private readonly PalletFactory _palletFactory;
     private readonly ModelState _modelState;
     
-    public PelletStepper(
-        ILogger<PelletStepper> logger,
-        PelletFactory pelletFactory,
+    public PalletStepper(
+        ILogger<PalletStepper> logger,
+        PalletFactory palletFactory,
         ModelState modelState)
     {
         _logger = logger;
-        _pelletFactory = pelletFactory;
+        _palletFactory = palletFactory;
         _modelState = modelState;
     }
     
@@ -27,6 +27,6 @@ public sealed class PelletStepper : IStepperService
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {
-        await _pelletFactory.AddNewTruckCompanyPelletsAsync(_modelState.ModelConfig.PelletsPerStep, cancellationToken);
+        await _palletFactory.AddNewTruckCompanyPalletsAsync(_modelState.ModelConfig.PalletsPerStep, cancellationToken);
     }
 }

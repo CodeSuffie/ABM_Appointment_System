@@ -2,7 +2,7 @@ using Database.Abstractions;
 
 namespace Database.Models;
 
-public class TruckCompany : ILocation, IStorage<Pellet>
+public class TruckCompany : ILocation, IStorage<Pallet>
 {
     public long Id { get; set; }
     
@@ -10,10 +10,10 @@ public class TruckCompany : ILocation, IStorage<Pellet>
     public long XLocation { get; set; }
     public long YLocation { get; set; }
     
-    // IStorage<Pellet>
+    // IStorage<Pallet>
     public long Capacity { get; set; }
     
-    public List<Pellet> Inventory { get; set; } = [];
+    public List<Pallet> Inventory { get; set; } = [];
     
     // TruckCompany
     public List<Truck> Trucks { get; set; } = [];

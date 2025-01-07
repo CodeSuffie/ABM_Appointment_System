@@ -48,7 +48,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<LoadRepository>();
         services.AddScoped<OperatingHourRepository>();
         services.AddScoped<ParkingSpotRepository>();
-        services.AddScoped<PelletRepository>();
+        services.AddScoped<PalletRepository>();
         services.AddScoped<PickerRepository>();
         services.AddScoped<StufferRepository>();
         services.AddScoped<TripRepository>();
@@ -72,7 +72,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<LoadFactory>();
         services.AddScoped<OperatingHourFactory>();
         services.AddScoped<ParkingSpotFactory>();
-        services.AddScoped<PelletFactory>();
+        services.AddScoped<PalletFactory>();
         services.AddScoped<PickerFactory>();
         services.AddScoped<PickerShiftFactory>();
         services.AddScoped<StufferFactory>();
@@ -92,7 +92,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<BayStaffService>();
         services.AddScoped<HubShiftService>();
         services.AddScoped<ParkingSpotService>();
-        services.AddScoped<PelletService>();
+        services.AddScoped<PalletService>();
         services.AddScoped<PickerService>();
         services.AddScoped<StufferService>();
         services.AddScoped<TripService>();
@@ -109,7 +109,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPriorityInitializerService,     BayStaffInitializer>();
         services.AddScoped<IPriorityInitializerService,     HubInitializer>();
         services.AddScoped<IPriorityInitializerService,     ParkingSpotInitializer>();
-        services.AddScoped<IPriorityInitializerService,     PelletInitializer>();
+        services.AddScoped<IPriorityInitializerService,     PalletInitializer>();
         services.AddScoped<IPriorityInitializerService,     PickerInitializer>();
         services.AddScoped<IPriorityInitializerService,     StufferInitializer>();
         services.AddScoped<IPriorityInitializerService,     TruckCompanyInitializer>();
@@ -127,7 +127,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStepperService,                 HubStepper>();
         services.AddScoped<IStepperService,                 LoadStepper>();
         services.AddScoped<IStepperService,                 ParkingSpotStepper>();
-        services.AddScoped<IStepperService,                 PelletStepper>();
+        services.AddScoped<IStepperService,                 PalletStepper>();
         services.AddScoped<IStepperService,                 PickerStepper>();
         services.AddScoped<IStepperService,                 StufferStepper>();
         services.AddScoped<IStepperService,                 TripStepper>();

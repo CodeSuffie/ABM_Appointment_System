@@ -9,7 +9,7 @@ public sealed class LoadRepository(ModelDbContext context)
     public IQueryable<Load> Get()
     {
         return context.Loads
-            .Include(l => l.Pellets);
+            .Include(l => l.Pallets);
     }
     
     public IQueryable<Load> Get(TruckCompany truckCompany)

@@ -70,7 +70,7 @@ public class Instrumentation : IDisposable
         FetchedBaysCounter = _meter.CreateUpDownCounter<long>("fetched-bay", "Bay", "#Bays Finished Fetching.");
         PickedUpBaysCounter = _meter.CreateUpDownCounter<long>("picking-up-bay", "Bay", "#Bays Working on a Pick-Up.");
         
-        DropOffMissCounter = _meter.CreateCounter<long>("drop-off-miss", "DropOffMiss", "#Drop Off Pellets Unable to place at Bay.");
+        DropOffMissCounter = _meter.CreateCounter<long>("drop-off-miss", "DropOffMiss", "#Drop Off Pallets Unable to place at Bay.");
         DropOffBayStaffCounter = _meter.CreateUpDownCounter<long>("drop-off-bay-staff", "BayStaff", "#BayStaff Working on a Drop-Off.");
         PickUpBayStaffCounter = _meter.CreateUpDownCounter<long>("pick-up-bay-staff", "BayStaff", "#BayStaff Working on a Pick-Up.");
 
