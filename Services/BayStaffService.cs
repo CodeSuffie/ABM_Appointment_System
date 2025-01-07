@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
 using Services.Factories;
+using Settings;
 
 namespace Services;
 
@@ -17,9 +18,7 @@ public sealed class BayStaffService
     private readonly WorkFactory _workFactory;
     private readonly TripRepository _tripRepository;
     private readonly BayService _bayService;
-    private readonly Counter<int> _dropOffMissCounter;
-    private readonly UpDownCounter<int> _dropOffBayStaffCounter;
-    private readonly UpDownCounter<int> _pickUpBayStaffCounter;
+    private readonly Instrumentation _instrumentation;
 
     public BayStaffService(
         ILogger<BayStaffService> logger,
@@ -29,8 +28,8 @@ public sealed class BayStaffService
         BayRepository bayRepository,
         WorkFactory workFactory,
         TripRepository tripRepository,
-        BayService bayService,
-        Meter meter)
+        BayService bayService, 
+        Instrumentation instrumentation)
     {
         _logger = logger;
         _modelState = modelState;
@@ -40,10 +39,7 @@ public sealed class BayStaffService
         _workFactory = workFactory;
         _tripRepository = tripRepository;
         _bayService = bayService;
-
-        _dropOffMissCounter = meter.CreateCounter<int>("drop-off-miss", "DropOffMiss", "#Drop Off Pellets Unable to place at Bay.");
-        _dropOffBayStaffCounter = meter.CreateUpDownCounter<int>("drop-off-bay-staff", "BayStaff", "#BayStaff Working on a Drop-Off.");
-        _pickUpBayStaffCounter = meter.CreateUpDownCounter<int>("pick-up-bay-staff", "BayStaff", "#BayStaff Working on a Pick-Up.");
+        _instrumentation = instrumentation;
     }
     
     public async Task AlertWorkCompleteAsync(Work work, Bay bay, BayStaff bayStaff, CancellationToken cancellationToken)
@@ -70,7 +66,7 @@ public sealed class BayStaffService
         {
             case WorkType.DropOff:
                 await _pelletService.AlertDroppedOffAsync(pellet, bay, cancellationToken);
-                _dropOffBayStaffCounter.Add(-1, 
+                _instrumentation.DropOffBayStaffCounter.Add(-1, 
                 [
                         new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                         new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
@@ -81,7 +77,7 @@ public sealed class BayStaffService
             
             case WorkType.PickUp:
                 await _pelletService.AlertPickedUpAsync(pellet, trip, cancellationToken);
-                _pickUpBayStaffCounter.Add(-1, 
+                _instrumentation.PickUpBayStaffCounter.Add(-1, 
                 [
                         new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                         new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
@@ -139,7 +135,7 @@ public sealed class BayStaffService
         {
             _logger.LogInformation("BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with no room for another Pellet and can therefore not start Drop-Off Work this Step ({Step})", bayStaff, bay, _modelState.ModelTime);
             
-            _dropOffMissCounter.Add(1, 
+            _instrumentation.DropOffMissCounter.Add(1, 
             [
                     new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                     new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
@@ -196,7 +192,7 @@ public sealed class BayStaffService
         _logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})", WorkType.DropOff, bayStaff, bay);
         await _workFactory.GetNewObjectAsync(bay, bayStaff, pellet, WorkType.DropOff, cancellationToken);
         
-        _dropOffBayStaffCounter.Add(1, 
+        _instrumentation.DropOffBayStaffCounter.Add(1, 
         [
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
@@ -210,7 +206,7 @@ public sealed class BayStaffService
         _logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})", WorkType.PickUp, bayStaff, bay);
         await _workFactory.GetNewObjectAsync(bay, bayStaff, pellet, WorkType.PickUp, cancellationToken);
         
-        _pickUpBayStaffCounter.Add(1, 
+        _instrumentation.PickUpBayStaffCounter.Add(1, 
         [
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),

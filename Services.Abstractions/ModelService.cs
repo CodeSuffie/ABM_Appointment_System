@@ -28,7 +28,7 @@ public sealed class ModelService(
         }
         
         await modelStepper.StepAsync(CancellationToken);
-        await modelStepper.DataCollectAsync(CancellationToken);
+        // await modelStepper.DataCollectAsync(CancellationToken);
 
         await modelState.StepAsync(CancellationToken);
     }

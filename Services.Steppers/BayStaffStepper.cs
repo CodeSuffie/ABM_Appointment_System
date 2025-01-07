@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
+using Settings;
 
 namespace Services.Steppers;
 
@@ -17,10 +18,8 @@ public sealed class BayStaffStepper : IStepperService<BayStaff>
     private readonly BayStaffService _bayStaffService;
     private readonly BayStaffRepository _bayStaffRepository;
     private readonly ModelState _modelState;
-    private readonly Histogram<int> _workingBayStaffHistogram;
-    private readonly Histogram<int> _dropOffBayStaffHistogram;
-    private readonly Histogram<int> _pickUpBayStaffHistogram;
-
+    private readonly Instrumentation _instrumentation;
+    
     public BayStaffStepper(
         ILogger<BayStaffStepper> logger,
         BayRepository bayRepository,
@@ -30,7 +29,7 @@ public sealed class BayStaffStepper : IStepperService<BayStaff>
         BayStaffService bayStaffService,
         BayStaffRepository bayStaffRepository,
         ModelState modelState,
-        Meter meter)
+        Instrumentation instrumentation)
     {
         _logger = logger;
         _bayRepository = bayRepository;
@@ -40,10 +39,7 @@ public sealed class BayStaffStepper : IStepperService<BayStaff>
         _bayStaffService = bayStaffService;
         _bayStaffRepository = bayStaffRepository;
         _modelState = modelState;
-
-        _workingBayStaffHistogram = meter.CreateHistogram<int>("working-bay-staff", "BayStaff", "#BayStaff Working.");
-        _dropOffBayStaffHistogram = meter.CreateHistogram<int>("drop-off-bay-staff", "BayStaff", "#BayStaff Working on a Drop-Off.");
-        _pickUpBayStaffHistogram = meter.CreateHistogram<int>("pick-up-bay-staff", "BayStaff", "#BayStaff Working on a Pick-Up.");
+        _instrumentation = instrumentation;
     }
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)
@@ -80,6 +76,12 @@ public sealed class BayStaffStepper : IStepperService<BayStaff>
                 return;
             }
             
+            _instrumentation.WorkingBayStaffCounter.Add(1, 
+            [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("BayStaff", bayStaff.Id)
+            ]);
+            
             var bay = await _bayRepository.GetAsync(shift, cancellationToken);
             if (bay == null)
             {
@@ -95,6 +97,12 @@ public sealed class BayStaffStepper : IStepperService<BayStaff>
             
             return;
         }
+        
+        _instrumentation.WorkingBayStaffCounter.Add(1, 
+        [
+            new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+            new KeyValuePair<string, object?>("BayStaff", bayStaff.Id)
+        ]);
         
         if (_workService.IsWorkCompleted(work))
         {

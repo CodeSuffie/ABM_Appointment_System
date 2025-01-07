@@ -14,23 +14,19 @@ public sealed class TruckStepper : IStepperService<Truck>
     private readonly TruckRepository _truckRepository;
     private readonly TripRepository _tripRepository;
     private readonly ModelState _modelState;
-    private readonly Histogram<int> _unclaimedTrucksHistogram;
 
     public TruckStepper(
         ILogger<TruckStepper> logger,
         TruckService truckService,
         TruckRepository truckRepository,
         TripRepository tripRepository,
-        ModelState modelState,
-        Meter meter)
+        ModelState modelState)
     {
         _logger = logger;
         _truckService = truckService;
         _truckRepository = truckRepository;
         _tripRepository = tripRepository;
         _modelState = modelState;
-
-        _unclaimedTrucksHistogram = meter.CreateHistogram<int>("unclaimed-truck", "Truck", "#Trucks Unclaimed.");
     }
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)

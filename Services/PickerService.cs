@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
 using Services.Factories;
+using Settings;
 
 namespace Services;
 
@@ -21,8 +22,7 @@ public sealed class PickerService
     private readonly AppointmentRepository _appointmentRepository;
     private readonly WorkFactory _workFactory;
     private readonly ModelState _modelState;
-    private readonly Counter<int> _fetchMissCounter;
-    private readonly UpDownCounter<int> _occupiedPickerCounter;
+    private readonly Instrumentation _instrumentation;
 
     public PickerService(ILogger<PickerService> logger,
         HubRepository hubRepository,
@@ -34,8 +34,8 @@ public sealed class PickerService
         AppointmentSlotRepository appointmentSlotRepository,
         AppointmentRepository appointmentRepository,
         WorkFactory workFactory,
-        ModelState modelState,
-        Meter meter)
+        ModelState modelState, 
+        Instrumentation instrumentation)
     {
         _logger = logger;
         _hubRepository = hubRepository;
@@ -48,9 +48,7 @@ public sealed class PickerService
         _appointmentRepository = appointmentRepository;
         _workFactory = workFactory;
         _modelState = modelState;
-        
-        _fetchMissCounter = meter.CreateCounter<int>("fetch-miss", "FetchMiss", "#PickUp Load not fetched yet.");
-        _occupiedPickerCounter = meter.CreateUpDownCounter<int>("fetching-picker", "Picker", "#Picker Working on a Fetch.");
+        _instrumentation = instrumentation;
     }
     
     public async Task AlertWorkCompleteAsync(Picker picker, CancellationToken cancellationToken)
@@ -81,7 +79,7 @@ public sealed class PickerService
         
         await _pelletService.AlertFetchedAsync(pellet, bay, cancellationToken);
         
-        _occupiedPickerCounter.Add(-1, 
+        _instrumentation.OccupiedPickerCounter.Add(-1, 
         [
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("Picker", picker.Id),
@@ -151,11 +149,11 @@ public sealed class PickerService
                 bestBay = bay;
                 bestAppointment = appointment;
             }
+
+            if (bestBay == null || bestAppointment == null) continue;
             
-            if (bestBay != null && bestAppointment != null)
-            {
-                await StartFetchAsync(picker, bestBay, bestAppointment, cancellationToken);
-            }
+            await StartFetchAsync(picker, bestBay, bestAppointment, cancellationToken);
+            break;
         }
     }
 
@@ -234,7 +232,7 @@ public sealed class PickerService
         _logger.LogDebug("Adding Work for this Picker \n({@Picker})\n at this Bay \n({@Bay}) to Fetch this Pellet \n({@Pellet})", picker, bay, pellet);
         await _workFactory.GetNewObjectAsync(bay, picker, pellet, cancellationToken);
         
-        _occupiedPickerCounter.Add(1, 
+        _instrumentation.OccupiedPickerCounter.Add(1, 
         [
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("Picker", picker.Id),
@@ -242,7 +240,7 @@ public sealed class PickerService
                 new KeyValuePair<string, object?>("Pellet", pellet.Id)
             ]);
         
-        _fetchMissCounter.Add(1, 
+        _instrumentation.FetchMissCounter.Add(1, 
         [
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("Picker", picker.Id),
@@ -266,7 +264,7 @@ public sealed class PickerService
         _logger.LogDebug("Adding Work for this Picker \n({@Picker})\n at this Bay \n({@Bay}) to Fetch this Pellet \n({@Pellet})", picker, bay, pellet);
         await _workFactory.GetNewObjectAsync(bay, picker, pellet, cancellationToken);
         
-        _occupiedPickerCounter.Add(1, 
+        _instrumentation.OccupiedPickerCounter.Add(1, 
         [
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("Picker", picker.Id),
@@ -284,13 +282,13 @@ public sealed class PickerService
 
         if (appointmentSlot.StartTime <= _modelState.ModelTime)
         {
-            _fetchMissCounter.Add(1, 
+            _instrumentation.FetchMissCounter.Add(1, 
             [
                     new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                     new KeyValuePair<string, object?>("Picker", picker.Id),
                     new KeyValuePair<string, object?>("Bay", bay.Id),
                     new KeyValuePair<string, object?>("Pellet", pellet.Id),
-                    new KeyValuePair<string, object?>("Appointment", appointment.Id),
+                    // new KeyValuePair<string, object?>("Appointment", appointment.Id),
                 ]);
         }
     }

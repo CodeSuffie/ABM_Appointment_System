@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
 using Services.Factories;
+using Settings;
 
 namespace Services;
 
@@ -20,8 +21,7 @@ public sealed class StufferService
     private readonly PelletService _pelletService;
     private readonly AppointmentSlotRepository _appointmentSlotRepository;
     private readonly ModelState _modelState;
-        
-    private readonly UpDownCounter<int> _occupiedStufferCounter;
+    private readonly Instrumentation _instrumentation;
 
     public StufferService(ILogger<StufferService> logger,
         WorkRepository workRepository,
@@ -32,7 +32,7 @@ public sealed class StufferService
         PelletService pelletService,
         AppointmentSlotRepository appointmentSlotRepository,
         ModelState modelState,
-        Meter meter)
+        Instrumentation instrumentation)
     {
         _logger = logger;
         _workRepository = workRepository;
@@ -43,8 +43,7 @@ public sealed class StufferService
         _pelletService = pelletService;
         _appointmentSlotRepository = appointmentSlotRepository;
         _modelState = modelState;
-        
-        _occupiedStufferCounter = meter.CreateUpDownCounter<int>("fetch-stuffer", "Stuffer", "#Stuffer Working on a Stuff.");
+        _instrumentation = instrumentation; 
     }
 
     public async Task AlertWorkCompleteAsync(Stuffer stuffer, CancellationToken cancellationToken)
@@ -75,7 +74,7 @@ public sealed class StufferService
         
         await _pelletService.AlertStuffedAsync(pellet, bay, cancellationToken);
         
-        _occupiedStufferCounter.Add(-1, 
+        _instrumentation.OccupiedStufferCounter.Add(-1, 
         [
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("Stuffer", stuffer.Id),
@@ -198,7 +197,7 @@ public sealed class StufferService
         _logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pellet \n({@Pellet})", stuffer, bay, pellet);
         await _workFactory.GetNewObjectAsync(bay, stuffer, pellet, cancellationToken);
         
-        _occupiedStufferCounter.Add(1, 
+        _instrumentation.OccupiedStufferCounter.Add(1, 
         [
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("Stuffer", stuffer.Id),
@@ -222,7 +221,7 @@ public sealed class StufferService
         _logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pellet \n({@Pellet})", stuffer, bay, pellet);
         await _workFactory.GetNewObjectAsync(bay, stuffer, pellet, cancellationToken);
         
-        _occupiedStufferCounter.Add(1, 
+        _instrumentation.OccupiedStufferCounter.Add(1, 
         [
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("Stuffer", stuffer.Id),

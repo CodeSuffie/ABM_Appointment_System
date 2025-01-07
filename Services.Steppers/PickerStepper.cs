@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
+using Settings;
 
 namespace Services.Steppers;
 
@@ -16,8 +17,7 @@ public sealed class PickerStepper : IStepperService<Picker>
     private readonly PickerService _pickerService;
     private readonly PickerRepository _pickerRepository;
     private readonly ModelState _modelState;
-    private readonly Histogram<int> _workingPickerHistogram;
-    private readonly Histogram<int> _fetchingPickerHistogram;
+    private readonly Instrumentation _instrumentation;
     
     public PickerStepper(
         ILogger<PickerStepper> logger,
@@ -27,7 +27,7 @@ public sealed class PickerStepper : IStepperService<Picker>
         PickerService pickerService,
         PickerRepository pickerRepository,
         ModelState modelState,
-        Meter meter)
+        Instrumentation instrumentation)
     {
         _logger = logger;
         _hubShiftService = hubShiftService;
@@ -36,9 +36,7 @@ public sealed class PickerStepper : IStepperService<Picker>
         _pickerService = pickerService;
         _pickerRepository = pickerRepository;
         _modelState = modelState;
-        
-        _workingPickerHistogram = meter.CreateHistogram<int>("working-picker", "Picker", "#Picker Working.");
-        _fetchingPickerHistogram = meter.CreateHistogram<int>("fetching-picker", "Picker", "#Picker Working on a Fetch.");
+        _instrumentation = instrumentation;
     }
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)
@@ -75,8 +73,20 @@ public sealed class PickerStepper : IStepperService<Picker>
             _logger.LogDebug("Alerting Free for this Picker \n({@Picker})\n in this Step ({Step})", picker, _modelState.ModelTime);
             await _pickerService.AlertFreeAsync(picker, cancellationToken);
             
+            _instrumentation.WorkingPickerCounter.Add(1, 
+            [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Picker", picker.Id)
+            ]);
+            
             return;
         }
+        
+        _instrumentation.WorkingPickerCounter.Add(1, 
+        [
+            new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+            new KeyValuePair<string, object?>("Picker", picker.Id)
+        ]);
         
         if (_workService.IsWorkCompleted(work))
         {

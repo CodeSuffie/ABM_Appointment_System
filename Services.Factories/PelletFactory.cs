@@ -17,7 +17,6 @@ public sealed class PelletFactory : IFactoryService<Pellet>
     private readonly HubFactory _hubFactory;
     private readonly WarehouseRepository _warehouseRepository;
     private readonly ModelState _modelState;
-    private readonly UpDownCounter<int> _unclaimedPellets;
     
     public PelletFactory(
         ILogger<PelletFactory> logger,
@@ -27,8 +26,7 @@ public sealed class PelletFactory : IFactoryService<Pellet>
         HubRepository hubRepository,
         HubFactory hubFactory,
         WarehouseRepository warehouseRepository,
-        ModelState modelState,
-        Meter meter)
+        ModelState modelState)
     {
         _logger = logger;
         _pelletRepository = pelletRepository;
@@ -38,9 +36,6 @@ public sealed class PelletFactory : IFactoryService<Pellet>
         _hubFactory = hubFactory;
         _warehouseRepository = warehouseRepository;
         _modelState = modelState;    
-        
-        _unclaimedPellets =
-            meter.CreateUpDownCounter<int>("pellet-unclaimed", "Pellet", "#Pellets unclaimed (excl. completed).");
     }
     
     private int GetDifficulty()
@@ -86,8 +81,6 @@ public sealed class PelletFactory : IFactoryService<Pellet>
             await _pelletRepository.SetAsync(pellet, truckCompany, cancellationToken);
             
             _logger.LogInformation("New Pellet created: Pellet={@Pellet}", pellet);
-    
-            _unclaimedPellets.Add(1);
         }
     }
 
@@ -121,8 +114,6 @@ public sealed class PelletFactory : IFactoryService<Pellet>
             await _pelletRepository.SetAsync(pellet, warehouse, cancellationToken);
 
             _logger.LogInformation("New Pellet created: Pellet={@Pellet}", pellet);
-
-            _unclaimedPellets.Add(1);
         }
     }
     

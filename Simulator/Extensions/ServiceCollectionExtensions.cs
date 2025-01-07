@@ -2,6 +2,7 @@
 using Database;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -13,6 +14,7 @@ using Services.Abstractions;
 using Services.Factories;
 using Services.Initializers;
 using Services.Steppers;
+using Settings;
 
 namespace Simulator.Extensions;
 
@@ -137,32 +139,31 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ModelState>();
         services.AddScoped<ModelService>();
         
-        var serviceName = "Simulator";  // Maybe Apps.ConsoleApp & Apps.DesktopApp?
-        var serviceVersion = "1.0.0";
-        var serviceEnvironment = "";
-        
-        // services.AddOpenTelemetry()
-        //     .ConfigureResource(resource => resource.AddService(
-        //         serviceName: serviceName, 
-        //         serviceVersion: serviceVersion))
-        //     .WithTracing(providerBuilder => providerBuilder
-        //         .AddSource(serviceName)
-        //         .AddOtlpExporter(exporter =>
-        //         {
-        //             exporter.Endpoint = new Uri("http://grafana-collector:4317/");
-        //             exporter.Protocol = OtlpExportProtocol.Grpc;
-        //         }))     // What is this for?
-        //     .WithMetrics(providerBuilder => providerBuilder
-        //         .AddMeter(serviceName)
-        //         .AddOtlpExporter(exporter =>
-        //         {
-        //             exporter.Endpoint = new Uri("http://grafana-collector:4317/");
-        //             exporter.Protocol = OtlpExportProtocol.Grpc;
-        //         }));        // PrometheusExporter() ?
-        
-        var meter = new Meter(serviceName, serviceVersion);
-        // var meter = meterFactory.Create(serviceName, serviceVersion); ?
-        services.AddSingleton(meter);
+        services.AddOpenTelemetry()
+            .ConfigureResource(resource => resource.AddService(
+                serviceName: Instrumentation.ServiceName, 
+                serviceVersion: Instrumentation.ServiceVersion))
+            .WithTracing(providerBuilder => providerBuilder
+                .AddSource(Instrumentation.ServiceName)
+                .AddOtlpExporter(exporter =>
+                {
+                    exporter.Endpoint = new Uri("http://grafana-collector:4317/");
+                    exporter.Protocol = OtlpExportProtocol.Grpc;
+                }))     // What is this for?
+            .WithMetrics(providerBuilder => providerBuilder
+                .AddMeter(Instrumentation.ServiceName)
+                .AddOtlpExporter(exporter =>
+                {
+                    exporter.Endpoint = new Uri("http://grafana-collector:4317/");
+                    exporter.Protocol = OtlpExportProtocol.Grpc;
+                    exporter.ExportProcessorType = ExportProcessorType.Simple;
+                    // exporter.BatchExportProcessorOptions.MaxExportBatchSize = 2048;
+                    // exporter.BatchExportProcessorOptions.ExporterTimeoutMilliseconds = 10000;
+                    // exporter.BatchExportProcessorOptions.MaxQueueSize = 8192;
+                    // exporter.BatchExportProcessorOptions.ScheduledDelayMilliseconds = 1000;
+                }));        // PrometheusExporter() ?
+
+        services.AddSingleton<Instrumentation>();
         
         return services;
     }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
+using Settings;
 
 namespace Services.Steppers;
 
@@ -16,8 +17,7 @@ public sealed class StufferStepper : IStepperService<Stuffer>
     private readonly StufferService _stufferService;
     private readonly StufferRepository _stufferRepository;
     private readonly ModelState _modelState;
-    private readonly Histogram<int> _workingStufferHistogram;
-    private readonly Histogram<int> _stuffingStufferHistogram;
+    private readonly Instrumentation _instrumentation;
     
     public StufferStepper(
         ILogger<StufferStepper> logger,
@@ -27,7 +27,7 @@ public sealed class StufferStepper : IStepperService<Stuffer>
         StufferService stufferService,
         StufferRepository stufferRepository,
         ModelState modelState,
-        Meter meter)
+        Instrumentation instrumentation)
     {
         _logger = logger;
         _hubShiftService = hubShiftService;
@@ -36,9 +36,7 @@ public sealed class StufferStepper : IStepperService<Stuffer>
         _stufferService = stufferService;
         _stufferRepository = stufferRepository;
         _modelState = modelState;
-        
-        _workingStufferHistogram = meter.CreateHistogram<int>("working-stuffer", "Stuffer", "#Stuffer Working.");
-        _stuffingStufferHistogram = meter.CreateHistogram<int>("fetch-stuffer", "Stuffer", "#Stuffer Working on a Stuff.");
+        _instrumentation = instrumentation;
     }
     
     public async Task DataCollectAsync(CancellationToken cancellationToken)
@@ -75,8 +73,20 @@ public sealed class StufferStepper : IStepperService<Stuffer>
             _logger.LogDebug("Alerting Free for this Stuffer \n({@Stuffer})\n in this Step ({Step})", stuffer, _modelState.ModelTime);
             await _stufferService.AlertFreeAsync(stuffer, cancellationToken);
             
+            _instrumentation.WorkingStufferCounter.Add(1, 
+            [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("Stuffer", stuffer.Id)
+            ]);
+            
             return;
         }
+        
+        _instrumentation.WorkingStufferCounter.Add(1, 
+        [
+            new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+            new KeyValuePair<string, object?>("Stuffer", stuffer.Id)
+        ]);
         
         if (_workService.IsWorkCompleted(work))
         {

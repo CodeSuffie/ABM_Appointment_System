@@ -8,21 +8,14 @@ namespace Services.Steppers;
 public sealed class HubStepper : IStepperService
 {
     private readonly ILogger<HubStepper> _logger;
-    private readonly HubRepository _hubRepository;
     private readonly ModelState _modelState;
-    private readonly Histogram<int> _operatingHubsHistogram;
     
     public HubStepper(
         ILogger<HubStepper> logger,
-        HubRepository hubRepository,
-        ModelState modelState,
-        Meter meter)
+        ModelState modelState)
     {
         _logger = logger;
-        _hubRepository = hubRepository;
         _modelState = modelState;
-
-        _operatingHubsHistogram = meter.CreateHistogram<int>("operating-hub", "Hub", "#Hubs Operating.");
     }
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)

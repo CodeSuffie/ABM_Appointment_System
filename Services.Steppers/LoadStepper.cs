@@ -8,21 +8,14 @@ namespace Services.Steppers;
 public sealed class LoadStepper : IStepperService
 {
     private readonly ILogger<LoadStepper> _logger;
-    private readonly LoadRepository _loadRepository;
     private readonly ModelState _modelState;
-    private readonly Histogram<int> _unclaimedLoadsHistogram;
     
     public LoadStepper(
         ILogger<LoadStepper> logger,
-        LoadRepository loadRepository,
-        ModelState modelState,
-        Meter meter)
+        ModelState modelState)
     {
         _logger = logger;
-        _loadRepository = loadRepository;
         _modelState = modelState;
-
-        _unclaimedLoadsHistogram = meter.CreateHistogram<int>("unclaimed-load", "Load", "#Loads Unclaimed.");
     }
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)

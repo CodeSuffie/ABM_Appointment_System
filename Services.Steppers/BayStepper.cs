@@ -14,33 +14,19 @@ public sealed class BayStepper : IStepperService<Bay>
     private readonly BayRepository _bayRepository;
     private readonly TripRepository _tripRepository;
     private readonly ModelState _modelState;
-    private readonly Histogram<int> _closedBaysHistogram;
-    private readonly Histogram<int> _freeBaysHistogram;
-    private readonly Histogram<int> _claimedBaysHistogram;
-    private readonly Histogram<int> _droppedOffBaysHistogram;
-    private readonly Histogram<int> _fetchedBaysHistogram;
-    private readonly Histogram<int> _pickedUpBaysHistogram;
     
     public BayStepper(
         ILogger<BayStepper> logger,
         BayService bayService,
         BayRepository bayRepository,
         TripRepository tripRepository,
-        ModelState modelState,
-        Meter meter)
+        ModelState modelState)
     {
         _logger = logger;
         _bayService = bayService;
         _bayRepository = bayRepository;
         _tripRepository = tripRepository;
         _modelState = modelState;
-
-        _closedBaysHistogram = meter.CreateHistogram<int>("closed-bay", "Bay", "#Bays Closed.");
-        _freeBaysHistogram = meter.CreateHistogram<int>("free-bay", "Bay", "#Bays Free.");
-        _claimedBaysHistogram = meter.CreateHistogram<int>("claimed-bay", "Bay", "#Bays Claimed.");
-        _droppedOffBaysHistogram = meter.CreateHistogram<int>("dropped-off-bay", "Bay", "#Bays Finished Drop-Off.");
-        _fetchedBaysHistogram = meter.CreateHistogram<int>("fetched-bay", "Bay", "#Bays Finished Fetching.");
-        _pickedUpBaysHistogram = meter.CreateHistogram<int>("picking-up-bay", "Bay", "#Bays Working on a Pick-Up.");
     }
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)

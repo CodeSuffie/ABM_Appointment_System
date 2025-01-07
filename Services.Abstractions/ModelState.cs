@@ -10,14 +10,14 @@ public sealed class ModelState
     public AppointmentConfigBase? AppointmentConfig = null;
 
     public void Initialize(
-        TimeSpan startTime,
-        ModelConfigBase modelConfig,
-        AgentConfigBase agentConfig,
-        AppointmentConfigBase? appointmentConfig)
+        TimeSpan? startTime = null,
+        ModelConfigBase? modelConfig = null,
+        AgentConfigBase? agentConfig = null,
+        AppointmentConfigBase? appointmentConfig = null)
     {
-        ModelTime = startTime;
-        ModelConfig = modelConfig;
-        AgentConfig = agentConfig;
+        ModelTime = startTime ?? new TimeSpan(0, 0, 0);
+        ModelConfig = modelConfig ?? new ModelConfig();
+        AgentConfig = agentConfig ?? new AgentConfig();
         AppointmentConfig = ModelConfig.AppointmentSystemMode ? appointmentConfig : null;
     }
     

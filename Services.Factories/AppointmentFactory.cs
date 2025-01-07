@@ -50,23 +50,24 @@ public sealed class AppointmentFactory(
         var bays = bayRepository.Get(hub)
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken);
+
+        var slotLength = modelState.AppointmentConfig!.AppointmentLength * 
+                         modelState.ModelConfig.ModelStep;
+        var blockingCount = (modelState.AppointmentConfig!.AppointmentLength /
+                             modelState.AppointmentConfig!.AppointmentSlotDifference) - 1;
+        var slotDifference = modelState.AppointmentConfig!.AppointmentSlotDifference *
+                             modelState.ModelConfig.ModelStep;
+        var startTime = appointmentSlot.StartTime - blockingCount * slotDifference;
+        var endTime = appointmentSlot.StartTime + blockingCount * slotDifference;
+        
+        var appointmentSlots = appointmentSlotRepository.GetBetween(hub, startTime, endTime, slotLength)
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken);
         
         await foreach (var bay in bays)
         {
             if (bay.BayStatus == BayStatus.Closed) continue;
-
-            var slotLength = modelState.AppointmentConfig!.AppointmentLength * 
-                             modelState.ModelConfig.ModelStep;
-            var blockingCount = (modelState.AppointmentConfig!.AppointmentLength /
-                                 modelState.AppointmentConfig!.AppointmentSlotDifference) - 1;
-            var slotDifference = modelState.AppointmentConfig!.AppointmentSlotDifference *
-                                 modelState.ModelConfig.ModelStep;
-            var startTime = appointmentSlot.StartTime - blockingCount * slotDifference;
-            var endTime = appointmentSlot.StartTime + blockingCount * slotDifference;
                 
-            var appointmentSlots = appointmentSlotRepository.GetBetween(hub, startTime, endTime, slotLength)
-                .AsAsyncEnumerable()
-                .WithCancellation(cancellationToken);
 
             var validBay = true;
             await foreach (var slot in appointmentSlots)
@@ -91,8 +92,8 @@ public sealed class AppointmentFactory(
 
         return null;
     }
-    
-    public async Task<AppointmentSlot?> GetNextVacantAsync(Hub hub, TimeSpan startTime, CancellationToken cancellationToken)
+
+    public async Task<Tuple<AppointmentSlot, Bay>?> GetNextVacantAsync(Hub hub, TimeSpan startTime, CancellationToken cancellationToken)
     {
         var appointmentSlots = appointmentSlotRepository.GetAfter(hub, startTime)
             .AsAsyncEnumerable()
@@ -103,7 +104,7 @@ public sealed class AppointmentFactory(
             var bay = await GetVacantAsync(hub, appointmentSlot, cancellationToken);
             if (bay != null)
             {
-                return appointmentSlot;
+                return new Tuple<AppointmentSlot, Bay>(appointmentSlot, bay);
             }
         }
 
@@ -112,23 +113,15 @@ public sealed class AppointmentFactory(
     
     public async Task SetAsync(Trip trip, Hub hub, TimeSpan startTime, CancellationToken cancellationToken)
     {
-        var appointmentSlot = await GetNextVacantAsync(hub, startTime, cancellationToken);
-        if (appointmentSlot == null)
+        var appointmentSlotBay = await GetNextVacantAsync(hub, startTime, cancellationToken);
+        if (appointmentSlotBay == null)
         {
-            logger.LogError("Hub \n({@Hub})\n did not have any AppointmentSlot with available Appointments after this Step ({Step})\n for this Trip \n({@Trip}).", hub, startTime,  trip);
+            logger.LogError("Hub \n({@Hub})\n did not have any AppointmentSlot with available Appointments after this Step ({Step})\n for this Trip \n({@Trip}).", hub, startTime, trip);
 
             return;
         }
 
-        var bay = await GetVacantAsync(hub, appointmentSlot, cancellationToken);
-        if (bay == null)
-        {
-            logger.LogError("Hub \n({@Hub})\n with this AppointmentSlot \n({@AppointmentSlot})\n had no Bay available for an Appointment after this Step ({Step})\n for this Trip \n({@Trip}).", hub, appointmentSlot, startTime,  trip);
-
-            return;
-        }
-
-        var appointment = await GetNewObjectAsync(appointmentSlot, bay, trip, cancellationToken);
+        var appointment = await GetNewObjectAsync(appointmentSlotBay.Item1, appointmentSlotBay.Item2, trip, cancellationToken);
         
         logger.LogInformation("New Appointment created: Appointment={@Appointment}", appointment);
     }

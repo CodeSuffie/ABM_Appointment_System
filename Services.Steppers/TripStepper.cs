@@ -15,26 +15,13 @@ public sealed class TripStepper : IStepperService<Trip>
     private readonly WorkService _workService;
     private readonly TripService _tripService;
     private readonly ModelState _modelState;
-    
-    private readonly Histogram<int> _unclaimedTripsHistogram;
-    private readonly Histogram<int> _claimedTripsHistogram;
-    private readonly Histogram<int> _waitTravelHubTripsHistogram;
-    private readonly Histogram<int> _travelHubTripsHistogram;
-    private readonly Histogram<int> _arrivedTripsHistogram;
-    private readonly Histogram<int> _parkedTripsHistogram;
-    private readonly Histogram<int> _checkingInTripsHistogram;
-    private readonly Histogram<int> _checkInCompleteTripsHistogram;
-    private readonly Histogram<int> _atBayTripsHistogram;
-    private readonly Histogram<int> _travelHomeTripsHistogram;
-    private readonly Histogram<int> _completedTripsHistogram;
 
     public TripStepper(ILogger<TripStepper> logger,
         TripRepository tripRepository,
         WorkRepository workRepository,
         WorkService workService,
         TripService tripService,
-        ModelState modelState,
-        Meter meter)
+        ModelState modelState)
     {
         _logger = logger;
         _tripRepository = tripRepository;
@@ -42,18 +29,6 @@ public sealed class TripStepper : IStepperService<Trip>
         _workService = workService;
         _tripService = tripService;
         _modelState = modelState;
-        
-        _unclaimedTripsHistogram = meter.CreateHistogram<int>("unclaimed-trip", "Trip", "#Trips Unclaimed (excl. Completed).");
-        _claimedTripsHistogram = meter.CreateHistogram<int>("claimed-trip", "Trip", "#Trips Claimed (excl. Completed).");
-        _waitTravelHubTripsHistogram = meter.CreateHistogram<int>("wait-travel-hub-trip", "Trip", "#Trips Waiting to Travel to the Hub.");
-        _travelHubTripsHistogram = meter.CreateHistogram<int>("travel-hub-trip", "Trip", "#Trips Travelling to the Hub.");
-        _arrivedTripsHistogram = meter.CreateHistogram<int>("arrived-hub-trip", "Trip", "#Trips Arrived at the Hub but not yet parking.");
-        _parkedTripsHistogram = meter.CreateHistogram<int>("parking-trip", "Trip", "#Trips Parking but not yet Checked-In.");
-        _checkingInTripsHistogram = meter.CreateHistogram<int>("checking-in-trip", "Trip", "#Trips Currently Checking In.");
-        _checkInCompleteTripsHistogram = meter.CreateHistogram<int>("checked-in-trip", "Trip", "#Trips Checked In but not yet at a Bay.");
-        _atBayTripsHistogram = meter.CreateHistogram<int>("bay-trip", "Trip", "#Trips Currently at a Bay.");
-        _travelHomeTripsHistogram = meter.CreateHistogram<int>("travel-home-trip", "Trip", "#Trips with completed Bay Work and Travelling home.");
-        _completedTripsHistogram = meter.CreateHistogram<int>("completed-trip", "Trip", "#Trips Completed.");
     }
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)

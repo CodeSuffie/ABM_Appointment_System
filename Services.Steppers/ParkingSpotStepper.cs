@@ -14,24 +14,19 @@ public sealed class ParkingSpotStepper : IStepperService<ParkingSpot>
     private readonly ParkingSpotRepository _parkingSpotRepository;
     private readonly TripRepository _tripRepository;
     private readonly ModelState _modelState;
-    private readonly Histogram<int> _unclaimedParkingSpotsHistogram;
 
     public ParkingSpotStepper(
         ILogger<ParkingSpotStepper> logger,
         ParkingSpotService parkingSpotService,
         ParkingSpotRepository parkingSpotRepository,
         TripRepository tripRepository,
-        ModelState modelState,
-        Meter meter)
+        ModelState modelState)
     {
         _logger = logger;
         _parkingSpotService = parkingSpotService;
         _parkingSpotRepository = parkingSpotRepository;
         _tripRepository = tripRepository;
         _modelState = modelState;
-
-        _unclaimedParkingSpotsHistogram =
-            meter.CreateHistogram<int>("unclaimed-parking-spot", "ParkingSpot", "#ParkingSpots Unclaimed.");
     }
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)

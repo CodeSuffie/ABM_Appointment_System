@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
+using Settings;
 
 namespace Services;
 
@@ -18,9 +19,7 @@ public sealed class BayService
     private readonly TripRepository _tripRepository;
     private readonly WorkRepository _workRepository;
     private readonly ModelState _modelState;
-    private readonly UpDownCounter<int> _droppedOffBaysCounter;
-    private readonly UpDownCounter<int> _fetchedBaysCounter;
-    private readonly UpDownCounter<int> _pickedUpBaysCounter;
+    private readonly Instrumentation _instrumentation;
 
     public BayService(ILogger<BayService> logger,
         HubRepository hubRepository,
@@ -31,7 +30,7 @@ public sealed class BayService
         TripRepository tripRepository,
         WorkRepository workRepository,
         ModelState modelState,
-        Meter meter)
+        Instrumentation instrumentation)
     {
         _logger = logger;
         _hubRepository = hubRepository;
@@ -42,10 +41,7 @@ public sealed class BayService
         _tripRepository = tripRepository;
         _workRepository = workRepository;
         _modelState = modelState;
-        
-        _droppedOffBaysCounter = meter.CreateUpDownCounter<int>("dropped-off-bay", "Bay", "#Bays Finished Drop-Off.");
-        _fetchedBaysCounter = meter.CreateUpDownCounter<int>("fetched-bay", "Bay", "#Bays Finished Fetching.");
-        _pickedUpBaysCounter = meter.CreateUpDownCounter<int>("picking-up-bay", "Bay", "#Bays Working on a Pick-Up.");
+        _instrumentation = instrumentation;
     }
 
     public async Task AlertWorkCompleteAsync(Bay bay, CancellationToken cancellationToken)
@@ -79,7 +75,7 @@ public sealed class BayService
         }
 
         var trip = !_modelState.ModelConfig.AppointmentSystemMode ?
-            await _tripService.GetNextAsync(hub, WorkType.Bay, cancellationToken) :
+            await _tripService.GetNextAsync(hub, WorkType.WaitBay, cancellationToken) :
             await _tripService.GetNextAsync(hub, bay, cancellationToken);
         if (trip == null)
         {
@@ -111,12 +107,12 @@ public sealed class BayService
             if (! bay.BayFlags.HasFlag(BayFlags.DroppedOff))
             {
                 await _bayRepository.AddAsync(bay, BayFlags.DroppedOff, cancellationToken);
-                _droppedOffBaysCounter.Add(1, 
+                _instrumentation.DroppedOffBaysCounter.Add(1, 
                 [
-                        new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                        new KeyValuePair<string, object?>("Bay", bay.Id),
-                        new KeyValuePair<string, object?>("BayFlag", BayFlags.DroppedOff),
-                    ]);
+                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                    new KeyValuePair<string, object?>("Bay", bay.Id),
+                    new KeyValuePair<string, object?>("BayFlag", BayFlags.DroppedOff),
+                ]);
             }
         }
         else
@@ -124,12 +120,12 @@ public sealed class BayService
             if (bay.BayFlags.HasFlag(BayFlags.DroppedOff))
             {
                 await _bayRepository.RemoveAsync(bay, BayFlags.DroppedOff, cancellationToken);
-                _droppedOffBaysCounter.Add(-1, 
+                _instrumentation.DroppedOffBaysCounter.Add(-1, 
                 [
-                        new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                        new KeyValuePair<string, object?>("Bay", bay.Id),
-                        new KeyValuePair<string, object?>("BayFlag", BayFlags.DroppedOff),
-                    ]);
+                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                    new KeyValuePair<string, object?>("Bay", bay.Id),
+                    new KeyValuePair<string, object?>("BayFlag", BayFlags.DroppedOff),
+                ]);
             }
         }
         
@@ -138,12 +134,12 @@ public sealed class BayService
             if (! bay.BayFlags.HasFlag(BayFlags.Fetched))
             {
                 await _bayRepository.AddAsync(bay, BayFlags.Fetched, cancellationToken);
-                _fetchedBaysCounter.Add(1, 
+                _instrumentation.FetchedBaysCounter.Add(1, 
                 [
-                        new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                        new KeyValuePair<string, object?>("Bay", bay.Id),
-                        new KeyValuePair<string, object?>("BayFlag", BayFlags.Fetched),
-                    ]);
+                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                    new KeyValuePair<string, object?>("Bay", bay.Id),
+                    new KeyValuePair<string, object?>("BayFlag", BayFlags.Fetched),
+                ]);
             }
         }
         else
@@ -151,12 +147,12 @@ public sealed class BayService
             if (bay.BayFlags.HasFlag(BayFlags.Fetched))
             {
                 await _bayRepository.RemoveAsync(bay, BayFlags.Fetched, cancellationToken);
-                _fetchedBaysCounter.Add(-1, 
+                _instrumentation.FetchedBaysCounter.Add(-1, 
                 [
-                        new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                        new KeyValuePair<string, object?>("Bay", bay.Id),
-                        new KeyValuePair<string, object?>("BayFlag", BayFlags.Fetched),
-                    ]);
+                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                    new KeyValuePair<string, object?>("Bay", bay.Id),
+                    new KeyValuePair<string, object?>("BayFlag", BayFlags.Fetched),
+                ]);
             }
         }
         
@@ -165,7 +161,7 @@ public sealed class BayService
             if (! bay.BayFlags.HasFlag(BayFlags.PickedUp))
             {
                 await _bayRepository.AddAsync(bay, BayFlags.PickedUp, cancellationToken);
-                _pickedUpBaysCounter.Add(1, 
+                _instrumentation.PickedUpBaysCounter.Add(1, 
                 [
                         new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                         new KeyValuePair<string, object?>("Bay", bay.Id),
@@ -178,7 +174,7 @@ public sealed class BayService
             if (bay.BayFlags.HasFlag(BayFlags.PickedUp))
             {
                 await _bayRepository.RemoveAsync(bay, BayFlags.PickedUp, cancellationToken);
-                _pickedUpBaysCounter.Add(-1, 
+                _instrumentation.PickedUpBaysCounter.Add(-1, 
                 [
                         new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                         new KeyValuePair<string, object?>("Bay", bay.Id),

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
+using Settings;
 
 namespace Services.Steppers;
 
@@ -16,8 +17,7 @@ public sealed class AdminStaffStepper : IStepperService<AdminStaff>
     private readonly HubShiftService _hubShiftService;
     private readonly AdminStaffRepository _adminStaffRepository;
     private readonly ModelState _modelState;
-    private readonly Histogram<int> _workingAdminStaffHistogram;
-    private readonly Histogram<int> _occupiedAdminStaffHistogram;
+    private readonly Instrumentation _instrumentation;
 
     public AdminStaffStepper(
         ILogger<AdminStaffStepper> logger,
@@ -27,7 +27,7 @@ public sealed class AdminStaffStepper : IStepperService<AdminStaff>
         HubShiftService hubShiftService,
         AdminStaffRepository adminStaffRepository,
         ModelState modelState,
-        Meter meter)
+        Instrumentation instrumentation)
     {
         _logger = logger;
         _adminStaffService = adminStaffService;
@@ -35,10 +35,8 @@ public sealed class AdminStaffStepper : IStepperService<AdminStaff>
         _workService = workService;
         _hubShiftService = hubShiftService;
         _adminStaffRepository = adminStaffRepository;
-        _modelState = modelState;
-
-        _workingAdminStaffHistogram = meter.CreateHistogram<int>("working-admin-staff", "AdminStaff", "#AdminStaff Working.");
-        _occupiedAdminStaffHistogram = meter.CreateHistogram<int>("occupied-admin-staff", "AdminStaff", "#AdminStaff Occupied.");
+        _modelState = modelState; 
+        _instrumentation = instrumentation;
     }
 
     public async Task DataCollectAsync(CancellationToken cancellationToken)
@@ -75,8 +73,20 @@ public sealed class AdminStaffStepper : IStepperService<AdminStaff>
             _logger.LogDebug("Alerting Free for this AdminStaff \n({@AdminStaff})\n in this Step ({Step})", adminStaff, _modelState.ModelTime);
             await _adminStaffService.AlertFreeAsync(adminStaff, cancellationToken);
             
+            _instrumentation.WorkingAdminStaffCounter.Add(1, 
+            [
+                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+                new KeyValuePair<string, object?>("AdminStaff", adminStaff.Id)
+            ]);
+            
             return;
         }
+        
+        _instrumentation.WorkingAdminStaffCounter.Add(1, 
+        [
+            new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
+            new KeyValuePair<string, object?>("AdminStaff", adminStaff.Id)
+        ]);
         
         if (_workService.IsWorkCompleted(work))
         {
