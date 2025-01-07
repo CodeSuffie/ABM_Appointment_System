@@ -109,7 +109,7 @@ internal static class LoggerFactory
                         TruckCompanyId = l.TruckCompanyId,
                         HubId = l.HubId,
                         TripId = l.TripId,
-                        PelletIds = l.Pellets.Select(p => p.Id)
+                        PalletIds = l.Pallets.Select(p => p.Id)
                     })
                 .Destructure.ByTransforming<OperatingHour>(
                     oh => new { 
@@ -125,7 +125,7 @@ internal static class LoggerFactory
                         HubId = ps.HubId,
                         TripId = ps.TripId,
                     })
-                .Destructure.ByTransforming<Pellet>(
+                .Destructure.ByTransforming<Pallet>(
                     p => new
                     {
                         Id = p.Id,
@@ -217,7 +217,7 @@ internal static class LoggerFactory
                         PickerId = w.PickerId,
                         StufferId = w.StufferId,
                         BayId = w.BayId,
-                        PelletId = w.PelletId
+                        PalletId = w.PalletId
                     })
                 .MinimumLevel.Warning()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)

@@ -39,10 +39,10 @@ public sealed class BayRepository(ModelDbContext context)
             .FirstOrDefaultAsync(b => b.Id == work.BayId, cancellationToken);
     }
     
-    public Task<Bay?> GetAsync(Pellet pellet, CancellationToken cancellationToken)
+    public Task<Bay?> GetAsync(Pallet pallet, CancellationToken cancellationToken)
     {
         return Get()
-            .FirstOrDefaultAsync(b => b.Id == pellet.BayId, cancellationToken);
+            .FirstOrDefaultAsync(b => b.Id == pallet.BayId, cancellationToken);
     }
 
     public Task<Bay?> GetAsync(Appointment appointment, CancellationToken cancellationToken)

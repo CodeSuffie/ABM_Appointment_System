@@ -23,7 +23,7 @@ public sealed class TripService
     private readonly LocationFactory _locationFactory;
     private readonly TruckCompanyRepository _truckCompanyRepository;
     private readonly WorkFactory _workFactory;
-    private readonly PelletService _pelletService;
+    private readonly PalletService _palletService;
     private readonly AppointmentSlotRepository _appointmentSlotRepository;
     private readonly AppointmentRepository _appointmentRepository;
     private readonly ModelState _modelState;
@@ -56,7 +56,7 @@ public sealed class TripService
         LocationFactory locationFactory,
         TruckCompanyRepository truckCompanyRepository,
         WorkFactory workFactory,
-        PelletService pelletService,
+        PalletService palletService,
         AppointmentSlotRepository appointmentSlotRepository,
         AppointmentRepository appointmentRepository,
         ModelState modelState,
@@ -75,7 +75,7 @@ public sealed class TripService
         _locationFactory = locationFactory;
         _truckCompanyRepository = truckCompanyRepository;
         _workFactory = workFactory;
-        _pelletService = pelletService;
+        _palletService = palletService;
         _appointmentSlotRepository = appointmentSlotRepository;
         _appointmentRepository = appointmentRepository;
         _modelState = modelState;
@@ -130,8 +130,8 @@ public sealed class TripService
                 _logger.LogDebug("Setting DropOff Load \n({@Load})\n to this Trip \n({@Trip}).", dropOff, trip);
                 await _tripRepository.SetDropOffAsync(trip, dropOff, cancellationToken);
         
-                _logger.LogDebug("Loading Pellets for DropOff Load \n({@Load})\n onto this Truck \n({@Truck}).", dropOff, truck);
-                await _pelletService.LoadPelletsAsync(truck, dropOff, cancellationToken);
+                _logger.LogDebug("Loading Pallets for DropOff Load \n({@Load})\n onto this Truck \n({@Truck}).", dropOff, truck);
+                await _palletService.LoadPalletsAsync(truck, dropOff, cancellationToken);
                 
                 _logger.LogDebug("Finding PickUp Load for this Truck \n({@Truck})\n with this Trip \n({@Trip}).", truck, trip);
                 pickUp = await _loadFactory.GetNewPickUpAsync(truck, hub, cancellationToken);
@@ -672,7 +672,7 @@ public sealed class TripService
     private async Task CompleteTripAsync(Trip trip, CancellationToken cancellationToken)
     {
         await _tripRepository.SetAsync(trip, true, cancellationToken);
-        await _pelletService.CompleteAsync(trip, cancellationToken);
+        await _palletService.CompleteAsync(trip, cancellationToken);
 
         var truck = await _truckRepository.GetAsync(trip, cancellationToken);
         if (truck == null)

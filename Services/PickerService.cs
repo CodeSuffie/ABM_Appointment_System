@@ -12,8 +12,8 @@ public sealed class PickerService
 {
     private readonly ILogger<PickerService> _logger;
     private readonly HubRepository _hubRepository;
-    private readonly PelletRepository _pelletRepository;
-    private readonly PelletService _pelletService;
+    private readonly PalletRepository _palletRepository;
+    private readonly PalletService _palletService;
     private readonly BayRepository _bayRepository;
     private readonly BayService _bayService;
     private readonly WorkRepository _workRepository;
@@ -26,8 +26,8 @@ public sealed class PickerService
 
     public PickerService(ILogger<PickerService> logger,
         HubRepository hubRepository,
-        PelletRepository pelletRepository,
-        PelletService pelletService,
+        PalletRepository palletRepository,
+        PalletService palletService,
         BayRepository bayRepository,
         BayService bayService,
         WorkRepository workRepository,
@@ -39,8 +39,8 @@ public sealed class PickerService
     {
         _logger = logger;
         _hubRepository = hubRepository;
-        _pelletRepository = pelletRepository;
-        _pelletService = pelletService;
+        _palletRepository = palletRepository;
+        _palletService = palletService;
         _bayRepository = bayRepository;
         _bayService = bayService;
         _workRepository = workRepository;
@@ -63,10 +63,10 @@ public sealed class PickerService
             return;
         }
 
-        var pellet = await _pelletRepository.GetAsync(work, cancellationToken);
-        if (pellet == null)
+        var pallet = await _palletRepository.GetAsync(work, cancellationToken);
+        if (pallet == null)
         {
-            _logger.LogError("Picker \n({@Picker})\n its assigned Work \n({@Work})\n did not have a Pellet assigned to Fetch.", picker, work);
+            _logger.LogError("Picker \n({@Picker})\n its assigned Work \n({@Work})\n did not have a Pallet assigned to Fetch.", picker, work);
 
             return;
         }
@@ -74,19 +74,19 @@ public sealed class PickerService
         var bay = await _bayRepository.GetAsync(work, cancellationToken);
         if (bay == null)
         {
-            _logger.LogError("Picker \n({@Picker})\n its assigned Work \n({@Work})\n did not have a bay assigned to Fetch the Pellet \n({@Pellet})\n for.", picker, work, pellet);
+            _logger.LogError("Picker \n({@Picker})\n its assigned Work \n({@Work})\n did not have a bay assigned to Fetch the Pallet \n({@Pallet})\n for.", picker, work, pallet);
 
             return;
         }
         
-        await _pelletService.AlertFetchedAsync(pellet, bay, cancellationToken);
+        await _palletService.AlertFetchedAsync(pallet, bay, cancellationToken);
         
         _occupiedPickerCounter.Add(-1, 
         [
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("Picker", picker.Id),
                 new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pellet", pellet.Id),
+                new KeyValuePair<string, object?>("Pallet", pallet.Id),
             ]);
     }
 
@@ -122,7 +122,7 @@ public sealed class PickerService
 
             Bay? bestBay = null;
             Appointment? bestAppointment = null;
-            var fetchPelletCount = 0;
+            var fetchPalletCount = 0;
             await foreach (var appointment in appointments)
             {
                 var bay = await _bayRepository.GetAsync(appointment, cancellationToken);
@@ -133,21 +133,21 @@ public sealed class PickerService
                     continue;
                 }
                 
-                if (! await _bayService.HasRoomForPelletAsync(bay, cancellationToken))
+                if (! await _bayService.HasRoomForPalletAsync(bay, cancellationToken))
                 {
                     continue;
                 }
 
-                var bayFetchPelletCount = (await _pelletService
-                        .GetAvailableFetchPelletsAsync(bay, appointment, cancellationToken))
+                var bayFetchPalletCount = (await _palletService
+                        .GetAvailableFetchPalletsAsync(bay, appointment, cancellationToken))
                     .Count;
                 
-                if (bestBay != null && bayFetchPelletCount <= fetchPelletCount)
+                if (bestBay != null && bayFetchPalletCount <= fetchPalletCount)
                 {
                     continue;
                 }
         
-                fetchPelletCount = bayFetchPelletCount;
+                fetchPalletCount = bayFetchPalletCount;
                 bestBay = bay;
                 bestAppointment = appointment;
             }
@@ -177,30 +177,30 @@ public sealed class PickerService
             .WithCancellation(cancellationToken);
 
         Bay? bestBay = null;
-        var fetchPelletCount = 0;
+        var fetchPalletCount = 0;
         await foreach (var bay in bays)
         {
-            if (! await _bayService.HasRoomForPelletAsync(bay, cancellationToken))
+            if (! await _bayService.HasRoomForPalletAsync(bay, cancellationToken))
             {
                 continue;
             }
             
-            var bayFetchPelletCount = (await _pelletService
-                    .GetAvailableFetchPelletsAsync(bay, cancellationToken))
+            var bayFetchPalletCount = (await _palletService
+                    .GetAvailableFetchPalletsAsync(bay, cancellationToken))
                 .Count;
 
-            if (bestBay != null && bayFetchPelletCount <= fetchPelletCount)
+            if (bestBay != null && bayFetchPalletCount <= fetchPalletCount)
             {
                 continue;
             }
             
-            fetchPelletCount = bayFetchPelletCount;
+            fetchPalletCount = bayFetchPalletCount;
             bestBay = bay;
         }
 
         if (bestBay == null)
         {
-            _logger.LogInformation("Picker \n({@Picker})\n its assigned Hub \n({@Hub})\n did not have a Bay with more Pellets assigned to Fetch.", picker, hub);
+            _logger.LogInformation("Picker \n({@Picker})\n its assigned Hub \n({@Hub})\n did not have a Bay with more Pallets assigned to Fetch.", picker, hub);
 
             if (!_modelState.ModelConfig.AppointmentSystemMode)
             {
@@ -221,25 +221,25 @@ public sealed class PickerService
     
     private async Task StartFetchAsync(Picker picker, Bay bay, CancellationToken cancellationToken)
     {
-        var pellet = await _pelletService.GetNextFetchAsync(bay, cancellationToken);
-        if (pellet == null)
+        var pallet = await _palletService.GetNextFetchAsync(bay, cancellationToken);
+        if (pallet == null)
         {
-            _logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Fetch.", bay);
+            _logger.LogInformation("Bay \n({@Bay})\n did not have any more Pallets assigned to Fetch.", bay);
             
             _logger.LogInformation("Fetch Work could not be started for this Bay \n({@Bay}).", bay);
             
             return;
         }
         
-        _logger.LogDebug("Adding Work for this Picker \n({@Picker})\n at this Bay \n({@Bay}) to Fetch this Pellet \n({@Pellet})", picker, bay, pellet);
-        await _workFactory.GetNewObjectAsync(bay, picker, pellet, cancellationToken);
+        _logger.LogDebug("Adding Work for this Picker \n({@Picker})\n at this Bay \n({@Bay}) to Fetch this Pallet \n({@Pallet})", picker, bay, pallet);
+        await _workFactory.GetNewObjectAsync(bay, picker, pallet, cancellationToken);
         
         _occupiedPickerCounter.Add(1, 
         [
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("Picker", picker.Id),
                 new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pellet", pellet.Id)
+                new KeyValuePair<string, object?>("Pallet", pallet.Id)
             ]);
         
         _fetchMissCounter.Add(1, 
@@ -247,31 +247,31 @@ public sealed class PickerService
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("Picker", picker.Id),
                 new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pellet", pellet.Id)
+                new KeyValuePair<string, object?>("Pallet", pallet.Id)
             ]);
     }
     
     private async Task StartFetchAsync(Picker picker, Bay bay, Appointment appointment, CancellationToken cancellationToken)
     {
-        var pellet = await _pelletService.GetNextFetchAsync(bay, appointment, cancellationToken);
-        if (pellet == null)
+        var pallet = await _palletService.GetNextFetchAsync(bay, appointment, cancellationToken);
+        if (pallet == null)
         {
-            _logger.LogInformation("Bay \n({@Bay})\n did not have any more Pellets assigned to Fetch.", bay);
+            _logger.LogInformation("Bay \n({@Bay})\n did not have any more Pallets assigned to Fetch.", bay);
             
             _logger.LogInformation("Fetch Work could not be started for this Bay \n({@Bay}).", bay);
             
             return;
         }
         
-        _logger.LogDebug("Adding Work for this Picker \n({@Picker})\n at this Bay \n({@Bay}) to Fetch this Pellet \n({@Pellet})", picker, bay, pellet);
-        await _workFactory.GetNewObjectAsync(bay, picker, pellet, cancellationToken);
+        _logger.LogDebug("Adding Work for this Picker \n({@Picker})\n at this Bay \n({@Bay}) to Fetch this Pallet \n({@Pallet})", picker, bay, pallet);
+        await _workFactory.GetNewObjectAsync(bay, picker, pallet, cancellationToken);
         
         _occupiedPickerCounter.Add(1, 
         [
                 new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                 new KeyValuePair<string, object?>("Picker", picker.Id),
                 new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pellet", pellet.Id)
+                new KeyValuePair<string, object?>("Pallet", pallet.Id)
             ]);
 
         var appointmentSlot = await _appointmentSlotRepository.GetAsync(appointment, cancellationToken);
@@ -289,7 +289,7 @@ public sealed class PickerService
                     new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
                     new KeyValuePair<string, object?>("Picker", picker.Id),
                     new KeyValuePair<string, object?>("Bay", bay.Id),
-                    new KeyValuePair<string, object?>("Pellet", pellet.Id),
+                    new KeyValuePair<string, object?>("Pallet", pallet.Id),
                     new KeyValuePair<string, object?>("Appointment", appointment.Id),
                 ]);
         }

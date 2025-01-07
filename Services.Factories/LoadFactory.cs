@@ -10,7 +10,7 @@ public sealed class LoadFactory : IFactoryService<Load>
     private readonly ILogger<LoadFactory> _logger;
     private readonly TruckCompanyRepository _truckCompanyRepository;
     private readonly HubFactory _hubFactory;
-    private readonly PelletFactory _pelletFactory;
+    private readonly PalletFactory _palletFactory;
     private readonly LoadRepository _loadRepository;
     private readonly ModelState _modelState;
     
@@ -18,14 +18,14 @@ public sealed class LoadFactory : IFactoryService<Load>
         ILogger<LoadFactory> logger,
         TruckCompanyRepository truckCompanyRepository,
         HubFactory hubFactory,
-        PelletFactory pelletFactory,
+        PalletFactory palletFactory,
         LoadRepository loadRepository,
         ModelState modelState)
     {
         _logger = logger;
         _truckCompanyRepository = truckCompanyRepository;
         _hubFactory = hubFactory;
-        _pelletFactory = pelletFactory;
+        _palletFactory = palletFactory;
         _loadRepository = loadRepository;
         _modelState = modelState;
     }
@@ -74,12 +74,12 @@ public sealed class LoadFactory : IFactoryService<Load>
         _logger.LogDebug("Setting Hub ({@Hub}) for this Load \n({@Load}).", hub, load);
         await _loadRepository.SetAsync(load, hub, cancellationToken);
         
-        _logger.LogDebug("Setting Pellets for this Load \n({@Load})\n for this Truck \n({@Truck})\n and this Hub \n({@Hub}).", load, truck, hub);
-        await _pelletFactory.SetPelletsAsync(load, truck.Capacity, cancellationToken);
+        _logger.LogDebug("Setting Pallets for this Load \n({@Load})\n for this Truck \n({@Truck})\n and this Hub \n({@Hub}).", load, truck, hub);
+        await _palletFactory.SetPalletsAsync(load, truck.Capacity, cancellationToken);
 
-        if (load.Pellets.Count != 0) return load;
+        if (load.Pallets.Count != 0) return load;
         
-        _logger.LogInformation("Load \n({@Load})\n could not be assigned any Pellets.", load);
+        _logger.LogInformation("Load \n({@Load})\n could not be assigned any Pallets.", load);
         
         _logger.LogDebug("Removing this Load \n({@Load}).", load);
         await _loadRepository.RemoveAsync(load, cancellationToken);
@@ -114,12 +114,12 @@ public sealed class LoadFactory : IFactoryService<Load>
         _logger.LogDebug("Setting Hub ({@Hub}) for this Load \n({@Load}).", hub, load);
         await _loadRepository.SetAsync(load, hub, cancellationToken);
         
-        _logger.LogDebug("Setting Pellets for this Load \n({@Load})\n for this Truck \n({@Truck})\n and this Hub \n({@Hub}).", load, truck, hub);
-        await _pelletFactory.SetPelletsAsync(load, truck.Capacity, cancellationToken);
+        _logger.LogDebug("Setting Pallets for this Load \n({@Load})\n for this Truck \n({@Truck})\n and this Hub \n({@Hub}).", load, truck, hub);
+        await _palletFactory.SetPalletsAsync(load, truck.Capacity, cancellationToken);
 
-        if (load.Pellets.Count != 0) return load;
+        if (load.Pallets.Count != 0) return load;
         
-        _logger.LogInformation("Load \n({@Load})\n could not be assigned any Pellets.", load);
+        _logger.LogInformation("Load \n({@Load})\n could not be assigned any Pallets.", load);
         
         _logger.LogDebug("Removing this Load \n({@Load}).", load);
         await _loadRepository.RemoveAsync(load, cancellationToken);

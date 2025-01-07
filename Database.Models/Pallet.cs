@@ -1,6 +1,6 @@
 namespace Database.Models;
 
-public class Pellet
+public class Pallet
 {
     public long Id { get; set; }
     

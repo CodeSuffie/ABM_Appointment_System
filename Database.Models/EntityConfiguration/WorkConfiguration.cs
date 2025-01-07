@@ -31,8 +31,8 @@ public class WorkConfiguration : IEntityTypeConfiguration<Work>
             .WithMany(x => x.Works)
             .HasForeignKey(x => x.BayId);
         
-        builder.HasOne(x => x.Pellet)
+        builder.HasOne(x => x.Pallet)
             .WithOne(x => x.Work)
-            .HasForeignKey<Work>(x => x.PelletId);
+            .HasForeignKey<Work>(x => x.PalletId);
     }
 }

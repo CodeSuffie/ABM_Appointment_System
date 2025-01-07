@@ -17,14 +17,14 @@ public sealed class WorkFactory(
         return adminStaff.Speed * modelState.ModelConfig.ModelStep;
     }
     
-    private TimeSpan GetTime(BayStaff bayStaff, Pellet pellet)
+    private TimeSpan GetTime(BayStaff bayStaff, Pallet pallet)
     {
-        return (bayStaff.Speed + pellet.Difficulty) * modelState.ModelConfig.ModelStep;
+        return (bayStaff.Speed + pallet.Difficulty) * modelState.ModelConfig.ModelStep;
     }
     
-    private TimeSpan GetTime(Picker picker, Pellet pellet)
+    private TimeSpan GetTime(Picker picker, Pallet pallet)
     {
-        return (picker.Speed + pellet.Difficulty) * picker.Experience * modelState.ModelConfig.ModelStep;
+        return (picker.Speed + pallet.Difficulty) * picker.Experience * modelState.ModelConfig.ModelStep;
     }
     
     private TimeSpan GetTime(Stuffer stuffer)
@@ -199,13 +199,13 @@ public sealed class WorkFactory(
         return work;
     }
     
-    public async Task<Work?> GetNewObjectAsync(Bay bay, BayStaff bayStaff, Pellet pellet, WorkType workType, CancellationToken cancellationToken)
+    public async Task<Work?> GetNewObjectAsync(Bay bay, BayStaff bayStaff, Pallet pallet, WorkType workType, CancellationToken cancellationToken)
     {
-        var duration = GetTime(bayStaff, pellet);
+        var duration = GetTime(bayStaff, pallet);
         var work = await GetNewObjectAsync(duration, workType, cancellationToken);
         if (work == null)
         {
-            logger.LogError("Work could not be created for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})\n for this Pellet \n({@Pellet}).", bayStaff, bay, pellet);
+            logger.LogError("Work could not be created for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})\n for this Pallet \n({@Pallet}).", bayStaff, bay, pallet);
 
             return null;
         }
@@ -216,19 +216,19 @@ public sealed class WorkFactory(
         logger.LogDebug("Setting this BayStaff \n({@BayStaff})\n for this Work \n({@Work}).", bayStaff, work);
         await workRepository.SetAsync(work, bayStaff, cancellationToken);
         
-        logger.LogDebug("Setting this Pellet \n({@Pellet})\n for this Work \n({@Work}).", pellet, work);
-        await workRepository.SetAsync(work, pellet, cancellationToken);
+        logger.LogDebug("Setting this Pallet \n({@Pallet})\n for this Work \n({@Work}).", pallet, work);
+        await workRepository.SetAsync(work, pallet, cancellationToken);
 
         return work;
     }
     
-    public async Task<Work?> GetNewObjectAsync(Bay bay, Picker picker, Pellet pellet, CancellationToken cancellationToken)
+    public async Task<Work?> GetNewObjectAsync(Bay bay, Picker picker, Pallet pallet, CancellationToken cancellationToken)
     {
-        var duration = GetTime(picker, pellet);
+        var duration = GetTime(picker, pallet);
         var work = await GetNewObjectAsync(duration, WorkType.Fetch, cancellationToken);
         if (work == null)
         {
-            logger.LogError("Work could not be created for this Picker \n({@Picker})\n at this Bay \n({@Bay})\n for this Pellet \n({@Pellet}).", picker, bay, pellet);
+            logger.LogError("Work could not be created for this Picker \n({@Picker})\n at this Bay \n({@Bay})\n for this Pallet \n({@Pallet}).", picker, bay, pallet);
 
             return null;
         }
@@ -239,19 +239,19 @@ public sealed class WorkFactory(
         logger.LogDebug("Setting this Picker \n({@Picker})\n for this Work \n({@Work}).", picker, work);
         await workRepository.SetAsync(work, picker, cancellationToken);
         
-        logger.LogDebug("Setting this Pellet \n({@Pellet})\n for this Work \n({@Work}).", pellet, work);
-        await workRepository.SetAsync(work, pellet, cancellationToken);
+        logger.LogDebug("Setting this Pallet \n({@Pallet})\n for this Work \n({@Work}).", pallet, work);
+        await workRepository.SetAsync(work, pallet, cancellationToken);
 
         return work;
     }
     
-    public async Task<Work?> GetNewObjectAsync(Bay bay, Stuffer stuffer, Pellet pellet, CancellationToken cancellationToken)
+    public async Task<Work?> GetNewObjectAsync(Bay bay, Stuffer stuffer, Pallet pallet, CancellationToken cancellationToken)
     {
         var duration = GetTime(stuffer);
         var work = await GetNewObjectAsync(duration, WorkType.Stuff, cancellationToken);
         if (work == null)
         {
-            logger.LogError("Work could not be created for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay})\n for this Pellet \n({@Pellet}).", stuffer, bay, pellet);
+            logger.LogError("Work could not be created for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay})\n for this Pallet \n({@Pallet}).", stuffer, bay, pallet);
 
             return null;
         }
@@ -262,8 +262,8 @@ public sealed class WorkFactory(
         logger.LogDebug("Setting this Stuffer \n({@Stuffer})\n for this Work \n({@Work}).", stuffer, work);
         await workRepository.SetAsync(work, stuffer, cancellationToken);
         
-        logger.LogDebug("Setting this Pellet \n({@Pellet})\n for this Work \n({@Work}).", pellet, work);
-        await workRepository.SetAsync(work, pellet, cancellationToken);
+        logger.LogDebug("Setting this Pallet \n({@Pallet})\n for this Work \n({@Work}).", pallet, work);
+        await workRepository.SetAsync(work, pallet, cancellationToken);
 
         return work;
     }

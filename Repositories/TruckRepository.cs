@@ -26,19 +26,19 @@ public sealed class TruckRepository(ModelDbContext context)
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task AddAsync(Truck truck, Pellet pellet, CancellationToken cancellationToken)
+    public async Task AddAsync(Truck truck, Pallet pallet, CancellationToken cancellationToken)
     {
-        truck.Inventory.Remove(pellet);
-        truck.Inventory.Add(pellet);
-        pellet.Truck = truck;
+        truck.Inventory.Remove(pallet);
+        truck.Inventory.Add(pallet);
+        pallet.Truck = truck;
 
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task RemoveAsync(Truck truck, Pellet pellet, CancellationToken cancellationToken)
+    public async Task RemoveAsync(Truck truck, Pallet pallet, CancellationToken cancellationToken)
     {
-        truck.Inventory.Remove(pellet);
-        pellet.Truck = null;
+        truck.Inventory.Remove(pallet);
+        pallet.Truck = null;
 
         await context.SaveChangesAsync(cancellationToken);
     }

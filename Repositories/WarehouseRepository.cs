@@ -20,10 +20,10 @@ public sealed class WarehouseRepository(ModelDbContext context)
                 cancellationToken);
     }
 
-    public Task<Warehouse?> GetAsync(Pellet pellet, CancellationToken cancellationToken)
+    public Task<Warehouse?> GetAsync(Pallet pallet, CancellationToken cancellationToken)
     {
         return Get()
-            .FirstOrDefaultAsync(w => w.Id == pellet.WarehouseId,
+            .FirstOrDefaultAsync(w => w.Id == pallet.WarehouseId,
                 cancellationToken);
     }
     

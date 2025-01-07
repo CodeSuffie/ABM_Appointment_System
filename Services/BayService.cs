@@ -11,8 +11,8 @@ public sealed class BayService
 {
     private readonly ILogger<BayService> _logger;
     private readonly HubRepository _hubRepository;
-    private readonly PelletRepository _pelletRepository;
-    private readonly PelletService _pelletService;
+    private readonly PalletRepository _palletRepository;
+    private readonly PalletService _palletService;
     private readonly TripService _tripService;
     private readonly BayRepository _bayRepository;
     private readonly TripRepository _tripRepository;
@@ -24,8 +24,8 @@ public sealed class BayService
 
     public BayService(ILogger<BayService> logger,
         HubRepository hubRepository,
-        PelletRepository pelletRepository,
-        PelletService pelletService,
+        PalletRepository palletRepository,
+        PalletService palletService,
         TripService tripService,
         BayRepository bayRepository,
         TripRepository tripRepository,
@@ -35,8 +35,8 @@ public sealed class BayService
     {
         _logger = logger;
         _hubRepository = hubRepository;
-        _pelletRepository = pelletRepository;
-        _pelletService = pelletService;
+        _palletRepository = palletRepository;
+        _palletService = palletService;
         _tripService = tripService;
         _bayRepository = bayRepository;
         _tripRepository = tripRepository;
@@ -106,7 +106,7 @@ public sealed class BayService
             return;
         }
 
-        if (! await _pelletService.HasDropOffPelletsAsync(bay, cancellationToken))
+        if (! await _palletService.HasDropOffPalletsAsync(bay, cancellationToken))
         {
             if (! bay.BayFlags.HasFlag(BayFlags.DroppedOff))
             {
@@ -133,7 +133,7 @@ public sealed class BayService
             }
         }
         
-        if (! await _pelletService.HasFetchPelletsAsync(bay, cancellationToken))
+        if (! await _palletService.HasFetchPalletsAsync(bay, cancellationToken))
         {
             if (! bay.BayFlags.HasFlag(BayFlags.Fetched))
             {
@@ -160,7 +160,7 @@ public sealed class BayService
             }
         }
         
-        if (! await _pelletService.HasPickUpPelletsAsync(bay, cancellationToken))
+        if (! await _palletService.HasPickUpPalletsAsync(bay, cancellationToken))
         {
             if (! bay.BayFlags.HasFlag(BayFlags.PickedUp))
             {
@@ -188,15 +188,15 @@ public sealed class BayService
         }
     }
 
-    public async Task<bool> HasRoomForPelletAsync(Bay bay, CancellationToken cancellationToken)
+    public async Task<bool> HasRoomForPalletAsync(Bay bay, CancellationToken cancellationToken)
     {
-        var pelletCount = await _pelletRepository.Get(bay)
+        var palletCount = await _palletRepository.Get(bay)
             .CountAsync(cancellationToken);
         var dropOffWorkCount = await _workRepository.Get(bay, WorkType.DropOff)
             .CountAsync(cancellationToken);
         var fetchWorkCount = await _workRepository.Get(bay, WorkType.Fetch)
             .CountAsync(cancellationToken);
 
-        return (pelletCount + dropOffWorkCount + fetchWorkCount) < bay.Capacity;
+        return (palletCount + dropOffWorkCount + fetchWorkCount) < bay.Capacity;
     }
 }

@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Database.Models.EntityConfiguration;
 
-public class PelletConfiguration : IEntityTypeConfiguration<Pellet>
+public class PalletConfiguration : IEntityTypeConfiguration<Pallet>
 {
-    public void Configure(EntityTypeBuilder<Pellet> builder)
+    public void Configure(EntityTypeBuilder<Pallet> builder)
     {
         builder.HasOne(x => x.TruckCompany)
             .WithMany(x => x.Inventory)
@@ -24,11 +24,11 @@ public class PelletConfiguration : IEntityTypeConfiguration<Pellet>
             .HasForeignKey(x => x.WarehouseId);
         
         builder.HasOne(x => x.Load)
-            .WithMany(x => x.Pellets)
+            .WithMany(x => x.Pallets)
             .HasForeignKey(x => x.LoadId);
         
         builder.HasOne(x => x.Work)
-            .WithOne(x => x.Pellet)
-            .HasForeignKey<Work>(x => x.PelletId);
+            .WithOne(x => x.Pallet)
+            .HasForeignKey<Work>(x => x.PalletId);
     }
 }
