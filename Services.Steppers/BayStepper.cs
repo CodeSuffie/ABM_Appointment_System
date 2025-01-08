@@ -32,6 +32,7 @@ public sealed class BayStepper : IStepperService<Bay>
     public async Task StepAsync(Bay bay, CancellationToken cancellationToken)
     {
         await _bayService.UpdateStatusAsync(bay, cancellationToken);
+        await _bayService.UpdateFlagsAsync(bay, cancellationToken);
         
         if (bay.BayStatus == BayStatus.Closed) return;
         
@@ -41,8 +42,6 @@ public sealed class BayStepper : IStepperService<Bay>
             await _bayService.AlertFreeAsync(bay, cancellationToken);
             return;
         }
-        
-        await _bayService.UpdateFlagsAsync(bay, cancellationToken);
         
         if (bay.BayFlags.HasFlag(BayFlags.DroppedOff) && 
             bay.BayFlags.HasFlag(BayFlags.Fetched) &&

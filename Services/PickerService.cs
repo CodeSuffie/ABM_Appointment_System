@@ -15,6 +15,7 @@ public sealed class PickerService
     private readonly HubRepository _hubRepository;
     private readonly PalletRepository _palletRepository;
     private readonly PalletService _palletService;
+    private readonly TripRepository _tripRepository;
     private readonly BayRepository _bayRepository;
     private readonly BayService _bayService;
     private readonly WorkRepository _workRepository;
@@ -28,6 +29,7 @@ public sealed class PickerService
         HubRepository hubRepository,
         PalletRepository palletRepository,
         PalletService palletService,
+        TripRepository tripRepository,
         BayRepository bayRepository,
         BayService bayService,
         WorkRepository workRepository,
@@ -41,6 +43,7 @@ public sealed class PickerService
         _hubRepository = hubRepository;
         _palletRepository = palletRepository;
         _palletService = palletService;
+        _tripRepository = tripRepository;
         _bayRepository = bayRepository;
         _bayService = bayService;
         _workRepository = workRepository;
@@ -102,24 +105,31 @@ public sealed class PickerService
             return;
         }
 
-        var appointmentSlots = _appointmentSlotRepository.GetAfter(hub, _modelState.ModelTime -
-                _modelState.AppointmentConfig!.AppointmentLength * _modelState.ModelConfig.ModelStep)
+        var appointmentSlots = _appointmentSlotRepository.GetAfter(hub, _modelState.ModelTime)
             .Where(aps => aps.Appointments.Count != 0)
             .OrderBy(aps => aps.StartTime)
-            .Take((_modelState.AppointmentConfig!.AppointmentLength / _modelState.AppointmentConfig!.AppointmentSlotDifference) + 1);
+            .Take((_modelState.AppointmentConfig!.AppointmentLength / _modelState.AppointmentConfig!.AppointmentSlotDifference) * 2 + 1);
 
+        Bay? bestBay = null;
+        Appointment? bestAppointment = null;
+        var fetchPalletCount = 0;
+        
         foreach (var appointmentSlot in appointmentSlots)
         {
             var appointments = _appointmentRepository.Get(appointmentSlot)
                 .AsAsyncEnumerable()
                 .WithCancellation(cancellationToken);
 
-
-            Bay? bestBay = null;
-            Appointment? bestAppointment = null;
-            var fetchPalletCount = 0;
             await foreach (var appointment in appointments)
             {
+                var appointmentTrip = await _tripRepository.GetAsync(appointment, cancellationToken);
+                if (appointmentTrip == null)
+                {
+                    _logger.LogError("Appointment \n({@Appointment})\n did not have a Trip assigned.", appointment);
+
+                    continue;
+                }
+                
                 var bay = await _bayRepository.GetAsync(appointment, cancellationToken);
                 if (bay == null)
                 {
@@ -137,7 +147,7 @@ public sealed class PickerService
                         .GetAvailableFetchPalletsAsync(bay, appointment, cancellationToken))
                     .Count;
                 
-                if (bestBay != null && bayFetchPalletCount <= fetchPalletCount)
+                if (bayFetchPalletCount <= fetchPalletCount)
                 {
                     continue;
                 }
@@ -152,6 +162,8 @@ public sealed class PickerService
             await StartFetchAsync(picker, bestBay, bestAppointment, cancellationToken);
             break;
         }
+
+        var test = "wtf";
     }
 
     public async Task AlertFreeAsync(Picker picker, CancellationToken cancellationToken)
@@ -197,14 +209,10 @@ public sealed class PickerService
         {
             _logger.LogInformation("Picker \n({@Picker})\n its assigned Hub \n({@Hub})\n did not have a Bay with more Pallets assigned to Fetch.", picker, hub);
 
-            if (!_modelState.ModelConfig.AppointmentSystemMode)
+            _logger.LogDebug("Picker \n({@Picker})\n will remain idle...", picker);
+            
+            if (_modelState.ModelConfig.AppointmentSystemMode)
             {
-                _logger.LogDebug("Picker \n({@Picker})\n will remain idle...", picker);
-            }
-            else
-            {
-                _logger.LogDebug("Picker \n({@Picker})\n will try to fetch for next appointments...", picker);
-                
                 await AlertFreeAppointmentAsync(picker, cancellationToken);
             }
 
@@ -233,11 +241,6 @@ public sealed class PickerService
         ("Picker", picker.Id),
                 ("Bay", bay.Id),
                 ("Pallet", pallet.Id));
-        
-        _instrumentation.Add(Metric.FetchMiss, 1, 
-        ("Picker", picker.Id),
-            ("Bay", bay.Id),
-            ("Pallet", pallet.Id));
     }
     
     private async Task StartFetchAsync(Picker picker, Bay bay, Appointment appointment, CancellationToken cancellationToken)
@@ -256,24 +259,8 @@ public sealed class PickerService
         await _workFactory.GetNewObjectAsync(bay, picker, pallet, cancellationToken);
         
         _instrumentation.Add(Metric.PickerOccupied, 1, 
-        ("Picker", picker.Id),
+                ("Picker", picker.Id),
                 ("Bay", bay.Id),
                 ("Pallet", pallet.Id));
-
-        var appointmentSlot = await _appointmentSlotRepository.GetAsync(appointment, cancellationToken);
-        if (appointmentSlot == null)
-        {
-            _logger.LogError("Appointment \n({@Appointment})\n did not have an AppointmentSlot assigned to pick for.", picker);
-
-            return;
-        }
-
-        if (appointmentSlot.StartTime <= _modelState.ModelTime)
-        {
-            _instrumentation.Add(Metric.FetchMiss, 1, 
-            ("Picker", picker.Id),
-                    ("Bay", bay.Id),
-                    ("Pallet", pallet.Id));
-        }
     }
 }

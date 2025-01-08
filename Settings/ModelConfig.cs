@@ -29,7 +29,7 @@ public class ModelConfig : ModelConfigBase
     public override int InitialTruckCompanyPallets { get; } = 100;
     public override int InitialWarehousePallets { get; } = 100;
     public override int PalletsPerStep { get; } = 0;
-    public override int PalletAverageDifficulty { get; } = 1;
+    public override int PalletAverageDifficulty { get; } = 2;
     public override int PalletDifficultyDeviation { get; } = 1;
 
     public override bool AppointmentSystemMode { get; } = false;

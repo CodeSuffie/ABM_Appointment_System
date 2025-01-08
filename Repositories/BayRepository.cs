@@ -63,40 +63,40 @@ public sealed class BayRepository(
     
     public Task AddAsync(Bay bay, BayFlags flag, CancellationToken cancellationToken)
     {
-        bay.BayFlags |= flag;
-
-        Metric? metric = flag switch
+        if (!bay.BayFlags.HasFlag(BayFlags.DroppedOff) && flag.HasFlag(BayFlags.DroppedOff))
         {
-            BayFlags.DroppedOff => Metric.BayDroppedOff,
-            BayFlags.Fetched => Metric.BayFetched,
-            BayFlags.PickedUp => Metric.BayPickedUp,
-            _ => null
-        };
-
-        if (metric != null)
-        {
-            instrumentation.Add((Metric) metric, 1, ("Bay", bay.Id), ("BayFlag", flag));
+            instrumentation.Add(Metric.BayDroppedOff, 1, ("Bay", bay.Id), ("BayFlag", flag));
         }
+        if (!bay.BayFlags.HasFlag(BayFlags.Fetched) && flag.HasFlag(BayFlags.Fetched))
+        {
+            instrumentation.Add(Metric.BayFetched, 1, ("Bay", bay.Id), ("BayFlag", flag));
+        }
+        if (!bay.BayFlags.HasFlag(BayFlags.PickedUp) && flag.HasFlag(BayFlags.PickedUp))
+        {
+            instrumentation.Add(Metric.BayPickedUp, 1, ("Bay", bay.Id), ("BayFlag", flag));
+        }
+        
+        bay.BayFlags |= flag;
 
         return context.SaveChangesAsync(cancellationToken);
     }
     
     public Task RemoveAsync(Bay bay, BayFlags flag, CancellationToken cancellationToken)
     {
-        bay.BayFlags &= ~flag;
-        
-        Metric? metric = flag switch
+        if (bay.BayFlags.HasFlag(BayFlags.DroppedOff) && flag.HasFlag(BayFlags.DroppedOff))
         {
-            BayFlags.DroppedOff => Metric.BayDroppedOff,
-            BayFlags.Fetched => Metric.BayFetched,
-            BayFlags.PickedUp => Metric.BayPickedUp,
-            _ => null
-        };
-
-        if (metric != null)
-        {
-            instrumentation.Add((Metric) metric, -1, ("Bay", bay.Id), ("BayFlag", flag));
+            instrumentation.Add(Metric.BayDroppedOff, -1, ("Bay", bay.Id), ("BayFlag", flag));
         }
+        if (bay.BayFlags.HasFlag(BayFlags.Fetched) && flag.HasFlag(BayFlags.Fetched))
+        {
+            instrumentation.Add(Metric.BayFetched, -1, ("Bay", bay.Id), ("BayFlag", flag));
+        }
+        if (bay.BayFlags.HasFlag(BayFlags.PickedUp) && flag.HasFlag(BayFlags.PickedUp))
+        {
+            instrumentation.Add(Metric.BayPickedUp, -1, ("Bay", bay.Id), ("BayFlag", flag));
+        }
+        
+        bay.BayFlags &= ~flag;
         
         return context.SaveChangesAsync(cancellationToken);
     }

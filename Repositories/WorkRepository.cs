@@ -62,8 +62,7 @@ public sealed class WorkRepository(
     public Task<Work?> GetAsync(Picker picker, CancellationToken cancellationToken)
     {
         return Get()
-            .FirstOrDefaultAsync(x => x.Picker != null &&
-                                      x.PickerId == picker.Id, cancellationToken);
+            .FirstOrDefaultAsync(x => x.PickerId == picker.Id, cancellationToken);
     }
     
     public Task<Work?> GetAsync(Stuffer stuffer, CancellationToken cancellationToken)

@@ -10,13 +10,13 @@ public sealed class ModelInitializer(
 {
     public void InitializeObject()  
     {
-        modelState.Initialize();
+        // modelState.Initialize();
         
-        // modelState.Initialize(
-        //     new TimeSpan(0, 0, 0),
-        //     new AppointmentModelConfig(),
-        //     new AppointmentAgentConfig(),
-        //     new AppointmentConfig());
+        modelState.Initialize(
+            new TimeSpan(0, 0, 0),
+            new AppointmentModelConfig(),
+            new AppointmentAgentConfig(),
+            new AppointmentConfig());
             
         logger.LogInformation("New ModelState created: ModelState={@ModelState}", modelState);
     }

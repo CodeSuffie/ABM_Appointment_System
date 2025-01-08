@@ -100,10 +100,13 @@ public sealed class TripRepository(
 
             return;
         }
-        
-        instrumentation.Add(Metric.TruckOccupied, 1, 
-            ("Truck", truck.Id),
-            ("Trip", trip.Id));
+
+        if (oldTruck == null)
+        {
+            instrumentation.Add(Metric.TruckOccupied, 1, 
+                ("Truck", truck.Id),
+                ("Trip", trip.Id));
+        }
         
         trip.Truck = truck;
         truck.Trip = trip;
@@ -268,7 +271,7 @@ public sealed class TripRepository(
     
     public Task UnsetAsync(Trip trip, Truck truck, CancellationToken cancellationToken)
     {
-        if (trip.TruckId != null)
+        if (truck.TripId != null)
         {
             instrumentation.Add(Metric.TruckOccupied, -1, 
                 ("Truck", truck.Id),
@@ -284,7 +287,7 @@ public sealed class TripRepository(
 
     public Task UnsetAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
-        if (trip.ParkingSpotId != null)
+        if (parkingSpot.TripId != null)
         {
             instrumentation.Add(Metric.ParkingOccupied, -1, 
                 ("ParkingSpot", parkingSpot.Id),
@@ -299,7 +302,7 @@ public sealed class TripRepository(
     
     public Task UnsetAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
-        if (trip.AdminStaffId != null)
+        if (adminStaff.TripId != null)
         {
             instrumentation.Add(Metric.AdminOccupied, -1, 
                 ("AdminStaff", adminStaff.Id),
@@ -314,7 +317,7 @@ public sealed class TripRepository(
     
     public Task UnsetAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
     {
-        if (trip.BayId != null)
+        if (bay.TripId != null)
         {
             instrumentation.Add(Metric.BayOccupied, -1, 
                 ("Bay", bay.Id),

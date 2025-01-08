@@ -21,15 +21,15 @@ public sealed class BayShiftService(
     public Task<BayShift?> GetCurrentAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
         return bayShiftRepository.Get(bayStaff)
-            .FirstOrDefaultAsync(bs => bs.StartTime >= modelState.ModelTime && 
-                                       bs.StartTime + bs.Duration <= modelState.ModelTime,
+            .FirstOrDefaultAsync(bs => bs.StartTime <= modelState.ModelTime && 
+                                       bs.StartTime + bs.Duration >= modelState.ModelTime,
                 cancellationToken);
     }
     
     public IQueryable<BayShift> GetCurrent(Bay bay, CancellationToken cancellationToken)
     {
         return bayShiftRepository.Get(bay)
-            .Where(bs => bs.StartTime >= modelState.ModelTime &&
-                         bs.StartTime + bs.Duration <= modelState.ModelTime);
+            .Where(bs => bs.StartTime <= modelState.ModelTime &&
+                         bs.StartTime + bs.Duration >= modelState.ModelTime);
     }
 }

@@ -21,9 +21,11 @@ public sealed class TripService
     private readonly HubRepository _hubRepository;
     private readonly BayRepository _bayRepository;
     private readonly TruckRepository _truckRepository;
+    private readonly LoadRepository _loadRepository;
     private readonly LocationFactory _locationFactory;
     private readonly TruckCompanyRepository _truckCompanyRepository;
     private readonly WorkFactory _workFactory;
+    private readonly PalletRepository _palletRepository;
     private readonly PalletService _palletService;
     private readonly AppointmentSlotRepository _appointmentSlotRepository;
     private readonly AppointmentRepository _appointmentRepository;
@@ -40,9 +42,11 @@ public sealed class TripService
         HubRepository hubRepository,
         BayRepository bayRepository,
         TruckRepository truckRepository,
+        LoadRepository loadRepository,
         LocationFactory locationFactory,
         TruckCompanyRepository truckCompanyRepository,
         WorkFactory workFactory,
+        PalletRepository palletRepository,
         PalletService palletService,
         AppointmentSlotRepository appointmentSlotRepository,
         AppointmentRepository appointmentRepository,
@@ -59,9 +63,11 @@ public sealed class TripService
         _hubRepository = hubRepository;
         _bayRepository = bayRepository;
         _truckRepository = truckRepository;
+        _loadRepository = loadRepository;
         _locationFactory = locationFactory;
         _truckCompanyRepository = truckCompanyRepository;
         _workFactory = workFactory;
+        _palletRepository = palletRepository;
         _palletService = palletService;
         _appointmentSlotRepository = appointmentSlotRepository;
         _appointmentRepository = appointmentRepository;
@@ -403,6 +409,22 @@ public sealed class TripService
         await _workFactory.GetNewObjectAsync(trip, bay, cancellationToken);
         
         _logger.LogInformation("Bay \n({@Bay})\n successfully linked to this Trip \n({@Trip})", bay, trip);
+
+        var pickUpLoad = await _loadRepository.GetAsync(trip, LoadType.PickUp, cancellationToken);
+        if (pickUpLoad == null)
+        {
+            _logger.LogInformation("Trip \n({@Trip})\n has no PickUpLoad assigned to check its Pallets with their new Bay with.", trip);
+            return;
+        }
+        
+        var pickUpPallets = _palletRepository.Get(pickUpLoad);
+        var bayPallets = _palletRepository.Get(bay);
+        var unavailablePellets = pickUpPallets.Where(ip => bayPallets.All(bp => bp.Id != ip.Id));
+        var unavailablePelletsCount = await unavailablePellets.CountAsync(cancellationToken);
+        if (unavailablePelletsCount > 0)
+        {
+            _instrumentation.Add(Metric.FetchMiss, unavailablePelletsCount, ("Trip", trip.Id), ("Bay", bay.Id), ("Pellets", string.Join(", ", unavailablePellets.Select(up => up.Id))));
+        }
     }
 
     public async Task AlertWaitTravelHubCompleteAsync(Trip trip, CancellationToken cancellationToken)
