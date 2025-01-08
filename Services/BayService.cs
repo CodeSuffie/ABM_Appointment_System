@@ -18,8 +18,8 @@ public sealed class BayService
     private readonly BayRepository _bayRepository;
     private readonly TripRepository _tripRepository;
     private readonly WorkRepository _workRepository;
+    private readonly BayShiftService _bayShiftService;
     private readonly ModelState _modelState;
-    private readonly Instrumentation _instrumentation;
 
     public BayService(ILogger<BayService> logger,
         HubRepository hubRepository,
@@ -28,9 +28,9 @@ public sealed class BayService
         TripService tripService,
         BayRepository bayRepository,
         TripRepository tripRepository,
+        BayShiftService bayShiftService,
         WorkRepository workRepository,
-        ModelState modelState,
-        Instrumentation instrumentation)
+        ModelState modelState)
     {
         _logger = logger;
         _hubRepository = hubRepository;
@@ -39,9 +39,9 @@ public sealed class BayService
         _tripService = tripService;
         _bayRepository = bayRepository;
         _tripRepository = tripRepository;
+        _bayShiftService = bayShiftService;
         _workRepository = workRepository;
         _modelState = modelState;
-        _instrumentation = instrumentation;
     }
 
     public async Task AlertWorkCompleteAsync(Bay bay, CancellationToken cancellationToken)
@@ -89,6 +89,23 @@ public sealed class BayService
         _logger.LogDebug("Alerting Free for this Bay \n({@Bay})\n to selected Trip \n({@Trip})", bay, trip);
         await _tripService.AlertFreeAsync(trip, bay, cancellationToken);
     }
+
+    public async Task UpdateStatusAsync(Bay bay, CancellationToken cancellationToken)
+    {
+        var shifts = _bayShiftService.GetCurrent(bay, cancellationToken);
+        var works = _workRepository.Get(bay);
+        if (!await works.AnyAsync(cancellationToken) && !await shifts.AnyAsync(cancellationToken))
+        {
+            if (bay.BayStatus != BayStatus.Closed)
+            {
+                await _bayRepository.SetAsync(bay, BayStatus.Closed, cancellationToken);
+            }
+        }
+        else if (bay.BayStatus != BayStatus.Opened)
+        {
+            await _bayRepository.SetAsync(bay, BayStatus.Opened, cancellationToken);
+        }
+    }
     
     public async Task UpdateFlagsAsync(Bay bay, CancellationToken cancellationToken)
     {
@@ -107,12 +124,6 @@ public sealed class BayService
             if (! bay.BayFlags.HasFlag(BayFlags.DroppedOff))
             {
                 await _bayRepository.AddAsync(bay, BayFlags.DroppedOff, cancellationToken);
-                _instrumentation.DroppedOffBaysCounter.Add(1, 
-                [
-                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                    new KeyValuePair<string, object?>("Bay", bay.Id),
-                    new KeyValuePair<string, object?>("BayFlag", BayFlags.DroppedOff),
-                ]);
             }
         }
         else
@@ -120,12 +131,6 @@ public sealed class BayService
             if (bay.BayFlags.HasFlag(BayFlags.DroppedOff))
             {
                 await _bayRepository.RemoveAsync(bay, BayFlags.DroppedOff, cancellationToken);
-                _instrumentation.DroppedOffBaysCounter.Add(-1, 
-                [
-                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                    new KeyValuePair<string, object?>("Bay", bay.Id),
-                    new KeyValuePair<string, object?>("BayFlag", BayFlags.DroppedOff),
-                ]);
             }
         }
         
@@ -134,12 +139,6 @@ public sealed class BayService
             if (! bay.BayFlags.HasFlag(BayFlags.Fetched))
             {
                 await _bayRepository.AddAsync(bay, BayFlags.Fetched, cancellationToken);
-                _instrumentation.FetchedBaysCounter.Add(1, 
-                [
-                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                    new KeyValuePair<string, object?>("Bay", bay.Id),
-                    new KeyValuePair<string, object?>("BayFlag", BayFlags.Fetched),
-                ]);
             }
         }
         else
@@ -147,12 +146,6 @@ public sealed class BayService
             if (bay.BayFlags.HasFlag(BayFlags.Fetched))
             {
                 await _bayRepository.RemoveAsync(bay, BayFlags.Fetched, cancellationToken);
-                _instrumentation.FetchedBaysCounter.Add(-1, 
-                [
-                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                    new KeyValuePair<string, object?>("Bay", bay.Id),
-                    new KeyValuePair<string, object?>("BayFlag", BayFlags.Fetched),
-                ]);
             }
         }
         
@@ -161,12 +154,6 @@ public sealed class BayService
             if (! bay.BayFlags.HasFlag(BayFlags.PickedUp))
             {
                 await _bayRepository.AddAsync(bay, BayFlags.PickedUp, cancellationToken);
-                _instrumentation.PickedUpBaysCounter.Add(1, 
-                [
-                        new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                        new KeyValuePair<string, object?>("Bay", bay.Id),
-                        new KeyValuePair<string, object?>("BayFlag", BayFlags.PickedUp),
-                    ]);
             }
         }
         else
@@ -174,12 +161,6 @@ public sealed class BayService
             if (bay.BayFlags.HasFlag(BayFlags.PickedUp))
             {
                 await _bayRepository.RemoveAsync(bay, BayFlags.PickedUp, cancellationToken);
-                _instrumentation.PickedUpBaysCounter.Add(-1, 
-                [
-                        new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                        new KeyValuePair<string, object?>("Bay", bay.Id),
-                        new KeyValuePair<string, object?>("BayFlag", BayFlags.PickedUp),
-                    ]);
             }
         }
     }

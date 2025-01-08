@@ -74,13 +74,10 @@ public sealed class StufferService
         
         await _palletService.AlertStuffedAsync(pallet, bay, cancellationToken);
         
-        _instrumentation.OccupiedStufferCounter.Add(-1, 
-        [
-                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                new KeyValuePair<string, object?>("Stuffer", stuffer.Id),
-                new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pallet", pallet.Id),
-            ]);
+        _instrumentation.Add(Metric.StufferOccupied, -1, 
+        ("Stuffer", stuffer.Id),
+                ("Bay", bay.Id),
+                ("Pallet", pallet.Id));
     }
     
     public async Task AlertFreeAppointmentAsync(Stuffer stuffer, CancellationToken cancellationToken)
@@ -197,13 +194,10 @@ public sealed class StufferService
         _logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pallet \n({@Pallet})", stuffer, bay, pallet);
         await _workFactory.GetNewObjectAsync(bay, stuffer, pallet, cancellationToken);
         
-        _instrumentation.OccupiedStufferCounter.Add(1, 
-        [
-                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                new KeyValuePair<string, object?>("Stuffer", stuffer.Id),
-                new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pallet", pallet.Id)
-            ]);
+        _instrumentation.Add(Metric.StufferOccupied, 1, 
+        ("Stuffer", stuffer.Id),
+                ("Bay", bay.Id),
+                ("Pallet", pallet.Id));
     }
     
     private async Task StartStuffAsync(Stuffer stuffer, Bay bay, IQueryable<AppointmentSlot> appointmentSlots, CancellationToken cancellationToken)
@@ -221,14 +215,10 @@ public sealed class StufferService
         _logger.LogDebug("Adding Work for this Stuffer \n({@Stuffer})\n at this Bay \n({@Bay}) to Stuff this Pallet \n({@Pallet})", stuffer, bay, pallet);
         await _workFactory.GetNewObjectAsync(bay, stuffer, pallet, cancellationToken);
         
-        _instrumentation.OccupiedStufferCounter.Add(1, 
-        [
-                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                new KeyValuePair<string, object?>("Stuffer", stuffer.Id),
-                new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pallet", pallet.Id),
-                // new KeyValuePair<string, object?>("Appointments", appointmentSlots.Select(aps => aps.Id).ToList())
-            ]);
+        _instrumentation.Add(Metric.StufferOccupied, 1, 
+        ("Stuffer", stuffer.Id),
+                ("Bay", bay.Id),
+                ("Pallet", pallet.Id));
     }
 
 }

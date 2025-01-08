@@ -28,16 +28,6 @@ public sealed class TruckStepper : IStepperService<Truck>
         _tripRepository = tripRepository;
         _modelState = modelState;
     }
-
-    public async Task DataCollectAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogDebug("Handling Data Collection for Truck in this Step ({Step})", _modelState.ModelTime);
-        
-        // var unclaimed = await _truckRepository.CountUnclaimedAsync(cancellationToken);
-        // _unclaimedTrucksHistogram.Record(unclaimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        _logger.LogDebug("Finished handling Data Collection for Truck in this Step ({Step})", _modelState.ModelTime);
-    }
     
     public async Task StepAsync(Truck truck, CancellationToken cancellationToken)
     {

@@ -1,11 +1,13 @@
 using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Services.Abstractions;
 
 namespace Repositories;
 
 public sealed class WorkRepository(
     ModelDbContext context,
+    Instrumentation instrumentation,
     TripRepository tripRepository,
     AdminStaffRepository adminStaffRepository,
     BayStaffRepository bayStaffRepository,
@@ -18,12 +20,17 @@ public sealed class WorkRepository(
     {
         return context.Works;
     }
+
+    public IQueryable<Work> Get(Bay bay)
+    {
+        return Get()
+            .Where(x => x.BayId == bay.Id);
+    }
     
     public IQueryable<Work> Get(Bay bay, WorkType workType)
     {
-        return Get()
-            .Where(x => x.BayId == bay.Id && 
-                        x.WorkType == workType);
+        return Get(bay)
+            .Where(x => x.WorkType == workType);
     }
     
     public Task<Work?> GetAsync(Trip trip, CancellationToken cancellationToken)
@@ -89,6 +96,31 @@ public sealed class WorkRepository(
     
     public async Task SetAsync(Work work, Trip trip, CancellationToken cancellationToken)
     {
+        var oldWork = await GetAsync(trip, cancellationToken);
+        if (oldWork != null)
+        {
+            await RemoveAsync(work, cancellationToken);
+        }
+
+        var workType = work.WorkType;
+        Metric? metric = workType switch
+        {
+            WorkType.WaitTravelHub => Metric.TripWaitTravel,
+            WorkType.TravelHub => Metric.TripTravelHub,
+            WorkType.WaitParking => Metric.TripWaitParking,
+            WorkType.WaitCheckIn => Metric.TripWaitCheckIn,
+            WorkType.CheckIn => Metric.TripCheckingIn,
+            WorkType.WaitBay => Metric.TripWaitBay,
+            WorkType.Bay => Metric.TripBay,
+            WorkType.TravelHome => Metric.TripTravelHome,
+            _ => null
+        };
+
+        if (metric != null)
+        {
+            instrumentation.Add((Metric) metric, 1, ("Trip", trip.Id), ("Work", work.Id));
+        }
+        
         work.Trip = trip;
         trip.Work = work;
 
@@ -157,6 +189,25 @@ public sealed class WorkRepository(
         var trip = await tripRepository.GetAsync(work, cancellationToken);
         if (trip != null)
         {
+            var workType = work.WorkType;
+            Metric? metric = workType switch
+            {
+                WorkType.WaitTravelHub => Metric.TripWaitTravel,
+                WorkType.TravelHub => Metric.TripTravelHub,
+                WorkType.WaitParking => Metric.TripWaitParking,
+                WorkType.WaitCheckIn => Metric.TripWaitCheckIn,
+                WorkType.CheckIn => Metric.TripCheckingIn,
+                WorkType.WaitBay => Metric.TripWaitBay,
+                WorkType.Bay => Metric.TripBay,
+                WorkType.TravelHome => Metric.TripTravelHome,
+                _ => null
+            };
+
+            if (metric != null)
+            {
+                instrumentation.Add((Metric) metric, -1, ("Trip", trip.Id), ("Work", work.Id));
+            }
+            
             trip.Work = null;
         }
         

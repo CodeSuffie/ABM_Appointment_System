@@ -18,22 +18,18 @@ public sealed class BayShiftService(
         return modelState.ModelTime >= bayShift.StartTime && modelState.ModelTime <= endTime;
     }
     
-    public async Task<BayShift?> GetCurrentAsync(BayStaff bayStaff, CancellationToken cancellationToken)
+    public Task<BayShift?> GetCurrentAsync(BayStaff bayStaff, CancellationToken cancellationToken)
     {
-        var shifts = bayShiftRepository.Get(bayStaff)
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken);
-
-        await foreach (var shift in shifts)
-        {
-            if (!IsCurrent(shift)) continue;
-            
-            logger.LogInformation("BayShift \n({@BayShift})\n is currently active.", shift);
-                
-            return shift;
-        }
-
-        logger.LogInformation("No BayShift is currently active.");
-        return null;
+        return bayShiftRepository.Get(bayStaff)
+            .FirstOrDefaultAsync(bs => bs.StartTime >= modelState.ModelTime && 
+                                       bs.StartTime + bs.Duration <= modelState.ModelTime,
+                cancellationToken);
+    }
+    
+    public IQueryable<BayShift> GetCurrent(Bay bay, CancellationToken cancellationToken)
+    {
+        return bayShiftRepository.Get(bay)
+            .Where(bs => bs.StartTime >= modelState.ModelTime &&
+                         bs.StartTime + bs.Duration <= modelState.ModelTime);
     }
 }

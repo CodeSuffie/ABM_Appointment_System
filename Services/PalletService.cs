@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.Logging;
 using Repositories;
 using Services.Abstractions;
+using Settings;
 
 namespace Services;
 
@@ -23,6 +24,7 @@ public sealed class PalletService
     private readonly AppointmentRepository _appointmentRepository;
     private readonly PickerRepository _pickerRepository;
     private readonly BayStaffRepository _bayStaffRepository;
+    private readonly Instrumentation _instrumentation;
 
     public PalletService(
         ILogger<PalletService> logger,
@@ -38,7 +40,8 @@ public sealed class PalletService
         LoadRepository loadRepository,
         AppointmentRepository appointmentRepository,
         PickerRepository pickerRepository,
-        BayStaffRepository bayStaffRepository)
+        BayStaffRepository bayStaffRepository,
+        Instrumentation instrumentation)
     {
         _logger = logger;
         _palletRepository = palletRepository;
@@ -54,6 +57,7 @@ public sealed class PalletService
         _pickerRepository = pickerRepository;
         _bayStaffRepository = bayStaffRepository;
         _modelState = modelState;
+        _instrumentation = instrumentation;
     }
 
     private async Task<bool> HasPalletAsync(Bay bay, Pallet pallet, CancellationToken cancellationToken)

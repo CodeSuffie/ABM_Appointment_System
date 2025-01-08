@@ -19,11 +19,6 @@ public sealed class PalletStepper : IStepperService
         _palletFactory = palletFactory;
         _modelState = modelState;
     }
-    
-    public Task DataCollectAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
 
     public async Task StepAsync(CancellationToken cancellationToken)
     {

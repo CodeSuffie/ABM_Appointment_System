@@ -1,10 +1,13 @@
 using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Services.Abstractions;
 
 namespace Repositories;
 
-public sealed class BayRepository(ModelDbContext context)
+public sealed class BayRepository(
+    ModelDbContext context,
+    Instrumentation instrumentation)
 {
     public IQueryable<Bay> Get()
     {
@@ -58,46 +61,75 @@ public sealed class BayRepository(ModelDbContext context)
         await context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task AddAsync(Bay bay, BayFlags flag, CancellationToken cancellationToken)
+    public Task AddAsync(Bay bay, BayFlags flag, CancellationToken cancellationToken)
     {
         bay.BayFlags |= flag;
-        
-        await context.SaveChangesAsync(cancellationToken);
+
+        Metric? metric = flag switch
+        {
+            BayFlags.DroppedOff => Metric.BayDroppedOff,
+            BayFlags.Fetched => Metric.BayFetched,
+            BayFlags.PickedUp => Metric.BayPickedUp,
+            _ => null
+        };
+
+        if (metric != null)
+        {
+            instrumentation.Add((Metric) metric, 1, ("Bay", bay.Id), ("BayFlag", flag));
+        }
+
+        return context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task RemoveAsync(Bay bay, BayFlags flag, CancellationToken cancellationToken)
+    public Task RemoveAsync(Bay bay, BayFlags flag, CancellationToken cancellationToken)
     {
         bay.BayFlags &= ~flag;
         
-        await context.SaveChangesAsync(cancellationToken);
+        Metric? metric = flag switch
+        {
+            BayFlags.DroppedOff => Metric.BayDroppedOff,
+            BayFlags.Fetched => Metric.BayFetched,
+            BayFlags.PickedUp => Metric.BayPickedUp,
+            _ => null
+        };
+
+        if (metric != null)
+        {
+            instrumentation.Add((Metric) metric, -1, ("Bay", bay.Id), ("BayFlag", flag));
+        }
+        
+        return context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task SetAsync(Bay bay, Hub hub, CancellationToken cancellationToken)
+    public Task SetAsync(Bay bay, Hub hub, CancellationToken cancellationToken)
     {
         bay.Hub = hub;
         hub.Bays.Remove(bay);
         hub.Bays.Add(bay);
         
-        await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task SetAsync(Bay bay, BayStatus status, CancellationToken cancellationToken)
+    public Task SetAsync(Bay bay, BayStatus status, CancellationToken cancellationToken)
     {
         bay.BayStatus = status;
         
-        await context.SaveChangesAsync(cancellationToken);
+        var change = status == BayStatus.Opened ? 1 : -1;
+        instrumentation.Add(Metric.BayOpened, change, ("Bay", bay.Id));
+        
+        return context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task SetAsync(Bay bay, BayFlags flags, CancellationToken cancellationToken)
+    public Task SetAsync(Bay bay, BayFlags flags, CancellationToken cancellationToken)
     {
         bay.BayFlags = flags;
         
-        await context.SaveChangesAsync(cancellationToken);
+        return context.SaveChangesAsync(cancellationToken);
     }
     
-    public async Task<int> CountAsync(Hub hub, CancellationToken cancellationToken)
+    public Task<int> CountAsync(Hub hub, CancellationToken cancellationToken)
     {
-        var bayCount = await Get()
+        var bayCount = Get()
             .CountAsync(b => b.HubId == hub.Id, cancellationToken);
 
         return bayCount;

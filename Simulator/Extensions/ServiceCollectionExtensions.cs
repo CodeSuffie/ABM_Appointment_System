@@ -120,12 +120,8 @@ public static class ServiceCollectionExtensions
         
         // Steppers
         services.AddScoped<IStepperService,                 AdminStaffStepper>();
-        services.AddScoped<IStepperService,                 AppointmentStepper>();
-        services.AddScoped<IStepperService,                 AppointmentSlotStepper>();
         services.AddScoped<IStepperService,                 BayStepper>();
         services.AddScoped<IStepperService,                 BayStaffStepper>();
-        services.AddScoped<IStepperService,                 HubStepper>();
-        services.AddScoped<IStepperService,                 LoadStepper>();
         services.AddScoped<IStepperService,                 ParkingSpotStepper>();
         services.AddScoped<IStepperService,                 PalletStepper>();
         services.AddScoped<IStepperService,                 PickerStepper>();

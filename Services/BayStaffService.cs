@@ -61,30 +61,26 @@ public sealed class BayStaffService
 
             return;
         }
-        
+
+        Metric? metric = null;
         switch (work.WorkType)
         {
             case WorkType.DropOff:
                 await _palletService.AlertDroppedOffAsync(pallet, bay, cancellationToken);
-                _instrumentation.DropOffBayStaffCounter.Add(-1, 
-                [
-                        new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                        new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
-                        new KeyValuePair<string, object?>("Bay", bay.Id),
-                        new KeyValuePair<string, object?>("Pallet", pallet.Id)
-                    ]);
+                metric = Metric.BayStaffDropOff;
                 break;
-            
             case WorkType.PickUp:
                 await _palletService.AlertPickedUpAsync(pallet, trip, cancellationToken);
-                _instrumentation.PickUpBayStaffCounter.Add(-1, 
-                [
-                        new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                        new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
-                        new KeyValuePair<string, object?>("Bay", bay.Id),
-                        new KeyValuePair<string, object?>("Pallet", pallet.Id)
-                    ]);
+                metric = Metric.BayStaffPickUp;
                 break;
+        };
+
+        if (metric != null)
+        {
+            _instrumentation.Add((Metric) metric, -1, 
+                ("BayStaff", bayStaff.Id), 
+                ("Bay", bay.Id), 
+                ("Pallet", pallet.Id));
         }
     }
     
@@ -135,13 +131,10 @@ public sealed class BayStaffService
         {
             _logger.LogInformation("BayStaff \n({@BayStaff})\n is working at Bay \n({@Bay})\n with no room for another Pallet and can therefore not start Drop-Off Work this Step ({Step})", bayStaff, bay, _modelState.ModelTime);
             
-            _instrumentation.DropOffMissCounter.Add(1, 
-            [
-                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                    new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
-                    new KeyValuePair<string, object?>("Bay", bay.Id),
-                    new KeyValuePair<string, object?>("Trip", trip.Id)
-                ]);
+            _instrumentation.Add(Metric.DropOffMiss , 1, 
+                ("BayStaff", bayStaff.Id), 
+                ("Bay", bay.Id), 
+                ("Trip", trip.Id));
 
             return false;
         }
@@ -192,13 +185,10 @@ public sealed class BayStaffService
         _logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})", WorkType.DropOff, bayStaff, bay);
         await _workFactory.GetNewObjectAsync(bay, bayStaff, pallet, WorkType.DropOff, cancellationToken);
         
-        _instrumentation.DropOffBayStaffCounter.Add(1, 
-        [
-                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
-                new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pallet", pallet.Id)
-            ]);
+        _instrumentation.Add(Metric.BayStaffDropOff, 1, 
+            ("BayStaff", bayStaff.Id),
+            ("Bay", bay.Id),
+            ("Pallet", pallet.Id));
     }
 
     public async Task StartPickUpAsync(BayStaff bayStaff, Pallet pallet, Bay bay, CancellationToken cancellationToken)
@@ -206,12 +196,9 @@ public sealed class BayStaffService
         _logger.LogDebug("Adding Work of type {WorkType} for this BayStaff \n({@BayStaff})\n at this Bay \n({@Bay})", WorkType.PickUp, bayStaff, bay);
         await _workFactory.GetNewObjectAsync(bay, bayStaff, pallet, WorkType.PickUp, cancellationToken);
         
-        _instrumentation.PickUpBayStaffCounter.Add(1, 
-        [
-                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                new KeyValuePair<string, object?>("BayStaff", bayStaff.Id),
-                new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pallet", pallet.Id)
-            ]);
+        _instrumentation.Add(Metric.BayStaffPickUp, 1, 
+        ("BayStaff", bayStaff.Id),
+                ("Bay", bay.Id),
+                ("Pallet", pallet.Id));
     }
 }

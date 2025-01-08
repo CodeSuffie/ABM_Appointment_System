@@ -39,56 +39,28 @@ public sealed class StufferStepper : IStepperService<Stuffer>
         _instrumentation = instrumentation;
     }
     
-    public async Task DataCollectAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogDebug("Handling Data Collection for Stuffer in this Step ({Step})", _modelState.ModelTime);
-        
-        // var working = await _stufferRepository.CountAsync(_modelState.ModelTime, cancellationToken);
-        // _workingStufferHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        //
-        // var fetching = await _stufferRepository.CountAsync(cancellationToken);
-        // _stuffingStufferHistogram.Record(fetching, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        _logger.LogDebug("Finished handling Data Collection for Stuffer in this Step ({Step})", _modelState.ModelTime);
-    }
-    
     public async Task StepAsync(Stuffer stuffer, CancellationToken cancellationToken)
     {
         var work = await _workRepository.GetAsync(stuffer, cancellationToken);
+        var shift = await _hubShiftService.GetCurrentAsync(stuffer, cancellationToken);
         
         if (work == null)
         {
             _logger.LogInformation("Stuffer \n({@Stuffer})\n does not have active Work assigned in this Step ({Step})", stuffer, _modelState.ModelTime);
             
-            var shift = await _hubShiftService.GetCurrentAsync(stuffer, cancellationToken);
             if (shift == null)
             {
                 _logger.LogInformation("Stuffer \n({@Stuffer})\n is not working in this Step ({Step})", stuffer, _modelState.ModelTime);
                 
                 _logger.LogDebug("Stuffer \n({@Stuffer})\n will remain idle in this Step ({Step})", stuffer, _modelState.ModelTime);
-                
-                return;
             }
-            
-            _logger.LogDebug("Alerting Free for this Stuffer \n({@Stuffer})\n in this Step ({Step})", stuffer, _modelState.ModelTime);
-            await _stufferService.AlertFreeAsync(stuffer, cancellationToken);
-            
-            _instrumentation.WorkingStufferCounter.Add(1, 
-            [
-                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                new KeyValuePair<string, object?>("Stuffer", stuffer.Id)
-            ]);
-            
-            return;
+            else
+            {
+                _logger.LogDebug("Alerting Free for this Stuffer \n({@Stuffer})\n in this Step ({Step})", stuffer, _modelState.ModelTime);
+                await _stufferService.AlertFreeAsync(stuffer, cancellationToken);
+            }
         }
-        
-        _instrumentation.WorkingStufferCounter.Add(1, 
-        [
-            new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-            new KeyValuePair<string, object?>("Stuffer", stuffer.Id)
-        ]);
-        
-        if (_workService.IsWorkCompleted(work))
+        else if (_workService.IsWorkCompleted(work))
         {
             _logger.LogInformation("Stuffer \n({@Stuffer})\n just completed assigned Work \n({@Work})\n in this Step ({Step})", stuffer, work, _modelState.ModelTime);
             
@@ -97,6 +69,18 @@ public sealed class StufferStepper : IStepperService<Stuffer>
             
             _logger.LogDebug("Removing old Work \n({@Work})\n for this Stuffer \n({@Stuffer})", work, stuffer);
             await _workRepository.RemoveAsync(work, cancellationToken);
+        }
+        
+        if (shift == null) return;
+
+        if (shift.StartTime == _modelState.ModelTime)
+        {
+            _instrumentation.Add(Metric.StufferWorking, 1, ("Stuffer", stuffer.Id));
+        }
+
+        if (shift.StartTime + shift.Duration == _modelState.ModelTime + _modelState.ModelConfig.ModelStep)
+        {
+            _instrumentation.Add(Metric.StufferWorking, -1, ("Stuffer", stuffer.Id));
         }
     }
 

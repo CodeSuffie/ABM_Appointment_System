@@ -8,7 +8,7 @@ public sealed class ModelInitializer(
     ModelState modelState,
     IEnumerable<IPriorityInitializerService> initializationServices)
 {
-    public void InitializeObject()
+    public void InitializeObject()  
     {
         modelState.Initialize();
         

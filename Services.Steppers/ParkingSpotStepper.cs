@@ -28,16 +28,6 @@ public sealed class ParkingSpotStepper : IStepperService<ParkingSpot>
         _tripRepository = tripRepository;
         _modelState = modelState;
     }
-
-    public async Task DataCollectAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogDebug("Handling Data Collection for ParkingSpot in this Step ({Step})", _modelState.ModelTime);
-
-        // var unclaimed = await _parkingSpotRepository.CountUnclaimedAsync(cancellationToken);
-        // _unclaimedParkingSpotsHistogram.Record(unclaimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        _logger.LogDebug("Finished handling Data Collection for ParkingSpot in this Step ({Step})", _modelState.ModelTime);
-    }
     
     public async Task StepAsync(ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {

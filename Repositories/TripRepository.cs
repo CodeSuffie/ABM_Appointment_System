@@ -2,12 +2,14 @@ using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Services.Abstractions;
 
 namespace Repositories;
 
 public sealed class TripRepository(
     ILogger<TripRepository> logger,
     ModelDbContext context,
+    Instrumentation instrumentation,
     BayRepository bayRepository,
     ParkingSpotRepository parkingSpotRepository,
     AdminStaffRepository adminStaffRepository,
@@ -89,6 +91,26 @@ public sealed class TripRepository(
         await context.SaveChangesAsync(cancellationToken);
     }
     
+    public async Task SetAsync(Trip trip, Truck truck, CancellationToken cancellationToken)
+    {
+        var oldTruck = await truckRepository.GetAsync(trip, cancellationToken);
+        if (oldTruck != null && oldTruck.Id != truck.Id)
+        {
+            logger.LogError("Trip ({@Trip}) already has an assigned Truck ({@Truck}), it cannot move to the new Truck ({@Truck}).", trip, oldTruck, truck);
+
+            return;
+        }
+        
+        instrumentation.Add(Metric.TruckOccupied, 1, 
+            ("Truck", truck.Id),
+            ("Trip", trip.Id));
+        
+        trip.Truck = truck;
+        truck.Trip = trip;
+        
+        await context.SaveChangesAsync(cancellationToken);
+    }
+    
     public async Task SetAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
         var oldParkingSpot = await parkingSpotRepository.GetAsync(trip, cancellationToken);
@@ -98,6 +120,10 @@ public sealed class TripRepository(
 
             return;
         }
+        
+        instrumentation.Add(Metric.ParkingOccupied, 1, 
+            ("ParkingSpot", parkingSpot.Id),
+            ("Trip", trip.Id));
         
         trip.ParkingSpot = parkingSpot;
         parkingSpot.Trip = trip;
@@ -115,6 +141,10 @@ public sealed class TripRepository(
             return;
         }
         
+        instrumentation.Add(Metric.AdminOccupied, 1, 
+            ("AdminStaff", adminStaff.Id),
+            ("Trip", trip.Id));
+        
         trip.AdminStaff = adminStaff;
         adminStaff.Trip = trip;
         
@@ -131,24 +161,12 @@ public sealed class TripRepository(
             return;
         }
         
+        instrumentation.Add(Metric.BayOccupied, 1, 
+            ("Bay", bay.Id),
+            ("Trip", trip.Id));
+        
         trip.Bay = bay;
         bay.Trip = trip;
-        
-        await context.SaveChangesAsync(cancellationToken);
-    }
-    
-    public async Task SetAsync(Trip trip, Truck truck, CancellationToken cancellationToken)
-    {
-        var oldTruck = await truckRepository.GetAsync(trip, cancellationToken);
-        if (oldTruck != null && oldTruck.Id != truck.Id)
-        {
-            logger.LogError("Trip ({@Trip}) already has an assigned Truck ({@Truck}), it cannot move to the new Truck ({@Truck}).", trip, oldTruck, truck);
-
-            return;
-        }
-        
-        trip.Truck = truck;
-        truck.Trip = trip;
         
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -247,10 +265,32 @@ public sealed class TripRepository(
 
         await context.SaveChangesAsync(cancellationToken);
     }
+    
+    public Task UnsetAsync(Trip trip, Truck truck, CancellationToken cancellationToken)
+    {
+        if (trip.TruckId != null)
+        {
+            instrumentation.Add(Metric.TruckOccupied, -1, 
+                ("Truck", truck.Id),
+                ("Trip", trip.Id));
+        }
+        
+        trip.Truck = null;
+        truck.Trip = null;
+        
+        return context.SaveChangesAsync(cancellationToken);
+    }
 
 
     public Task UnsetAsync(Trip trip, ParkingSpot parkingSpot, CancellationToken cancellationToken)
     {
+        if (trip.ParkingSpotId != null)
+        {
+            instrumentation.Add(Metric.ParkingOccupied, -1, 
+                ("ParkingSpot", parkingSpot.Id),
+                ("Trip", trip.Id));
+        }
+        
         trip.ParkingSpot = null;
         parkingSpot.Trip = null;
         
@@ -259,6 +299,13 @@ public sealed class TripRepository(
     
     public Task UnsetAsync(Trip trip, AdminStaff adminStaff, CancellationToken cancellationToken)
     {
+        if (trip.AdminStaffId != null)
+        {
+            instrumentation.Add(Metric.AdminOccupied, -1, 
+                ("AdminStaff", adminStaff.Id),
+                ("Trip", trip.Id));
+        }
+        
         trip.AdminStaff = null;
         adminStaff.Trip = null;
         
@@ -267,16 +314,15 @@ public sealed class TripRepository(
     
     public Task UnsetAsync(Trip trip, Bay bay, CancellationToken cancellationToken)
     {
+        if (trip.BayId != null)
+        {
+            instrumentation.Add(Metric.BayOccupied, -1, 
+                ("Bay", bay.Id),
+                ("Trip", trip.Id));
+        }
+        
         trip.Bay = null;
         bay.Trip = null;
-        
-        return context.SaveChangesAsync(cancellationToken);
-    }
-    
-    public Task UnsetAsync(Trip trip, Truck truck, CancellationToken cancellationToken)
-    {
-        trip.Truck = null;
-        truck.Trip = null;
         
         return context.SaveChangesAsync(cancellationToken);
     }

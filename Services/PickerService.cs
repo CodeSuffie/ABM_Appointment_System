@@ -79,13 +79,10 @@ public sealed class PickerService
         
         await _palletService.AlertFetchedAsync(pallet, bay, cancellationToken);
         
-        _instrumentation.OccupiedPickerCounter.Add(-1, 
-        [
-                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                new KeyValuePair<string, object?>("Picker", picker.Id),
-                new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pallet", pallet.Id),
-            ]);
+        _instrumentation.Add(Metric.PickerOccupied, -1, 
+        ("Picker", picker.Id),
+                ("Bay", bay.Id),
+                ("Pallet", pallet.Id));
     }
 
     public async Task AlertFreeAppointmentAsync(Picker picker, CancellationToken cancellationToken)
@@ -232,21 +229,15 @@ public sealed class PickerService
         _logger.LogDebug("Adding Work for this Picker \n({@Picker})\n at this Bay \n({@Bay}) to Fetch this Pallet \n({@Pallet})", picker, bay, pallet);
         await _workFactory.GetNewObjectAsync(bay, picker, pallet, cancellationToken);
         
-        _instrumentation.OccupiedPickerCounter.Add(1, 
-        [
-                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                new KeyValuePair<string, object?>("Picker", picker.Id),
-                new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pallet", pallet.Id)
-            ]);
+        _instrumentation.Add(Metric.PickerOccupied, 1, 
+        ("Picker", picker.Id),
+                ("Bay", bay.Id),
+                ("Pallet", pallet.Id));
         
-        _instrumentation.FetchMissCounter.Add(1, 
-        [
-                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                new KeyValuePair<string, object?>("Picker", picker.Id),
-                new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pallet", pallet.Id)
-            ]);
+        _instrumentation.Add(Metric.FetchMiss, 1, 
+        ("Picker", picker.Id),
+            ("Bay", bay.Id),
+            ("Pallet", pallet.Id));
     }
     
     private async Task StartFetchAsync(Picker picker, Bay bay, Appointment appointment, CancellationToken cancellationToken)
@@ -264,13 +255,10 @@ public sealed class PickerService
         _logger.LogDebug("Adding Work for this Picker \n({@Picker})\n at this Bay \n({@Bay}) to Fetch this Pallet \n({@Pallet})", picker, bay, pallet);
         await _workFactory.GetNewObjectAsync(bay, picker, pallet, cancellationToken);
         
-        _instrumentation.OccupiedPickerCounter.Add(1, 
-        [
-                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                new KeyValuePair<string, object?>("Picker", picker.Id),
-                new KeyValuePair<string, object?>("Bay", bay.Id),
-                new KeyValuePair<string, object?>("Pallet", pallet.Id)
-            ]);
+        _instrumentation.Add(Metric.PickerOccupied, 1, 
+        ("Picker", picker.Id),
+                ("Bay", bay.Id),
+                ("Pallet", pallet.Id));
 
         var appointmentSlot = await _appointmentSlotRepository.GetAsync(appointment, cancellationToken);
         if (appointmentSlot == null)
@@ -282,14 +270,10 @@ public sealed class PickerService
 
         if (appointmentSlot.StartTime <= _modelState.ModelTime)
         {
-            _instrumentation.FetchMissCounter.Add(1, 
-            [
-                    new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                    new KeyValuePair<string, object?>("Picker", picker.Id),
-                    new KeyValuePair<string, object?>("Bay", bay.Id),
-                    new KeyValuePair<string, object?>("Pallet", pallet.Id),
-                    // new KeyValuePair<string, object?>("Appointment", appointment.Id),
-                ]);
+            _instrumentation.Add(Metric.FetchMiss, 1, 
+            ("Picker", picker.Id),
+                    ("Bay", bay.Id),
+                    ("Pallet", pallet.Id));
         }
     }
 }

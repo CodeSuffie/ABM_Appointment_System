@@ -28,34 +28,11 @@ public sealed class BayStepper : IStepperService<Bay>
         _tripRepository = tripRepository;
         _modelState = modelState;
     }
-
-    public async Task DataCollectAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogDebug("Handling Data Collection for Bay in this Step ({Step})", _modelState.ModelTime);
-        
-        // var closed = await _bayRepository.CountAsync(BayStatus.Closed, cancellationToken);
-        // _closedBaysHistogram.Record(closed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        //
-        // var free = await _bayRepository.CountAsync(false, cancellationToken);
-        // _freeBaysHistogram.Record(free, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        //
-        // var claimed = await _bayRepository.CountAsync(true, cancellationToken);
-        // _claimedBaysHistogram.Record(claimed, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        //
-        // var droppedOff = await _bayRepository.CountAsync(BayFlags.DroppedOff, cancellationToken);
-        // _droppedOffBaysHistogram.Record(droppedOff, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        //
-        // var fetched = await _bayRepository.CountAsync(BayFlags.Fetched, cancellationToken);
-        // _fetchedBaysHistogram.Record(fetched, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        //
-        // var pickedUp = await _bayRepository.CountAsync(BayFlags.PickedUp, cancellationToken);
-        // _pickedUpBaysHistogram.Record(pickedUp, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        _logger.LogDebug("Finished handling Data Collection for Bay in this Step ({Step})", _modelState.ModelTime);
-    }
     
     public async Task StepAsync(Bay bay, CancellationToken cancellationToken)
     {
+        await _bayService.UpdateStatusAsync(bay, cancellationToken);
+        
         if (bay.BayStatus == BayStatus.Closed) return;
         
         var trip = await _tripRepository.GetAsync(bay, cancellationToken);

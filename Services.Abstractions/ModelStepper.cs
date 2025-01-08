@@ -23,20 +23,6 @@ public sealed class ModelStepper
         _instrumentation = instrumentation; 
     }
 
-    public async Task DataCollectAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogDebug("Handling Data Collection for this Step ({Step})", _modelState.ModelTime);
-        
-        foreach (var stepperService in _stepperServices)
-        {
-            await stepperService.DataCollectAsync(cancellationToken);
-        }
-        
-        _logger.LogDebug("Completed Data Collection for this Step ({Step})", _modelState.ModelTime);
-        
-        _instrumentation.StepCounter.Add(1, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-    }
-
     public async Task StepAsync(CancellationToken cancellationToken)
     {
         _logger.LogWarning("Handling this Step ({Step})", _modelState.ModelTime);

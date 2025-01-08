@@ -1,10 +1,13 @@
 using Database;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
+using Services.Abstractions;
 
 namespace Repositories;
 
-public sealed class PalletRepository(ModelDbContext context)
+public sealed class PalletRepository(
+    ModelDbContext context,
+    Instrumentation instrumentation)
 {
     public IQueryable<Pallet> Get()
     {
@@ -95,8 +98,13 @@ public sealed class PalletRepository(ModelDbContext context)
     public Task SetAsync(Pallet pallet, Bay bay, CancellationToken cancellationToken)
     {
         pallet.Bay = bay;
-        bay.Inventory.Remove(pallet);
+        var removed = bay.Inventory.Remove(pallet);
         bay.Inventory.Add(pallet);
+
+        if (!removed)
+        {
+            instrumentation.Add(Metric.PalletBay, 1, ("Pallet", pallet.Id), ("Bay", bay.Id));
+        }
         
         return context.SaveChangesAsync(cancellationToken);
     }
@@ -137,7 +145,12 @@ public sealed class PalletRepository(ModelDbContext context)
     public Task UnsetAsync(Pallet pallet, Bay bay, CancellationToken cancellationToken)
     {
         pallet.Bay = null;
-        bay.Inventory.Remove(pallet);
+        var removed = bay.Inventory.Remove(pallet);
+        
+        if (removed)
+        {
+            instrumentation.Add(Metric.PalletBay, -1, ("Pallet", pallet.Id), ("Bay", bay.Id));
+        }
         
         return context.SaveChangesAsync(cancellationToken);
     }

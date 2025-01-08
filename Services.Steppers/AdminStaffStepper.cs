@@ -38,62 +38,46 @@ public sealed class AdminStaffStepper : IStepperService<AdminStaff>
         _modelState = modelState; 
         _instrumentation = instrumentation;
     }
-
-    public async Task DataCollectAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogDebug("Handling Data Collection for AdminStaff in this Step ({Step})", _modelState.ModelTime);
-        
-        // var working = await _adminStaffRepository.CountAsync(_modelState.ModelTime, cancellationToken);
-        // _workingAdminStaffHistogram.Record(working, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        //
-        // var occupied = await _adminStaffRepository.CountOccupiedAsync(cancellationToken);
-        // _occupiedAdminStaffHistogram.Record(occupied, new KeyValuePair<string, object?>("Step", _modelState.ModelTime));
-        
-        _logger.LogDebug("Finished handling Data Collection for AdminStaff in this Step ({Step})", _modelState.ModelTime);
-    }
     
     public async Task StepAsync(AdminStaff adminStaff, CancellationToken cancellationToken)
     {
         var work = await _workRepository.GetAsync(adminStaff, cancellationToken);
+        var shift = await _hubShiftService.GetCurrentAsync(adminStaff, cancellationToken);
         
         if (work == null)
         {
             _logger.LogInformation("AdminStaff \n({@AdminStaff})\n does not have active Work assigned in this Step ({Step})", adminStaff, _modelState.ModelTime);
             
-            var shift = await _hubShiftService.GetCurrentAsync(adminStaff, cancellationToken);
             if (shift == null)
             {
                 _logger.LogInformation("AdminStaff \n({@AdminStaff})\n is not working in this Step ({Step})", adminStaff, _modelState.ModelTime);
                 
                 _logger.LogDebug("AdminStaff \n({@AdminStaff})\n will remain idle in this Step ({Step})", adminStaff, _modelState.ModelTime);
-                
-                return;
             }
-            
-            _logger.LogDebug("Alerting Free for this AdminStaff \n({@AdminStaff})\n in this Step ({Step})", adminStaff, _modelState.ModelTime);
-            await _adminStaffService.AlertFreeAsync(adminStaff, cancellationToken);
-            
-            _instrumentation.WorkingAdminStaffCounter.Add(1, 
-            [
-                new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-                new KeyValuePair<string, object?>("AdminStaff", adminStaff.Id)
-            ]);
-            
-            return;
+            else
+            {
+                _logger.LogDebug("Alerting Free for this AdminStaff \n({@AdminStaff})\n in this Step ({Step})", adminStaff, _modelState.ModelTime);
+                await _adminStaffService.AlertFreeAsync(adminStaff, cancellationToken);
+            }
         }
-        
-        _instrumentation.WorkingAdminStaffCounter.Add(1, 
-        [
-            new KeyValuePair<string, object?>("Step", _modelState.ModelTime),
-            new KeyValuePair<string, object?>("AdminStaff", adminStaff.Id)
-        ]);
-        
-        if (_workService.IsWorkCompleted(work))
+        else if (_workService.IsWorkCompleted(work))
         {
             _logger.LogInformation("AdminStaff \n({@AdminStaff})\n just completed assigned Work \n({@Work})\n in this Step ({Step})", adminStaff, work, _modelState.ModelTime);
             
             _logger.LogDebug("Alerting Work Completed for this AdminStaff \n({@AdminStaff})\n in this Step ({Step})", adminStaff, _modelState.ModelTime);
             await _adminStaffService.AlertWorkCompleteAsync(adminStaff, cancellationToken);
+        }
+
+        if (shift == null) return;
+        
+        if (shift.StartTime == _modelState.ModelTime)
+        {
+            _instrumentation.Add(Metric.AdminWorking, 1, ("AdminStaff", adminStaff.Id));
+        }
+        
+        if (shift.StartTime + shift.Duration == _modelState.ModelTime + _modelState.ModelConfig.ModelStep)
+        {
+            _instrumentation.Add(Metric.AdminWorking, -1, ("AdminStaff", adminStaff.Id));
         }
     }
     
