@@ -152,7 +152,7 @@ public sealed partial class Simulation
         
         // create new timer
         _isRunning = true;
-        _timer = new Timer(TimerCallback, null, 0, 100);
+        _timer = new Timer(TimerCallback, null, 0, 50);
         StateHasChanged();
     }
     

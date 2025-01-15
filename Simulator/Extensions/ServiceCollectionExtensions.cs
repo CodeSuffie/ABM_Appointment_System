@@ -135,29 +135,29 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ModelState>();
         services.AddScoped<ModelService>();
         
-        services.AddOpenTelemetry()
-            .ConfigureResource(resource => resource.AddService(
-                serviceName: Instrumentation.ServiceName, 
-                serviceVersion: Instrumentation.ServiceVersion))
-            .WithTracing(providerBuilder => providerBuilder
-                .AddSource(Instrumentation.ServiceName)
-                .AddOtlpExporter(exporter =>
-                {
-                    exporter.Endpoint = new Uri("http://grafana-collector:4317/");
-                    exporter.Protocol = OtlpExportProtocol.Grpc;
-                }))     // What is this for?
-            .WithMetrics(providerBuilder => providerBuilder
-                .AddMeter(Instrumentation.ServiceName)
-                .AddOtlpExporter(exporter =>
-                {
-                    exporter.Endpoint = new Uri("http://grafana-collector:4317/");
-                    exporter.Protocol = OtlpExportProtocol.Grpc;
-                    exporter.ExportProcessorType = ExportProcessorType.Simple;
-                    // exporter.BatchExportProcessorOptions.MaxExportBatchSize = 2048;
-                    // exporter.BatchExportProcessorOptions.ExporterTimeoutMilliseconds = 10000;
-                    // exporter.BatchExportProcessorOptions.MaxQueueSize = 8192;
-                    // exporter.BatchExportProcessorOptions.ScheduledDelayMilliseconds = 1000;
-                }));        // PrometheusExporter() ?
+        // services.AddOpenTelemetry()
+        //     .ConfigureResource(resource => resource.AddService(
+        //         serviceName: Instrumentation.ServiceName, 
+        //         serviceVersion: Instrumentation.ServiceVersion))
+        //     .WithTracing(providerBuilder => providerBuilder
+        //         .AddSource(Instrumentation.ServiceName)
+        //         .AddOtlpExporter(exporter =>
+        //         {
+        //             exporter.Endpoint = new Uri("http://grafana-collector:4317/");
+        //             exporter.Protocol = OtlpExportProtocol.Grpc;
+        //         }))     // What is this for?
+        //     .WithMetrics(providerBuilder => providerBuilder
+        //         .AddMeter(Instrumentation.ServiceName)
+        //         .AddOtlpExporter(exporter =>
+        //         {
+        //             exporter.Endpoint = new Uri("http://grafana-collector:4317/");
+        //             exporter.Protocol = OtlpExportProtocol.Grpc;
+        //             exporter.ExportProcessorType = ExportProcessorType.Simple;
+        //             // exporter.BatchExportProcessorOptions.MaxExportBatchSize = 2048;
+        //             // exporter.BatchExportProcessorOptions.ExporterTimeoutMilliseconds = 10000;
+        //             // exporter.BatchExportProcessorOptions.MaxQueueSize = 8192;
+        //             // exporter.BatchExportProcessorOptions.ScheduledDelayMilliseconds = 1000;
+        //         }));        // PrometheusExporter() ?
 
         services.AddSingleton<Instrumentation>();
         
